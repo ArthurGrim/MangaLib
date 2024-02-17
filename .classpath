@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry excluding="de/mangalib/" kind="src" path="mangalib/src/main/java"/>
+	<classpathentry kind="src" path="mangalib/src/main/java/de/mangalib"/>
+	<classpathentry kind="src" path="mangalib/src/test/java"/>
+	<classpathentry kind="lib" path="mangalib/gradle/wrapper/gradle-wrapper.jar"/>
+	<classpathentry kind="output" path="mangalib/bin/main"/>
+</classpath>
