@@ -18,16 +18,16 @@ public class MangaReihe {
     private Integer mangaIndex;
 
     @Column(name = "statusID")
-    private Integer statusID;
+    private Status statusID;
 
     @Column(name = "verlagID")
-    private Integer verlagID;
+    private Verlage verlagID;
 
     @Column(name = "typID")
-    private Integer typID;
+    private Typen typID;
 
     @Column(name = "formatID")
-    private Integer formatID;
+    private Formate formatID;
 
     @Column(name = "titel")
     private String titel;
