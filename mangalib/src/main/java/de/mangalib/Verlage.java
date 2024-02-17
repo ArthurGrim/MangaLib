@@ -6,9 +6,9 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "verlag")
+@Table(name = "verlage")
 @Getter @Setter @NoArgsConstructor
-public class Verlag {
+public class Verlage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
