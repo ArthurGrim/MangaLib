@@ -6,16 +6,16 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "verlage")
+@Table(name = "typen")
 @Getter @Setter @NoArgsConstructor
-public class Verlage {
+public class Typen {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long verlagID;
+    private Long typID;
 
-    @Column(name = "name")
-    private String name;
+    @Column(name = "bezeichnung")
+    private String bezeichnung;
 
 }
 
