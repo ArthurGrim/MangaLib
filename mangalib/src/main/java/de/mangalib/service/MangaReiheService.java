@@ -44,7 +44,7 @@ public class MangaReiheService {
     }
 
     /**
-     * Speichert eine neue MangaReihe in der Datenbank.
+     * Speichert eine neuen MangaReihe in der Datenbank.
      * 
      * @param mangaReihe Die zu speichernde MangaReihe.
      * @return Die gespeicherte MangaReihe mit zugewiesener ID.
@@ -258,7 +258,12 @@ public class MangaReiheService {
 
     // ------------------------------Filtern--------------------------------
 
-    // Filtert MangaReihen nach Status
+    /**
+     * Filtert MangaReihen nach Status.
+     * 
+     * @param statusId Die ID des Status nach welcher gefiltert wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findByStatus(Long statusId) {
         if (statusId == null) {
             throw new IllegalArgumentException("Status-ID darf nicht null sein");
@@ -266,7 +271,12 @@ public class MangaReiheService {
         return mangaReiheRepository.findByStatusId(statusId);
     }
 
-    // Filtert MangaReihen nach Verlag
+    /**
+     * Filtert MangaReihen nach Verlag.
+     * 
+     * @param verlagId Die ID des Verlags nach welcher gefiltert wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findByVerlag(Long verlagId) {
         if (verlagId == null) {
             throw new IllegalArgumentException("Verlag-ID darf nicht null sein");
@@ -274,7 +284,12 @@ public class MangaReiheService {
         return mangaReiheRepository.findByVerlagId(verlagId);
     }
 
-    // Filtert MangaReihen nach Typ
+    /**
+     * Filtert MangaReihen nach Typ.
+     * 
+     * @param typId Die ID des Typs nach welcher gefiltert wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findByTyp(Long typId) {
         if (typId == null) {
             throw new IllegalArgumentException("Typ-ID darf nicht null sein");
@@ -282,7 +297,12 @@ public class MangaReiheService {
         return mangaReiheRepository.findByTypId(typId);
     }
 
-    // Filtert MangaReihen nach Format
+    /**
+     * Filtert MangaReihen nach Format.
+     * 
+     * @param formatId Die ID des Typs nach welcher gefiltert wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findByFormat(Long formatId) {
         if (formatId == null) {
             throw new IllegalArgumentException("Format-ID darf nicht null sein");
@@ -290,6 +310,12 @@ public class MangaReiheService {
         return mangaReiheRepository.findByFormatId(formatId);
     }
 
+    /**
+     * Filtert MangaReihen nach Jahr.
+     * 
+     * @param jahr Das Jahr nach welchem gefiltert wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findByErstelltAmYear(int jahr) {
         if (jahr < 1900 || jahr > java.time.Year.now().getValue()) {
             throw new IllegalArgumentException("Das Jahr muss zwischen 1900 und dem aktuellen Jahr liegen");
@@ -297,6 +323,13 @@ public class MangaReiheService {
         return mangaReiheRepository.findByErstelltAmYear(jahr);
     }
 
+    /**
+     * Filtert MangaReihen nach Jahr und Monat.
+     * 
+     * @param jahr  Das Jahr nach welchem gefiltert wird.
+     * @param monat Der Monat nach welchem gefiltert wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findByErstelltAmYearAndMonth(int jahr, int monat) {
         if (jahr < 1900 || jahr > java.time.Year.now().getValue()) {
             throw new IllegalArgumentException("Das Jahr muss zwischen 1900 und dem aktuellen Jahr liegen");
@@ -309,6 +342,12 @@ public class MangaReiheService {
 
     // ------------------------------Suchen--------------------------------
 
+    /**
+     * Sucht nach einer bestimmten ID.
+     * 
+     * @param id Die ID welche gesucht wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public Optional<MangaReihe> findById(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("Die ID darf nicht null sein");
@@ -316,6 +355,12 @@ public class MangaReiheService {
         return mangaReiheRepository.findById(id);
     }
 
+    /**
+     * Sucht nach einem bestimmten Index.
+     * 
+     * @param mangaIndex Der Index welche gesucht wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findByMangaIndex(Integer mangaIndex) {
         if (mangaIndex == null) {
             throw new IllegalArgumentException("Der mangaIndex darf nicht null sein");
@@ -323,6 +368,12 @@ public class MangaReiheService {
         return mangaReiheRepository.findByMangaIndex(mangaIndex);
     }
 
+    /**
+     * Sucht nach einer bestimmten Titel.
+     * 
+     * @param titel Der Titel nach welchem gesucht wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findByTitel(String titel) {
         if (titel == null || titel.trim().isEmpty()) {
             throw new IllegalArgumentException("Der Titel darf nicht leer sein");
@@ -332,7 +383,12 @@ public class MangaReiheService {
 
     // ------------------------------Sortieren--------------------------------
 
-    // Methode zum Sortieren von MangaReihen nach einem bestimmten Attribut
+    /**
+     * Methode zum Sortieren von MangaReihen nach einem bestimmten Attribut
+     * 
+     * @param sortAttribute Das Attribut nach welchem sortiert wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findAllSorted(String sortAttribute) {
         if (sortAttribute == null || sortAttribute.trim().isEmpty()) {
             throw new IllegalArgumentException("Sortierattribut darf nicht leer sein");
@@ -340,8 +396,14 @@ public class MangaReiheService {
         return mangaReiheRepository.findAll(Sort.by(sortAttribute));
     }
 
-    // Methode zum Sortieren von MangaReihen nach einem bestimmten Attribut und
-    // Richtung
+    /**
+     * Methode zum Sortieren von MangaReihen nach einem bestimmten Attribut und
+     * Richtung
+     * 
+     * @param sortAttribute Das Attribut nach welchem sortiert wird.
+     * @param direction     Ob absteigend oder aufsteigend sortiert wird.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
     public List<MangaReihe> findAllSorted(String sortAttribute, Sort.Direction direction) {
         if (sortAttribute == null || sortAttribute.trim().isEmpty()) {
             throw new IllegalArgumentException("Sortierattribut darf nicht leer sein");
