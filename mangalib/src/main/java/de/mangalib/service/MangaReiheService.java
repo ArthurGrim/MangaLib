@@ -253,7 +253,34 @@ public class MangaReiheService {
         });
     }
 
-    // Weitere Methoden können hier hinzugefügt werden, um spezifische
-    // Geschäftslogik zu implementieren
-    // Zum Beispiel: Erstellen, Aktualisieren, Löschen von MangaReihe-Objekten
+    // Filtert MangaReihen nach Status
+    public List<MangaReihe> findByStatus(Long statusId) {
+        return mangaReiheRepository.findByStatusId(statusId);
+    }
+
+    // Filtert MangaReihen nach Verlag
+    public List<MangaReihe> findByVerlag(Long verlagId) {
+        return mangaReiheRepository.findByVerlagId(verlagId);
+    }
+
+    // Filtert MangaReihen nach Typ
+    public List<MangaReihe> findByTyp(Long typId) {
+        return mangaReiheRepository.findByTypId(typId);
+    }
+
+    // Filtert MangaReihen nach Format
+    public List<MangaReihe> findByFormat(Long formatId) {
+        return mangaReiheRepository.findByFormatId(formatId);
+    }
+
+    // Methode zum Filtern nach Erstellungsjahr
+    public List<MangaReihe> findByErstelltAmYear(int jahr) {
+        return mangaReiheRepository.findByErstelltAmYear(jahr);
+    }
+
+    // Methode zum Filtern nach Erstellungsjahr und -monat
+    public List<MangaReihe> findByErstelltAmYearAndMonth(int jahr, int monat) {
+        return mangaReiheRepository.findByErstelltAmYearAndMonth(jahr, monat);
+    }
+
 }
