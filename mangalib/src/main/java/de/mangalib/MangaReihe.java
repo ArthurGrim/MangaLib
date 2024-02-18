@@ -21,7 +21,7 @@ public class MangaReihe {
     private Status statusID;
 
     @Column(name = "verlagID")
-    private Verlage verlagID;
+    private Verlag verlagID;
 
     @Column(name = "typID")
     private Typ typID;

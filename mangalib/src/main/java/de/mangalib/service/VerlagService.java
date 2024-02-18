@@ -1,6 +1,6 @@
 package de.mangalib.service;
 
-import de.mangalib.Verlage;
+import de.mangalib.Verlag;
 import de.mangalib.repository.VerlagRepository;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +19,7 @@ public class VerlagService {
     }
 
     // Eine Methode, um alle Verlag-Objekte aus der Datenbank abzurufen
-    public List<Verlage> findAll() {
+    public List<Verlag> findAll() {
         return verlageRepository.findAll();
     }
 
