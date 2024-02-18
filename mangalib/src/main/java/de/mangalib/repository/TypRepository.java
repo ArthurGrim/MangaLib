@@ -1,10 +1,11 @@
 package de.mangalib.repository;
 
-import de.mangalib.Formate;
+import de.mangalib.Typ;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FormateRepository extends JpaRepository<Formate, Long> {
+public interface TypRepository extends JpaRepository<Typ, Long> {
     // Benutzerdefinierte Methoden nach Bedarf
 }
+

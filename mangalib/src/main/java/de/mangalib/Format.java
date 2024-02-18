@@ -6,16 +6,15 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "typen")
+@Table(name = "formate")
 @Getter @Setter @NoArgsConstructor
-public class Typen {
+public class Format {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long typID;
+    private Long formatID;
 
     @Column(name = "bezeichnung")
     private String bezeichnung;
 
 }
-
