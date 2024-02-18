@@ -24,10 +24,10 @@ public class MangaReihe {
     private Verlage verlagID;
 
     @Column(name = "typID")
-    private Typen typID;
+    private Typ typID;
 
     @Column(name = "formatID")
-    private Formate formatID;
+    private Format formatID;
 
     @Column(name = "titel")
     private String titel;
