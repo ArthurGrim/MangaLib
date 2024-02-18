@@ -28,7 +28,8 @@ public class MangaReiheService {
     private final FormatRepository formatRepository;
 
     // Konstruktorbasierte Dependency Injection des MangaReiheRepository
-    public MangaReiheService(MangaReiheRepository mangaReiheRepository, StatusRepository statusRepository, FormatRepository formatRepository, TypRepository typRepository, VerlagRepository verlagRepository) {
+    public MangaReiheService(MangaReiheRepository mangaReiheRepository, StatusRepository statusRepository,
+            FormatRepository formatRepository, TypRepository typRepository, VerlagRepository verlagRepository) {
         this.mangaReiheRepository = mangaReiheRepository;
         this.statusRepository = statusRepository;
         this.verlagRepository = verlagRepository;
@@ -52,6 +53,102 @@ public class MangaReiheService {
             throw new IllegalArgumentException("MangaReihe darf nicht null sein");
         }
         return mangaReiheRepository.save(mangaReihe);
+    }
+
+    /**
+     * Aktualisiert den mangaIndex einer MangaReihe.
+     * 
+     * @param mangaReiheId    Die ID der MangaReihe, die aktualisiert werden soll.
+     * @param neuerMangaIndex Der neue mangaIndex für die MangaReihe.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
+    public Optional<MangaReihe> updateMangaReiheMangaIndex(Long mangaReiheId, Integer neuerMangaIndex) {
+        if (mangaReiheId == null || neuerMangaIndex == null) {
+            throw new IllegalArgumentException("ID und mangaIndex dürfen nicht null sein");
+        }
+        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
+            mangaReihe.setMangaIndex(neuerMangaIndex);
+            return mangaReiheRepository.save(mangaReihe);
+        });
+    }
+
+    /**
+     * Aktualisiert den Status einer MangaReihe.
+     * 
+     * @param mangaReiheId Die ID der MangaReihe, die aktualisiert werden soll.
+     * @param statusId     Die ID des neuen Status.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
+    public Optional<MangaReihe> updateMangaReiheStatus(Long mangaReiheId, Long statusId) {
+        if (mangaReiheId == null || statusId == null) {
+            throw new IllegalArgumentException("ID und Status-ID dürfen nicht null sein");
+        }
+        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
+            Status status = statusRepository.findById(statusId)
+                    .orElseThrow(() -> new IllegalArgumentException("Status mit ID " + statusId + " nicht gefunden"));
+            mangaReihe.setStatusID(status);
+            return mangaReiheRepository.save(mangaReihe);
+        });
+    }
+
+    /**
+     * Aktualisiert den Verlag einer MangaReihe.
+     * Nur um die Option zu haben. Der Verlag sollte sich eigentlich nicht ändern
+     * 
+     * @param mangaReiheId Die ID der MangaReihe, die aktualisiert werden soll.
+     * @param verlagId     Die ID des neuen Verlags.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
+    public Optional<MangaReihe> updateMangaReiheVerlag(Long mangaReiheId, Long verlagId) {
+        if (mangaReiheId == null || verlagId == null) {
+            throw new IllegalArgumentException("ID und Verlag-ID dürfen nicht null sein");
+        }
+        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
+            Verlag verlag = verlagRepository.findById(verlagId)
+                    .orElseThrow(() -> new IllegalArgumentException("Verlag mit ID " + verlagId + " nicht gefunden"));
+            mangaReihe.setVerlagID(verlag);
+            return mangaReiheRepository.save(mangaReihe);
+        });
+    }
+
+    /**
+     * Aktualisiert des Typs einer MangaReihe.
+     * Nur um die Option zu haben. Der Typ sollte sich eigentlich nicht ändern
+     * 
+     * @param mangaReiheId Die ID der MangaReihe, die aktualisiert werden soll.
+     * @param typId        Die ID des neuen Typs.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
+    public Optional<MangaReihe> updateMangaReiheTyp(Long mangaReiheId, Long typId) {
+        if (mangaReiheId == null || typId == null) {
+            throw new IllegalArgumentException("ID und Typ-ID dürfen nicht null sein");
+        }
+        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
+            Typ typ = typRepository.findById(typId)
+                    .orElseThrow(() -> new IllegalArgumentException("Typ mit ID " + typId + " nicht gefunden"));
+            mangaReihe.setTypID(typ);
+            return mangaReiheRepository.save(mangaReihe);
+        });
+    }
+
+    /**
+     * Aktualisiert des Formats einer MangaReihe.
+     * Nur um die Option zu haben. Das Format sollte sich eigentlich nicht ändern
+     * 
+     * @param mangaReiheId Die ID der MangaReihe, die aktualisiert werden soll.
+     * @param formatId     Die ID des neuen Formats.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
+    public Optional<MangaReihe> updateMangaReiheFormat(Long mangaReiheId, Long formatId) {
+        if (mangaReiheId == null || formatId == null) {
+            throw new IllegalArgumentException("ID und Format-ID dürfen nicht null sein");
+        }
+        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
+            Format format = formatRepository.findById(formatId)
+                    .orElseThrow(() -> new IllegalArgumentException("Format mit ID " + formatId + " nicht gefunden"));
+            mangaReihe.setFormatID(format);
+            return mangaReiheRepository.save(mangaReihe);
+        });
     }
 
     /**
@@ -152,85 +249,6 @@ public class MangaReiheService {
         }
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
             mangaReihe.setIstVergriffen(istVergriffen);
-            return mangaReiheRepository.save(mangaReihe);
-        });
-    }
-
-    /**
-     * Aktualisiert den Status einer MangaReihe.
-     * 
-     * @param mangaReiheId  Die ID der MangaReihe, die aktualisiert werden soll.
-     * @param statusId Die ID des neuen Status.
-     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
-     */
-    public Optional<MangaReihe> updateMangaReiheStatus(Long mangaReiheId, Long statusId) {
-        if (mangaReiheId == null || statusId == null) {
-            throw new IllegalArgumentException("ID und Status-ID dürfen nicht null sein");
-        }
-        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
-            Status status = statusRepository.findById(statusId)
-                    .orElseThrow(() -> new IllegalArgumentException("Status mit ID " + statusId + " nicht gefunden"));
-            mangaReihe.setStatusID(status);
-            return mangaReiheRepository.save(mangaReihe);
-        });
-    }
-
-    /**
-     * Aktualisiert den Verlag einer MangaReihe.
-     * Nur um die Option zu haben. Der Verlag sollte sich eigentlich nicht ändern
-     * 
-     * @param mangaReiheId  Die ID der MangaReihe, die aktualisiert werden soll.
-     * @param verlagId Die ID des neuen Verlags.
-     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
-     */
-    public Optional<MangaReihe> updateMangaReiheVerlag(Long mangaReiheId, Long verlagId) {
-        if (mangaReiheId == null || verlagId == null) {
-            throw new IllegalArgumentException("ID und Verlag-ID dürfen nicht null sein");
-        }
-        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
-            Verlag verlag = verlagRepository.findById(verlagId)
-                    .orElseThrow(() -> new IllegalArgumentException("Verlag mit ID " + verlagId + " nicht gefunden"));
-            mangaReihe.setVerlagID(verlag);
-            return mangaReiheRepository.save(mangaReihe);
-        });
-    }
-
-    /**
-     * Aktualisiert des Typs einer MangaReihe.
-     * Nur um die Option zu haben. Der Typ sollte sich eigentlich nicht ändern
-     * 
-     * @param mangaReiheId  Die ID der MangaReihe, die aktualisiert werden soll.
-     * @param typId Die ID des neuen Typs.
-     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
-     */
-    public Optional<MangaReihe> updateMangaReiheTyp(Long mangaReiheId, Long typId) {
-        if (mangaReiheId == null || typId == null) {
-            throw new IllegalArgumentException("ID und Typ-ID dürfen nicht null sein");
-        }
-        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
-            Typ typ = typRepository.findById(typId)
-                    .orElseThrow(() -> new IllegalArgumentException("Typ mit ID " + typId + " nicht gefunden"));
-            mangaReihe.setTypID(typ);
-            return mangaReiheRepository.save(mangaReihe);
-        });
-    }
-
-    /**
-     * Aktualisiert des Typs einer MangaReihe.
-     * Nur um die Option zu haben. Das Format sollte sich eigentlich nicht ändern
-     * 
-     * @param mangaReiheId  Die ID der MangaReihe, die aktualisiert werden soll.
-     * @param formatId Die ID des neuen Formats.
-     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
-     */
-    public Optional<MangaReihe> updateMangaReiheFormat(Long mangaReiheId, Long formatId) {
-        if (mangaReiheId == null || formatId == null) {
-            throw new IllegalArgumentException("ID und Format-ID dürfen nicht null sein");
-        }
-        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
-            Format format = formatRepository.findById(formatId)
-                    .orElseThrow(() -> new IllegalArgumentException("Format mit ID " + formatId + " nicht gefunden"));
-            mangaReihe.setFormatID(format);
             return mangaReiheRepository.save(mangaReihe);
         });
     }
