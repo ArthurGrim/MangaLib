@@ -73,7 +73,4 @@ public class VerlagService {
         return verlagRepository.findById(verlagId);
     }
 
-    // Weitere Methoden können hier hinzugefügt werden, um spezifische
-    // Geschäftslogik zu implementieren
-    // Zum Beispiel: Erstellen, Aktualisieren, Löschen von Verlag-Objekten
 }
