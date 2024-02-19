@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "mangareihe")
-@Getter @Setter @NoArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
 public class MangaReihe {
 
     @Id
@@ -17,17 +19,21 @@ public class MangaReihe {
     @Column(name = "mangaIndex")
     private Integer mangaIndex;
 
-    @Column(name = "statusID")
-    private Status statusID;
+    @ManyToOne
+    @JoinColumn(name = "statusID", referencedColumnName = "statusID")
+    private Status status;
 
-    @Column(name = "verlagID")
-    private Verlag verlagID;
+    @ManyToOne
+    @JoinColumn(name = "verlagID", referencedColumnName = "verlagID")
+    private Verlag verlag;
 
-    @Column(name = "typID")
-    private Typ typID;
+    @ManyToOne
+    @JoinColumn(name = "typID", referencedColumnName = "typID")
+    private Typ typ;
 
-    @Column(name = "formatID")
-    private Format formatID;
+    @ManyToOne
+    @JoinColumn(name = "formatID", referencedColumnName = "formatID")
+    private Format format;
 
     @Column(name = "titel")
     private String titel;
@@ -54,5 +60,3 @@ public class MangaReihe {
     private Boolean istVergriffen;
 
 }
-
-

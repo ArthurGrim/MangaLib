@@ -1,4 +1,4 @@
-package de.mvp.mangalib;
+package de.mangalib;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
