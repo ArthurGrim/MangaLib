@@ -1,3 +1,4 @@
+Use mangalib;
 -- Inserts für Verlage
 INSERT INTO Verlage (name) VALUES ('altraverse');
 INSERT INTO Verlage (name) VALUES ('C LINES');

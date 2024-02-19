@@ -89,7 +89,7 @@ public class MangaReiheService {
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
             Status status = statusRepository.findById(statusId)
                     .orElseThrow(() -> new IllegalArgumentException("Status mit ID " + statusId + " nicht gefunden"));
-            mangaReihe.setStatusID(status);
+            mangaReihe.setStatus(status);
             return mangaReiheRepository.save(mangaReihe);
         });
     }
@@ -109,7 +109,7 @@ public class MangaReiheService {
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
             Verlag verlag = verlagRepository.findById(verlagId)
                     .orElseThrow(() -> new IllegalArgumentException("Verlag mit ID " + verlagId + " nicht gefunden"));
-            mangaReihe.setVerlagID(verlag);
+            mangaReihe.setVerlag(verlag);
             return mangaReiheRepository.save(mangaReihe);
         });
     }
@@ -129,7 +129,7 @@ public class MangaReiheService {
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
             Typ typ = typRepository.findById(typId)
                     .orElseThrow(() -> new IllegalArgumentException("Typ mit ID " + typId + " nicht gefunden"));
-            mangaReihe.setTypID(typ);
+            mangaReihe.setTyp(typ);
             return mangaReiheRepository.save(mangaReihe);
         });
     }
@@ -149,7 +149,7 @@ public class MangaReiheService {
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
             Format format = formatRepository.findById(formatId)
                     .orElseThrow(() -> new IllegalArgumentException("Format mit ID " + formatId + " nicht gefunden"));
-            mangaReihe.setFormatID(format);
+            mangaReihe.setFormat(format);
             return mangaReiheRepository.save(mangaReihe);
         });
     }
@@ -262,52 +262,92 @@ public class MangaReiheService {
      * Filtert MangaReihen nach Status.
      * 
      * @param statusId Die ID des Status nach welcher gefiltert wird.
-     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     * @return Eine Liste von MangaReihen, die dem gegebenen Status entsprechen.
      */
     public List<MangaReihe> findByStatus(Long statusId) {
         if (statusId == null) {
             throw new IllegalArgumentException("Status-ID darf nicht null sein");
         }
-        return mangaReiheRepository.findByStatusId(statusId);
+
+        // Hole das Status-Objekt anhand der ID
+        Optional<Status> status = statusRepository.findById(statusId);
+
+        // Überprüfe, ob der Status vorhanden ist
+        if (!status.isPresent()) {
+            throw new IllegalArgumentException("Status mit der ID " + statusId + " existiert nicht");
+        }
+
+        // Verwende das Status-Objekt, um die MangaReihen zu filtern
+        return mangaReiheRepository.findByStatus(status.get());
     }
 
     /**
      * Filtert MangaReihen nach Verlag.
      * 
      * @param verlagId Die ID des Verlags nach welcher gefiltert wird.
-     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     * @return Eine Liste von MangaReihen, die dem gegebenen Verlag entsprechen.
      */
     public List<MangaReihe> findByVerlag(Long verlagId) {
         if (verlagId == null) {
             throw new IllegalArgumentException("Verlag-ID darf nicht null sein");
         }
-        return mangaReiheRepository.findByVerlagId(verlagId);
+
+        // Hole das Verlag-Objekt anhand der ID
+        Optional<Verlag> verlag = verlagRepository.findById(verlagId);
+
+        // Überprüfe, ob der Verlag vorhanden ist
+        if (!verlag.isPresent()) {
+            throw new IllegalArgumentException("Verlag mit der ID " + verlagId + " existiert nicht");
+        }
+
+        // Verwende das Verlag-Objekt, um die MangaReihen zu filtern
+        return mangaReiheRepository.findByVerlag(verlag.get());
     }
 
     /**
      * Filtert MangaReihen nach Typ.
      * 
      * @param typId Die ID des Typs nach welcher gefiltert wird.
-     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     * @return Eine Liste von MangaReihen, die dem gegebenen Typ entsprechen.
      */
     public List<MangaReihe> findByTyp(Long typId) {
         if (typId == null) {
             throw new IllegalArgumentException("Typ-ID darf nicht null sein");
         }
-        return mangaReiheRepository.findByTypId(typId);
+
+        // Hole das Typ-Objekt anhand der ID
+        Optional<Typ> typ = typRepository.findById(typId);
+
+        // Überprüfe, ob der Typ vorhanden ist
+        if (!typ.isPresent()) {
+            throw new IllegalArgumentException("Typ mit der ID " + typId + " existiert nicht");
+        }
+
+        // Verwende das Typ-Objekt, um die MangaReihen zu filtern
+        return mangaReiheRepository.findByTyp(typ.get());
     }
 
     /**
      * Filtert MangaReihen nach Format.
      * 
-     * @param formatId Die ID des Typs nach welcher gefiltert wird.
-     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     * @param formatId Die ID des Formats nach welcher gefiltert wird.
+     * @return Eine Liste von MangaReihen, die dem gegebenen Format entsprechen.
      */
     public List<MangaReihe> findByFormat(Long formatId) {
         if (formatId == null) {
             throw new IllegalArgumentException("Format-ID darf nicht null sein");
         }
-        return mangaReiheRepository.findByFormatId(formatId);
+
+        // Hole das Format-Objekt anhand der ID
+        Optional<Format> format = formatRepository.findById(formatId);
+
+        // Überprüfe, ob das Format vorhanden ist
+        if (!format.isPresent()) {
+            throw new IllegalArgumentException("Format mit der ID " + formatId + " existiert nicht");
+        }
+
+        // Verwende das Format-Objekt, um die MangaReihen zu filtern
+        return mangaReiheRepository.findByFormat(format.get());
     }
 
     /**
