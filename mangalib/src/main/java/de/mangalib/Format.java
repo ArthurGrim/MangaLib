@@ -1,5 +1,7 @@
 package de.mangalib;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,9 +14,14 @@ public class Format {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long formatID;
+    @Column(name = "format_id")
+    private Long formatId;
 
     @Column(name = "bezeichnung")
     private String bezeichnung;
 
+    @OneToMany(mappedBy = "format", cascade = CascadeType.ALL)
+    private List<MangaReihe> mangaReihen;
+
 }
+

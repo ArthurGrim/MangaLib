@@ -1,5 +1,7 @@
 package de.mangalib;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,9 +14,13 @@ public class Status {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long statusID;
+    @Column(name = "status_id")
+    private Long statusId;
 
     @Column(name = "beschreibung")
     private String beschreibung;
+
+    @OneToMany(mappedBy = "status", cascade = CascadeType.ALL)
+    private List<MangaReihe> mangaReihen;
 
 }

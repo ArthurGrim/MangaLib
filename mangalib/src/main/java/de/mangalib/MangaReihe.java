@@ -16,47 +16,47 @@ public class MangaReihe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "mangaIndex")
+    @Column(name = "manga_index")
     private Integer mangaIndex;
 
     @ManyToOne
-    @JoinColumn(name = "statusID", referencedColumnName = "statusID")
+    @JoinColumn(name = "status_id", referencedColumnName = "status_id")
     private Status status;
 
     @ManyToOne
-    @JoinColumn(name = "verlagID", referencedColumnName = "verlagID")
+    @JoinColumn(name = "verlag_id", referencedColumnName = "verlag_id")
     private Verlag verlag;
 
     @ManyToOne
-    @JoinColumn(name = "typID", referencedColumnName = "typID")
+    @JoinColumn(name = "typ_id", referencedColumnName = "typ_id")
     private Typ typ;
 
     @ManyToOne
-    @JoinColumn(name = "formatID", referencedColumnName = "formatID")
+    @JoinColumn(name = "format_id", referencedColumnName = "format_id")
     private Format format;
 
     @Column(name = "titel")
     private String titel;
 
-    @Column(name = "anzahlBaende")
+    @Column(name = "anzahl_baende")
     private Integer anzahlBaende;
 
-    @Column(name = "preisProBand")
+    @Column(name = "preis_pro_band")
     private Double preisProBand;
 
     @Column(name = "gesamtpreis")
     private Double gesamtpreis;
 
-    @Column(name = "erstelltAm")
+    @Column(name = "erstellt_am")
     private java.sql.Timestamp erstelltAm;
 
-    @Column(name = "aktualisiertAm")
+    @Column(name = "aktualisiert_am")
     private java.sql.Timestamp aktualisiertAm;
 
-    @Column(name = "istEbayPreis")
+    @Column(name = "ist_ebay_preis")
     private Boolean istEbayPreis;
 
-    @Column(name = "istVergriffen")
+    @Column(name = "ist_vergriffen")
     private Boolean istVergriffen;
 
 }
