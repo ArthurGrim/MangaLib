@@ -4,8 +4,7 @@ import de.mangalib.entity.Format;
 import de.mangalib.repository.FormatRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 // Markiert die Klasse als Service-Komponente für Spring
 @Service
@@ -22,6 +21,13 @@ public class FormatService {
     // Eine Methode, um alle Format-Objekte aus der Datenbank abzurufen
     public List<Format> findAll() {
         return formatRepository.findAll();
+    }
+
+    // Eine Methode, um alle Format-Objekte aus der Datenbank geordnet nach ID abzurufen
+    public List<Format> findAllSortById() {
+        List<Format> result = formatRepository.findAll();
+        result.sort(Comparator.comparing(Format::getFormatId));
+        return result;
     }
 
     /**

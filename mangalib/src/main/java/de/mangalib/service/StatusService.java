@@ -4,8 +4,7 @@ import de.mangalib.entity.Status;
 import de.mangalib.repository.StatusRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 // Markiert die Klasse als Service-Komponente für Spring
 @Service
@@ -22,6 +21,13 @@ public class StatusService {
     // Eine Methode, um alle Status-Objekte aus der Datenbank abzurufen
     public List<Status> findAll() {
         return statusRepository.findAll();
+    }
+
+    // Eine Methode, um alle Status-Objekte aus der Datenbank geordnet nach ID abzurufen
+    public List<Status> findAllSortById() {
+        List<Status> result = statusRepository.findAll();
+        result.sort(Comparator.comparing(Status::getStatusId));
+        return result;
     }
 
     /**

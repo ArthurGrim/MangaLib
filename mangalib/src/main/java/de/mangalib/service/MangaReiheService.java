@@ -14,8 +14,7 @@ import de.mangalib.repository.FormatRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 // Markiert die Klasse als Service-Komponente für Spring
 @Service
@@ -41,6 +40,13 @@ public class MangaReiheService {
     // Eine Methode, um alle MangaReihe-Objekte aus der Datenbank abzurufen
     public List<MangaReihe> findAll() {
         return mangaReiheRepository.findAll();
+    }
+
+    // Eine Methode, um alle MangaReihe-Objekte aus der Datenbank geordnet nach ID abzurufen
+    public List<MangaReihe> findAllSortById() {
+        List<MangaReihe> result = mangaReiheRepository.findAll();
+        result.sort(Comparator.comparing(MangaReihe::getId));
+        return result;
     }
 
     /**
