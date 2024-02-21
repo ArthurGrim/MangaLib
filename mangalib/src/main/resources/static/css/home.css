@@ -1,166 +1,183 @@
+/* Grundlegende Stile für den gesamten Body der Webseite */
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #212122;
+  font-family: Arial, sans-serif; /* Schriftart */
+  margin: 0; /* Kein Außenabstand */
+  padding: 0; /* Kein Innenabstand */
+  background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
 }
 
+/* Stile für die Kopfzeile */
 .header {
-  background-color: #161516;
-  color: white;
-  padding: 11px 0;
+  background-color: #161516; /* Dunkelgraue Hintergrundfarbe */
+  color: white; /* Weiße Textfarbe */
+  padding: 11px 0; /* Vertikaler Innenabstand */
 }
 
+/* Innerer Container der Kopfzeile für Layout und Ausrichtung */
 .header_headerInner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  /* Weitere Stile nach Bedarf */
+  display: flex; /* Flexibles Box-Layout */
+  justify-content: space-between; /* Elemente gleichmäßig verteilen */
+  align-items: center; /* Vertikale Ausrichtung der Elemente */
 }
 
+/* Container für das Menü in der Kopfzeile */
 .header_menuContainer {
-  display: flex;
-  justify-content: center;
-  flex-grow: 1; /* Ermöglicht es dem Container, den verfügbaren Platz zu nutzen */
+  display: flex; /* Flexibles Box-Layout */
+  justify-content: center; /* Zentrierte Ausrichtung */
+  flex-grow: 1; /* Nimmt verfügbaren Platz ein */
 }
 
+/* Stile für das Hauptmenü */
 .main-menu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  justify-content: center;
+  list-style: none; /* Keine Listenpunkte */
+  padding: 0; /* Kein Innenabstand */
+  margin: 0; /* Kein Außenabstand */
+  display: flex; /* Flexibles Box-Layout */
+  justify-content: center; /* Zentrierte Ausrichtung */
 }
 
+/* Stile für einzelne Menüpunkte */
 .main-menu li {
-  display: inline;
-  margin-right: 20px;
+  display: inline; /* Inline-Anzeige */
+  margin-right: 20px; /* Rechter Außenabstand */
 }
 
+/* Stile für Links im Menü */
 .main-menu a {
-  color: white;
-  text-decoration: none;
-  font-weight: bold;
+  color: white; /* Weiße Textfarbe */
+  text-decoration: none; /* Keine Unterstreichung */
+  font-weight: bold; /* Fette Schrift */
 }
 
+/* Stile für die Suchleiste */
 .searchbar {
-  display: flex;
-  align-items: center;
-  background-color: #212122; /* Hintergrundfarbe des Suchfeldes */
-  margin-right: 85px; /* Abstand zum rechten Rand */
+  display: flex; /* Flexibles Box-Layout */
+  align-items: center; /* Vertikale Ausrichtung der Elemente */
+  background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
+  margin-right: 85px; /* Rechter Außenabstand */
 }
 
+/* Stile für das Textfeld in der Suchleiste */
 .searchbar input[type="text"] {
-  outline: none;
-  flex-grow: 1;
-  padding: 5px 10px;
-  padding-right: 10px;
-  border: none;
-  border-radius: 0; /* Macht das Suchfeld viereckig */
-  background-color: #212122; /* Hintergrundfarbe des Suchfeldes */
-  color: #828282; /* Schriftfarbe */
+  outline: none; /* Kein Umriss bei Fokus */
+  flex-grow: 1; /* Nimmt verfügbaren Platz ein */
+  padding: 5px 10px; /* Innenabstand */
+  border: none; /* Kein Rand */
+  border-radius: 0; /* Eckige Form */
+  background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
+  color: #828282; /* Graue Schriftfarbe */
 }
 
+/* Stile für den Suchbutton */
 .searchbar button {
-  background: #212122;
-  border: none;
-  padding: 5px;
-  cursor: pointer;
+  background: #212122; /* Dunkelgraue Hintergrundfarbe */
+  border: none; /* Kein Rand */
+  padding: 5px; /* Innenabstand */
+  cursor: pointer; /* Mauszeiger als Zeiger */
 }
 
+/* Stile für SVG-Icons im Suchbutton */
 .searchbar button svg {
-  height: 1.2em; /* Größe des Icons anpassen */
-  width: 1.5em;
-  fill: #828282; /* Farbe des Icons */
+  height: 1.2em; /* Höhe des Icons */
+  width: 1.5em; /* Breite des Icons */
+  fill: #828282; /* Graue Farbe des Icons */
 }
 
+/* Stile für die Seitenleiste */
 .sidebar {
-  background-color: #161516;
-  color: white;
-  padding: 10px;
-  margin-top: 130px; /* Erhöhter Abstand zum Header */
-  margin-left: 20px; /* Abstand zum linken Rand */
-  width: 230px; /* Verringerte Breite des Panels */
-  position: absolute; /* Positionierung relativ zum nächsten positionierten Element */
-  top: 0;
-  left: 0;
+  background-color: #161516; /* Dunkelgraue Hintergrundfarbe */
+  color: white; /* Weiße Textfarbe */
+  padding: 10px; /* Innenabstand */
+  margin-top: 130px; /* Abstand nach oben */
+  margin-left: 20px; /* Abstand nach links */
+  width: 230px; /* Breite der Seitenleiste */
+  position: absolute; /* Absolute Positionierung */
+  top: 0; /* Oben im Container */
+  left: 0; /* Links im Container */
 }
 
+/* Stile für den Suchcontainer */
 .search-container {
-  display: flex;
-  flex-direction: column;
+  display: flex; /* Flexibles Box-Layout */
+  flex-direction: column; /* Vertikale Ausrichtung */
 }
 
+/* Stile für die Überschrift im Suchcontainer */
 .search-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  margin-left: 5px;
-  color: #cacaca;
+  display: flex; /* Flexibles Box-Layout */
+  justify-content: space-between; /* Elemente gleichmäßig verteilen */
+  align-items: center; /* Vertikale Ausrichtung der Elemente */
+  margin-bottom: 10px; /* Abstand nach unten */
+  margin-left: 5px; /* Abstand nach links */
+  color: #cacaca; /* Hellgraue Textfarbe */
 }
 
-
+/* Stile für den Hauptfilterbereich */
 .filter-main {
-  display: flex;
-  flex-direction: column;
+  display: flex; /* Flexibles Box-Layout */
+  flex-direction: column; /* Vertikale Ausrichtung */
 }
 
+/* Stile für das Datumsauswahl-Panel */
 .date-panel {
-  background-color: #1B1A1B; /* Hintergrundfarbe des Panels */
-  padding: 10px; /* Innerer Abstand des Panels */
-  margin: 10px 0; /* Äußerer Abstand des Panels */
-  margin-top: -1px;
+  background-color: #1B1A1B; /* Dunkelgraue Hintergrundfarbe */
+  padding: 10px; /* Innenabstand */
+  margin: 10px 0; /* Vertikaler Außenabstand */
+  margin-top: -1px; /* Leichter negativer Abstand nach oben */
 }
 
+/* Stile für die Select-Elemente im Datumsauswahl-Panel */
 .date-panel .filter-select {
-  display: block; /* Jedes Select-Element nimmt die volle Breite ein */
-  margin-bottom: 8px; /* Abstand zwischen den Select-Elementen */
-  /* Weitere Stile für die Select-Elemente */
+  display: block; /* Blockanzeige */
+  margin-bottom: 8px; /* Abstand nach unten */
 }
 
-/* Optional: Entfernen Sie den unteren Rand des letzten Select-Elements im Panel */
+/* Entfernt den unteren Rand des letzten Select-Elements im Panel */
 .date-panel .filter-select:last-child {
   margin-bottom: 0;
 }
 
+/* Stile für einzelne Filterbereiche */
 .filter-section {
-  margin-bottom: 10px;
+  margin-bottom: 10px; /* Abstand nach unten */
 }
 
+/* Stile für Filter-Labels */
 .filter-label {
-  display: inline-block;  
-  background-color: #274272; /* Dunkelblau als Hintergrundfarbe */
-  color: #f8f8f8; /* Hellgrau als Textfarbe */
-  padding: 6px 5px; /* Innerer Abstand */
-  font-size: 10px; /* Schriftgröße */
-  font-weight: bold; /* Schriftstärke */
-  position: relative; /* Für die Positionierung des Dreieck-Icons */
-  cursor: pointer; /* Zeiger-Cursor, um Interaktivität anzuzeigen */
+  display: inline-block; /* Inline-Blockanzeige */
+  background-color: #274272; /* Dunkelblaue Hintergrundfarbe */
+  color: #f8f8f8; /* Hellgraue Textfarbe */
+  padding: 6px 5px; /* Innenabstand */
+  font-size: 10px; /* Kleine Schriftgröße */
+  font-weight: bold; /* Fette Schrift */
+  position: relative; /* Relative Positionierung für das Dreieck-Icon */
+  cursor: pointer; /* Mauszeiger als Zeiger */
   user-select: none; /* Verhindert das Auswählen des Textes */
-  margin-bottom: -5px; /* Abstand nach unten zum nächsten Element */
-  margin-left: 5px;
-  pointer-events: none;
+  margin-bottom: -5px; /* Leichter negativer Abstand nach unten */
+  margin-left: 5px; /* Abstand nach links */
+  pointer-events: none; /* Keine Mausereignisse */
 }
 
+/* Stile für die Select-Elemente */
 .filter-select {
-  width: 100%;
-  padding: 5px;
-  border: none;
-  background-color: #212122;
-  color: #f8f8f8;
+  width: 100%; /* Volle Breite */
+  padding: 5px; /* Innenabstand */
+  border: none; /* Kein Rand */
+  background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
+  color: #f8f8f8; /* Hellgraue Textfarbe */
 }
 
+/* Stile für den Zurücksetzen-Button */
 .search-reset {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
+  background: none; /* Kein Hintergrund */
+  border: none; /* Kein Rand */
+  color: white; /* Weiße Textfarbe */
+  cursor: pointer; /* Mauszeiger als Zeiger */
 }
 
-/* Stil für SVG-Icons */
+/* Stile für SVG-Icons im Zurücksetzen-Button */
 .search-reset svg {
-  fill: white;
-  width: 16px;
-  height: 16px;
+  fill: white; /* Weiße Farbe des Icons */
+  width: 16px; /* Breite des Icons */
+  height: 16px; /* Höhe des Icons */
 }
