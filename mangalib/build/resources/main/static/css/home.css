@@ -78,10 +78,9 @@ body {
   background-color: #161516;
   color: white;
   padding: 10px;
-  margin-top: 80px; /* Erhöhter Abstand zum Header */
+  margin-top: 130px; /* Erhöhter Abstand zum Header */
   margin-left: 20px; /* Abstand zum linken Rand */
-  width: 180px; /* Verringerte Breite des Panels */
-  border-radius: 5px;
+  width: 230px; /* Verringerte Breite des Panels */
   position: absolute; /* Positionierung relativ zum nächsten positionierten Element */
   top: 0;
   left: 0;
@@ -97,6 +96,7 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  margin-left: 5px;
   color: #cacaca;
 }
 
@@ -110,7 +110,7 @@ body {
   background-color: #1B1A1B; /* Hintergrundfarbe des Panels */
   padding: 10px; /* Innerer Abstand des Panels */
   margin: 10px 0; /* Äußerer Abstand des Panels */
-  margin-top: -2px;
+  margin-top: -1px;
 }
 
 .date-panel .filter-select {
@@ -132,13 +132,13 @@ body {
   display: inline-block;  
   background-color: #274272; /* Dunkelblau als Hintergrundfarbe */
   color: #f8f8f8; /* Hellgrau als Textfarbe */
-  padding: 4px 5px; /* Innerer Abstand */
-  font-size: 8px; /* Schriftgröße */
+  padding: 6px 5px; /* Innerer Abstand */
+  font-size: 10px; /* Schriftgröße */
   font-weight: bold; /* Schriftstärke */
   position: relative; /* Für die Positionierung des Dreieck-Icons */
   cursor: pointer; /* Zeiger-Cursor, um Interaktivität anzuzeigen */
   user-select: none; /* Verhindert das Auswählen des Textes */
-  margin-bottom: -6px; /* Abstand nach unten zum nächsten Element */
+  margin-bottom: -5px; /* Abstand nach unten zum nächsten Element */
   margin-left: 5px;
   pointer-events: none;
 }
@@ -148,7 +148,7 @@ body {
   padding: 5px;
   border: none;
   background-color: #212122;
-  color: #828282;
+  color: #f8f8f8;
 }
 
 .search-reset {

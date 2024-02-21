@@ -29,7 +29,7 @@ public class MyController {
     @Autowired
     private FormatService formatService;
 
-    @GetMapping("/meineSeite")
+    @GetMapping("/home")
     public String meineSeite(Model model) {
         List<Status> alleStatus = statusService.findAll();
         List<Verlag> alleVerlage = verlagService.findAll();
