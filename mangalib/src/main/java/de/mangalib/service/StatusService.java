@@ -1,6 +1,6 @@
 package de.mangalib.service;
 
-import de.mangalib.Status;
+import de.mangalib.entity.Status;
 import de.mangalib.repository.StatusRepository;
 import org.springframework.stereotype.Service;
 

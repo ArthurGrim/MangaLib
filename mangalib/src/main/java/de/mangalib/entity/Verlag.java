@@ -1,4 +1,4 @@
-package de.mangalib;
+package de.mangalib.entity;
 
 import java.util.List;
 
@@ -8,19 +8,19 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "status")
+@Table(name = "verlage")
 @Getter @Setter @NoArgsConstructor
-public class Status {
+public class Verlag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "status_id")
-    private Long statusId;
+    @Column(name = "verlag_id")
+    private Long verlagId;
 
-    @Column(name = "beschreibung")
-    private String beschreibung;
+    @Column(name = "name")
+    private String name;
 
-    @OneToMany(mappedBy = "status", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "verlag", cascade = CascadeType.ALL)
     private List<MangaReihe> mangaReihen;
 
 }

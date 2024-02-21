@@ -7,6 +7,11 @@ import org.springframework.test.annotation.Rollback;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import de.mangalib.entity.Format;
+import de.mangalib.entity.MangaReihe;
+import de.mangalib.entity.Status;
+import de.mangalib.entity.Typ;
+import de.mangalib.entity.Verlag;
 import de.mangalib.service.FormatService;
 import de.mangalib.service.MangaReiheService;
 import de.mangalib.service.StatusService;

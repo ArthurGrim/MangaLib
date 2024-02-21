@@ -1,10 +1,10 @@
 package de.mangalib.repository;
 
-import de.mangalib.Format;
-import de.mangalib.MangaReihe;
-import de.mangalib.Status;
-import de.mangalib.Typ;
-import de.mangalib.Verlag;
+import de.mangalib.entity.Format;
+import de.mangalib.entity.MangaReihe;
+import de.mangalib.entity.Status;
+import de.mangalib.entity.Typ;
+import de.mangalib.entity.Verlag;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
