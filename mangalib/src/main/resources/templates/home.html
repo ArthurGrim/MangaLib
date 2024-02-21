@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>MangaLib</title>
-    <link rel="stylesheet" type="text/css" href="../static/css/home.css" />
+    <link rel="stylesheet" th:href="@{/css/home.css}" href="../static/css/home.css"/>
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
       rel="stylesheet"
@@ -137,7 +137,7 @@
                 <!-- Die Optionen über den Controler abrufen -->
                 <option
                   th:each="status : ${alleStatus}"
-                  th:value="${status.id}"
+                  th:value="${status.statusId}"
                   th:text="${status.beschreibung}"
                 >
                   Status
@@ -167,7 +167,7 @@
                 <!-- Die Optionen über den Controler abrufen -->
                 <option
                   th:each="verlag : ${alleVerlage}"
-                  th:value="${verlag.id}"
+                  th:value="${verlag.verlagId}"
                   th:text="${verlag.name}"
                 >
                   Verlag
@@ -197,7 +197,7 @@
                 <!-- Die Optionen über den Controler abrufen -->
                 <option
                   th:each="typ : ${alleTypen}"
-                  th:value="${typ.id}"
+                  th:value="${typ.typId}"
                   th:text="${typ.bezeichnung}"
                 >
                   Typ
@@ -227,7 +227,7 @@
                 <!-- Die Optionen über den Controler abrufen -->
                 <option
                   th:each="format : ${alleFormate}"
-                  th:value="${format.id}"
+                  th:value="${format.formatId}"
                   th:text="${format.bezeichnung}"
                 >
                   Format

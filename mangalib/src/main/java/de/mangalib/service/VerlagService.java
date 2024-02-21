@@ -4,8 +4,7 @@ import de.mangalib.entity.Verlag;
 import de.mangalib.repository.VerlagRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 // Markiert die Klasse als Service-Komponente für Spring
 @Service
@@ -22,6 +21,13 @@ public class VerlagService {
     // Eine Methode, um alle Verlag-Objekte aus der Datenbank abzurufen
     public List<Verlag> findAll() {
         return verlagRepository.findAll();
+    }
+
+    // Eine Methode, um alle Verlag-Objekte aus der Datenbank geordnet nach ID abzurufen
+    public List<Verlag> findAllSortById() {
+        List<Verlag> result = verlagRepository.findAll();
+        result.sort(Comparator.comparing(Verlag::getVerlagId));
+        return result;
     }
 
     /**

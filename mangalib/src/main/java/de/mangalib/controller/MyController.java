@@ -31,10 +31,10 @@ public class MyController {
 
     @GetMapping("/home")
     public String meineSeite(Model model) {
-        List<Status> alleStatus = statusService.findAll();
+        List<Status> alleStatus = statusService.findAllSortById();
         List<Verlag> alleVerlage = verlagService.findAll();
-        List<Typ> alleTypen = typService.findAll();
-        List<Format> alleFormate = formatService.findAll();
+        List<Typ> alleTypen = typService.findAllSortById();
+        List<Format> alleFormate = formatService.findAllSortById();
 
         model.addAttribute("alleStatus", alleStatus);
         model.addAttribute("alleVerlage", alleVerlage);

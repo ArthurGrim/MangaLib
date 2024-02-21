@@ -4,8 +4,7 @@ import de.mangalib.entity.Typ;
 import de.mangalib.repository.TypRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 // Markiert die Klasse als Service-Komponente für Spring
 @Service
@@ -23,6 +22,14 @@ public class TypService {
     public List<Typ> findAll() {
         return typRepository.findAll();
     }
+
+    // Eine Methode, um alle Typ-Objekte aus der Datenbank geordnet nach ID abzurufen
+    public List<Typ> findAllSortById() {
+        List<Typ> result = typRepository.findAll();
+        result.sort(Comparator.comparing(Typ::getTypId));
+        return result;
+    }
+
 
     /**
      * Fügt einen neuen Typ hinzu.
