@@ -1,6 +1,6 @@
 package de.mangalib.service;
 
-import de.mangalib.Typ;
+import de.mangalib.entity.Typ;
 import de.mangalib.repository.TypRepository;
 import org.springframework.stereotype.Service;
 

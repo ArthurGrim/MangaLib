@@ -1,4 +1,4 @@
-package de.mangalib;
+package de.mangalib.entity;
 
 import java.util.List;
 

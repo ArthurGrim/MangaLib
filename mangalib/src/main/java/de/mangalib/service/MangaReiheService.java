@@ -1,14 +1,14 @@
 package de.mangalib.service;
 
-import de.mangalib.MangaReihe;
 import de.mangalib.repository.MangaReiheRepository;
-import de.mangalib.Status;
 import de.mangalib.repository.StatusRepository;
-import de.mangalib.Verlag;
+import de.mangalib.entity.Format;
+import de.mangalib.entity.MangaReihe;
+import de.mangalib.entity.Status;
+import de.mangalib.entity.Typ;
+import de.mangalib.entity.Verlag;
 import de.mangalib.repository.VerlagRepository;
-import de.mangalib.Typ;
 import de.mangalib.repository.TypRepository;
-import de.mangalib.Format;
 import de.mangalib.repository.FormatRepository;
 
 import org.springframework.stereotype.Service;

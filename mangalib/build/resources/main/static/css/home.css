@@ -1,0 +1,166 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #212122;
+}
+
+.header {
+  background-color: #161516;
+  color: white;
+  padding: 11px 0;
+}
+
+.header_headerInner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* Weitere Stile nach Bedarf */
+}
+
+.header_menuContainer {
+  display: flex;
+  justify-content: center;
+  flex-grow: 1; /* Ermöglicht es dem Container, den verfügbaren Platz zu nutzen */
+}
+
+.main-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.main-menu li {
+  display: inline;
+  margin-right: 20px;
+}
+
+.main-menu a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.searchbar {
+  display: flex;
+  align-items: center;
+  background-color: #212122; /* Hintergrundfarbe des Suchfeldes */
+  margin-right: 85px; /* Abstand zum rechten Rand */
+}
+
+.searchbar input[type="text"] {
+  outline: none;
+  flex-grow: 1;
+  padding: 5px 10px;
+  padding-right: 10px;
+  border: none;
+  border-radius: 0; /* Macht das Suchfeld viereckig */
+  background-color: #212122; /* Hintergrundfarbe des Suchfeldes */
+  color: #828282; /* Schriftfarbe */
+}
+
+.searchbar button {
+  background: #212122;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.searchbar button svg {
+  height: 1.2em; /* Größe des Icons anpassen */
+  width: 1.5em;
+  fill: #828282; /* Farbe des Icons */
+}
+
+.sidebar {
+  background-color: #161516;
+  color: white;
+  padding: 10px;
+  margin-top: 80px; /* Erhöhter Abstand zum Header */
+  margin-left: 20px; /* Abstand zum linken Rand */
+  width: 180px; /* Verringerte Breite des Panels */
+  border-radius: 5px;
+  position: absolute; /* Positionierung relativ zum nächsten positionierten Element */
+  top: 0;
+  left: 0;
+}
+
+.search-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #cacaca;
+}
+
+
+.filter-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-panel {
+  background-color: #1B1A1B; /* Hintergrundfarbe des Panels */
+  padding: 10px; /* Innerer Abstand des Panels */
+  margin: 10px 0; /* Äußerer Abstand des Panels */
+  margin-top: -2px;
+}
+
+.date-panel .filter-select {
+  display: block; /* Jedes Select-Element nimmt die volle Breite ein */
+  margin-bottom: 8px; /* Abstand zwischen den Select-Elementen */
+  /* Weitere Stile für die Select-Elemente */
+}
+
+/* Optional: Entfernen Sie den unteren Rand des letzten Select-Elements im Panel */
+.date-panel .filter-select:last-child {
+  margin-bottom: 0;
+}
+
+.filter-section {
+  margin-bottom: 10px;
+}
+
+.filter-label {
+  display: inline-block;  
+  background-color: #274272; /* Dunkelblau als Hintergrundfarbe */
+  color: #f8f8f8; /* Hellgrau als Textfarbe */
+  padding: 4px 5px; /* Innerer Abstand */
+  font-size: 8px; /* Schriftgröße */
+  font-weight: bold; /* Schriftstärke */
+  position: relative; /* Für die Positionierung des Dreieck-Icons */
+  cursor: pointer; /* Zeiger-Cursor, um Interaktivität anzuzeigen */
+  user-select: none; /* Verhindert das Auswählen des Textes */
+  margin-bottom: -6px; /* Abstand nach unten zum nächsten Element */
+  margin-left: 5px;
+  pointer-events: none;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 5px;
+  border: none;
+  background-color: #212122;
+  color: #828282;
+}
+
+.search-reset {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+/* Stil für SVG-Icons */
+.search-reset svg {
+  fill: white;
+  width: 16px;
+  height: 16px;
+}

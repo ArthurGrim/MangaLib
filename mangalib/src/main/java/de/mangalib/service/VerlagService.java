@@ -1,6 +1,6 @@
 package de.mangalib.service;
 
-import de.mangalib.Verlag;
+import de.mangalib.entity.Verlag;
 import de.mangalib.repository.VerlagRepository;
 import org.springframework.stereotype.Service;
 

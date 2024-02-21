@@ -1,4 +1,4 @@
-package de.mangalib;
+package de.mangalib.entity;
 
 import java.util.List;
 
@@ -8,20 +8,19 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "formate")
+@Table(name = "status")
 @Getter @Setter @NoArgsConstructor
-public class Format {
+public class Status {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "format_id")
-    private Long formatId;
+    @Column(name = "status_id")
+    private Long statusId;
 
-    @Column(name = "bezeichnung")
-    private String bezeichnung;
+    @Column(name = "beschreibung")
+    private String beschreibung;
 
-    @OneToMany(mappedBy = "format", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "status", cascade = CascadeType.ALL)
     private List<MangaReihe> mangaReihen;
 
 }
-

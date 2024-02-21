@@ -1,6 +1,6 @@
 package de.mangalib.service;
 
-import de.mangalib.Format;
+import de.mangalib.entity.Format;
 import de.mangalib.repository.FormatRepository;
 import org.springframework.stereotype.Service;
 
