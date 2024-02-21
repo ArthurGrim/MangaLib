@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de_DE">
+<html lang="de_DE" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
     <title>MangaLib</title>
@@ -55,6 +55,7 @@
             </button>
           </div>
           <div class="filter-main">
+            <!-- Date Bereich -->
             <div class="filter-section">
               <label class="filter-label"
                 ><svg
@@ -72,9 +73,10 @@
                 </svg>
                 Datum</label
               >
+              <!-- Drop Down für Monat -->
               <div class="date-panel">
                 <select name="month" class="filter-select">
-                  <option hidden="" value="">Jahr</option>
+                  <option hidden="" value="">Monat</option>
                   <option value=""></option>
                   <option value="januar">Januar</option>
                   <option value="februar">Februar</option>
@@ -89,8 +91,9 @@
                   <option value="november">November</option>
                   <option value="dezember">Dezember</option>
                 </select>
+                <!-- Drop Down für Jahr -->
                 <select name="year" class="filter-select">
-                  <option hidden="" value="">Monat</option>
+                  <option hidden="" value="">Jahr</option>
                   <option value=""></option>
                   <option value="2018">2018</option>
                   <option value="2019">2019</option>
@@ -102,6 +105,7 @@
                 </select>
               </div>
             </div>
+            <!-- Drop Down für Sortierung -->
             <div class="filter-section">
               <label class="filter-label" for="sort"
                 ><svg
@@ -125,16 +129,22 @@
                 <option value="titel">Titel</option>
               </select>
             </div>
+            <!-- Drop Down für Status -->
             <div class="filter-section">
               <label class="filter-label" for="publisher"> Status</label>
               <select name="status" class="filter-select">
                 <option value="">Alle</option>
-                <option value="1">Vollständig</option>
-                <option value="2">Aktuell</option>
-                <option value="3">Unvollständig</option>
-                <option value="4">Verkauft</option>
+                <!-- Die Optionen über den Controler abrufen -->
+                <option
+                  th:each="status : ${alleStatus}"
+                  th:value="${status.id}"
+                  th:text="${status.beschreibung}"
+                >
+                  Status
+                </option>
               </select>
             </div>
+            <!-- Drop Down für Verlag -->
             <div class="filter-section">
               <label class="filter-label" for="publisher"
                 ><svg
@@ -153,9 +163,18 @@
                 Verlag</label
               >
               <select name="publisher" class="filter-select">
-                <!-- Verlage als Optionen hinzufügen -->
+                <option value="">Alle</option>
+                <!-- Die Optionen über den Controler abrufen -->
+                <option
+                  th:each="verlag : ${alleVerlage}"
+                  th:value="${verlag.id}"
+                  th:text="${verlag.name}"
+                >
+                  Verlag
+                </option>
               </select>
             </div>
+            <!-- Drop Down für Typ -->
             <div class="filter-section">
               <label class="filter-label" for="sourceType"
                 ><svg
@@ -175,12 +194,17 @@
               >
               <select name="sourceType" class="filter-select">
                 <option value="">Alle</option>
-                <option value="1">Manga</option>
-                <option value="2">Light Novel</option>
-                <option value="3">Webtoon</option>
-                <option value="4">Artbook & Sonstiges</option>
+                <!-- Die Optionen über den Controler abrufen -->
+                <option
+                  th:each="typ : ${alleTypen}"
+                  th:value="${typ.id}"
+                  th:text="${typ.bezeichnung}"
+                >
+                  Typ
+                </option>
               </select>
             </div>
+            <!-- Drop Down für Format -->
             <div class="filter-section">
               <label class="filter-label" for="format"
                 ><svg
@@ -200,9 +224,14 @@
               >
               <select name="format" class="filter-select">
                 <option value="">Alle</option>
-                <option value="1">Softcover</option>
-                <option value="2">Hardcover</option>
-                <option value="3">Digital</option>
+                <!-- Die Optionen über den Controler abrufen -->
+                <option
+                  th:each="format : ${alleFormate}"
+                  th:value="${format.id}"
+                  th:text="${format.bezeichnung}"
+                >
+                  Format
+                </option>
               </select>
             </div>
           </div>
