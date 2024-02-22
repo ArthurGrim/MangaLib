@@ -45,6 +45,7 @@ public class MyController {
     @GetMapping("/home")
     public String meineSeite(Model model,
             @RequestParam(name = "sortierung", required = false) String sortierung,
+            @RequestParam(name = "suche", required = false) String suche,
             @RequestParam(name = "statusFilter", required = false) Long statusId,
             @RequestParam(name = "verlagFilter", required = false) Long verlagId,
             @RequestParam(name = "typFilter", required = false) Long typId,
@@ -58,6 +59,12 @@ public class MyController {
         List<Format> alleFormate = formatService.findAllSortById();
 
         List<MangaReihe> alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
+
+        if (suche != null && !suche.trim().isEmpty()) {
+            alleMangaReihen = mangaReiheService.searchByTitelOrIndex(suche);
+        } else {
+            alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
+        }
 
         if (statusId != null) {
             alleMangaReihen = alleMangaReihen.stream()
@@ -108,6 +115,8 @@ public class MyController {
                 mangaReihe.setGesamtpreisString(df.format(mangaReihe.getGesamtpreis()));
             }
         });
+
+        
 
         model.addAttribute("sortierung", sortierung);
         model.addAttribute("statusFilter", statusId);
