@@ -36,6 +36,10 @@ body {
   justify-content: center; /* Zentrierte Ausrichtung */
 }
 
+.main-menu-homeButton a {
+  color: #72a2e5; /* Setzt die Schriftfarbe auf #72a2e5 */
+}
+
 /* Stile für einzelne Menüpunkte */
 .main-menu li {
   display: inline; /* Inline-Anzeige */
@@ -54,6 +58,7 @@ body {
   display: flex; /* Flexibles Box-Layout */
   align-items: center; /* Vertikale Ausrichtung der Elemente */
   background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
+  border-bottom: .0625rem solid #274272;
   margin-right: 85px; /* Rechter Außenabstand */
 }
 
@@ -86,6 +91,7 @@ body {
 /* Stile für die Seitenleiste */
 .sidebar {
   background-color: #161516; /* Dunkelgraue Hintergrundfarbe */
+  border-top: .125rem solid #274272;
   color: white; /* Weiße Textfarbe */
   padding: 10px; /* Innenabstand */
   margin-top: 130px; /* Abstand nach oben */
@@ -102,14 +108,34 @@ body {
   flex-direction: column; /* Vertikale Ausrichtung */
 }
 
+.search-reset img {
+  transform: scaleX(-1); /* Spiegelt das Bild horizontal */
+  transition: transform 0.3s ease-in-out;
+}
+
+@keyframes rotateCounterClockwise {
+  from {
+    transform: rotate(0deg) scaleX(-1);
+  }
+  to {
+    transform: rotate(-180deg) scaleX(-1);
+  }
+}
+
+.search-reset img:hover {
+  animation: rotateCounterClockwise 0.3s linear forwards; /* Kontinuierliche Drehung */
+}
+
 /* Stile für die Überschrift im Suchcontainer */
 .search-heading {
   display: flex; /* Flexibles Box-Layout */
   justify-content: space-between; /* Elemente gleichmäßig verteilen */
   align-items: center; /* Vertikale Ausrichtung der Elemente */
-  margin-bottom: 10px; /* Abstand nach unten */
+  margin-bottom: 1em; /* Abstand nach unten */
+  border-bottom: .0625rem solid #212122;
   margin-left: 5px; /* Abstand nach links */
   color: #cacaca; /* Hellgraue Textfarbe */
+  padding: 0 .5em .25em;
 }
 
 /* Stile für den Hauptfilterbereich */
@@ -156,15 +182,17 @@ body {
   margin-bottom: -5px; /* Leichter negativer Abstand nach unten */
   margin-left: 5px; /* Abstand nach links */
   pointer-events: none; /* Keine Mausereignisse */
+  font-family: noto-sans,Noto Sans,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
 }
 
 /* Stile für die Select-Elemente */
 .filter-select {
   width: 100%; /* Volle Breite */
-  padding: 5px; /* Innenabstand */
+  padding: .425em calc(1.2em + .5rem) .325em .75em; /* Innenabstand */
   border: none; /* Kein Rand */
   background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
   color: #f8f8f8; /* Hellgraue Textfarbe */
+  font-family: noto-sans,Noto Sans,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
 }
 
 /* Stile für den Zurücksetzen-Button */
