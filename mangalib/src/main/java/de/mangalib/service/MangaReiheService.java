@@ -457,6 +457,48 @@ public class MangaReiheService {
         return mangaReiheRepository.findByTitelContainingIgnoreCase(titel);
     }
 
+    /**
+     * Sucht nach MangaReihen basierend auf einem Suchbegriff, der entweder ein
+     * Titel oder ein Index sein kann.
+     * Wenn der Suchbegriff in eine Zahl umgewandelt werden kann, wird angenommen,
+     * dass es sich um einen Index handelt,
+     * und es wird nach diesem Index gesucht. Andernfalls wird angenommen, dass es
+     * sich um einen Titel handelt,
+     * und es wird nach Titeln gesucht, die den Suchbegriff enthalten.
+     *
+     * @param searchQuery Der Suchbegriff, der entweder ein Titel oder ein Index
+     *                    sein kann.
+     * @return Eine Liste von MangaReihen, die dem Suchbegriff entsprechen. Die
+     *         Liste kann leer sein, wenn keine Übereinstimmungen gefunden werden.
+     * @throws IllegalArgumentException wenn die Suchanfrage leer oder null ist.
+     */
+    public List<MangaReihe> searchByTitelOrIndex(String searchQuery) {
+        if (searchQuery == null || searchQuery.trim().isEmpty()) {
+            throw new IllegalArgumentException("Die Suchanfrage darf nicht leer sein");
+        }
+
+        // Versuchen Sie, die Suchanfrage in eine Zahl umzuwandeln
+        Integer index = null;
+        try {
+            index = Integer.parseInt(searchQuery);
+        } catch (NumberFormatException e) {
+            // Nichts tun, wenn die Umwandlung fehlschlägt, da es sich um einen Titel
+            // handeln könnte
+        }
+
+        List<MangaReihe> result;
+
+        // Wenn die Suchanfrage eine Zahl ist, suchen Sie nach dem Index
+        if (index != null) {
+            result = mangaReiheRepository.findByMangaIndex(index);
+        } else {
+            // Andernfalls suchen Sie nach dem Titel
+            result = findByTitel(searchQuery);
+        }
+
+        return result;
+    }
+
     // ------------------------------Sortieren--------------------------------
 
     /**

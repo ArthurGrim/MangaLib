@@ -19,17 +19,14 @@
             <li><a href="/einkaufsliste">Einkaufsliste</a></li>
           </ul>
         </div>
-        <form class="searchbar">
-          <input type="text" placeholder="Suche..." />
+        <form class="searchbar" action="/home" method="get">
+          <input type="text" name="suche" placeholder="Suche..." />
           <button type="submit">
-            <!-- SVG Such-Icon -->
-            <img
-              th:src="@{/svg/such_icon.svg}"
-              alt="SVG"
-              style="height: 1em; width: 1em"
-            />
+              <!-- SVG Such-Icon -->
+              <img th:src="@{/svg/such_icon.svg}" alt="SVG" style="height: 1em; width: 1em"/>
           </button>
-        </form>
+      </form>
+      
       </nav>
     </header>
 
