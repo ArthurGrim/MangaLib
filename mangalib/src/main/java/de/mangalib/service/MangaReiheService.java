@@ -14,6 +14,7 @@ import de.mangalib.repository.FormatRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Sort;
 
+import java.time.Year;
 import java.util.*;
 
 // Markiert die Klasse als Service-Komponente für Spring
@@ -42,7 +43,8 @@ public class MangaReiheService {
         return mangaReiheRepository.findAll();
     }
 
-    // Eine Methode, um alle MangaReihe-Objekte aus der Datenbank geordnet nach ID abzurufen
+    // Eine Methode, um alle MangaReihe-Objekte aus der Datenbank geordnet nach ID
+    // abzurufen
     public List<MangaReihe> findAllSortById() {
         List<MangaReihe> result = mangaReiheRepository.findAll();
         result.sort(Comparator.comparing(MangaReihe::getId));
@@ -388,6 +390,30 @@ public class MangaReiheService {
             throw new IllegalArgumentException("Der Monat muss zwischen 1 und 12 liegen");
         }
         return mangaReiheRepository.findByErstelltAmYearAndMonth(jahr, monat);
+    }
+
+    /**
+     * Filtert MangaReihen nach dem aktuellen Jahr und einem spezifischen Monat.
+     * 
+     * @param monat Der Monat, nach dem gefiltert wird. Muss zwischen 1 und 12
+     *              liegen.
+     * @return Eine Liste von MangaReihen, die im aktuellen Jahr und im angegebenen
+     *         Monat erstellt wurden.
+     * @throws IllegalArgumentException wenn der Monat außerhalb des Bereichs 1-12
+     *                                  liegt.
+     */
+    public List<MangaReihe> findByErstelltAmCurrentYearAndMonth(int monat) {
+        // Ermitteln des aktuellen Jahres
+        int currentYear = Year.now().getValue();
+
+        // Überprüfen, ob der Monat im gültigen Bereich liegt
+        if (monat < 1 || monat > 12) {
+            throw new IllegalArgumentException("Der Monat muss zwischen 1 und 12 liegen");
+        }
+
+        // Aufruf der Methode findByErstelltAmYearAndMonth mit dem aktuellen Jahr und
+        // dem übergebenen Monat
+        return findByErstelltAmYearAndMonth(currentYear, monat);
     }
 
     // ------------------------------Suchen--------------------------------

@@ -66,34 +66,63 @@
                 >
                 <!-- Drop Down für Monat -->
                 <div class="date-panel">
-                  <select name="month" class="filter-select">
+                  <!-- Drop Down für Monat -->
+                  <!-- Drop Down für Monat -->
+                  <select
+                    name="monatFilter"
+                    onchange="this.form.submit()"
+                    class="filter-select"
+                  >
                     <option hidden="" value="">Monat</option>
-                    <option value=""></option>
-                    <option value="januar">Januar</option>
-                    <option value="februar">Februar</option>
-                    <option value="märz">März</option>
-                    <option value="april">April</option>
-                    <option value="mai">Mai</option>
-                    <option value="juni">Juni</option>
-                    <option value="juli">Juli</option>
-                    <option value="august">August</option>
-                    <option value="september">September</option>
-                    <option value="oktober">Oktober</option>
-                    <option value="november">November</option>
-                    <option value="dezember">Dezember</option>
+                    <option value="" th:selected="${monatFilter == null}">Alle</option>
+                    <option value="1" th:selected="${monatFilter == 1}">
+                      Januar
+                    </option>
+                    <option value="2" th:selected="${monatFilter == 2}">
+                      Februar
+                    </option>
+                    <option value="3" th:selected="${monatFilter == 3}">
+                      März
+                    </option>
+                    <option value="4" th:selected="${monatFilter == 4}">
+                      April
+                    </option>
+                    <option value="5" th:selected="${monatFilter == 5}">
+                      Mai
+                    </option>
+                    <option value="6" th:selected="${monatFilter == 6}">
+                      Juni
+                    </option>
+                    <option value="7" th:selected="${monatFilter == 7}">
+                      Juli
+                    </option>
+                    <option value="8" th:selected="${monatFilter == 8}">
+                      August
+                    </option>
+                    <option value="9" th:selected="${monatFilter == 9}">
+                      September
+                    </option>
+                    <option value="10" th:selected="${monatFilter == 10}">
+                      Oktober
+                    </option>
+                    <option value="11" th:selected="${monatFilter == 11}">
+                      November
+                    </option>
+                    <option value="12" th:selected="${monatFilter == 12}">
+                      Dezember
+                    </option>
                   </select>
+
                   <!-- Drop Down für Jahr -->
-                  <select name="year" class="filter-select">
+                  <select name="jahrFilter" onchange="this.form.submit()" class="filter-select">
                     <option hidden="" value="">Jahr</option>
-                    <option value=""></option>
-                    <option value="2018">2018</option>
-                    <option value="2019">2019</option>
-                    <option value="2020">2020</option>
-                    <option value="2021">2021</option>
-                    <option value="2022">2022</option>
-                    <option value="2023">2023</option>
-                    <option value="2024">2024</option>
-                  </select>
+                    <option value="" th:selected="${jahrFilter == null}">Alle</option>
+                    <option th:each="jahr : ${#numbers.sequence(2019, T(java.time.Year).now().getValue())}"
+                            th:value="${jahr}"
+                            th:text="${jahr}"
+                            th:selected="${jahrFilter != null and jahr == jahrFilter}">
+                    </option>
+                </select>
                 </div>
               </div>
               <!-- Drop Down für Sortierung -->
@@ -134,16 +163,22 @@
                   />
                   Status</label
                 >
-                <select name="statusFilter" onchange="this.form.submit()" class="filter-select">
+                <select
+                  name="statusFilter"
+                  onchange="this.form.submit()"
+                  class="filter-select"
+                >
                   <option value="">Alle</option>
                   <!-- Die Optionen über den Controler abrufen -->
-                  <option th:each="status : ${alleStatus}"
-                          th:value="${status.statusId}"
-                          th:text="${status.beschreibung}"
-                          th:selected="${statusFilter != null && status.statusId == statusFilter}">
-                          Status
+                  <option
+                    th:each="status : ${alleStatus}"
+                    th:value="${status.statusId}"
+                    th:text="${status.beschreibung}"
+                    th:selected="${statusFilter != null && status.statusId == statusFilter}"
+                  >
+                    Status
                   </option>
-              </select>
+                </select>
               </div>
               <!-- Drop Down für Verlag -->
               <div class="filter-section">
@@ -156,16 +191,22 @@
                   />
                   Verlag</label
                 >
-                <select name="verlagFilter" onchange="this.form.submit()" class="filter-select">
+                <select
+                  name="verlagFilter"
+                  onchange="this.form.submit()"
+                  class="filter-select"
+                >
                   <option value="">Alle</option>
                   <!-- Die Optionen über den Controler abrufen -->
-                  <option th:each="verlag : ${alleVerlage}"
-                          th:value="${verlag.verlagId}"
-                          th:text="${verlag.name}"
-                          th:selected="${verlagFilter != null && verlag.verlagId == verlagFilter}">
-                      Verlag
+                  <option
+                    th:each="verlag : ${alleVerlage}"
+                    th:value="${verlag.verlagId}"
+                    th:text="${verlag.name}"
+                    th:selected="${verlagFilter != null && verlag.verlagId == verlagFilter}"
+                  >
+                    Verlag
                   </option>
-              </select>
+                </select>
               </div>
               <!-- Drop Down für Typ -->
               <div class="filter-section">
@@ -178,16 +219,22 @@
                   />
                   Typ</label
                 >
-                <select name="typFilter" onchange="this.form.submit()" class="filter-select">
+                <select
+                  name="typFilter"
+                  onchange="this.form.submit()"
+                  class="filter-select"
+                >
                   <option value="">Alle</option>
                   <!-- Die Optionen über den Controler abrufen -->
-                  <option th:each="typ : ${alleTypen}"
-                          th:value="${typ.typId}"
-                          th:text="${typ.bezeichnung}"
-                          th:selected="${typFilter != null && typ.typId == typFilter}">
-                      Typ
+                  <option
+                    th:each="typ : ${alleTypen}"
+                    th:value="${typ.typId}"
+                    th:text="${typ.bezeichnung}"
+                    th:selected="${typFilter != null && typ.typId == typFilter}"
+                  >
+                    Typ
                   </option>
-              </select>
+                </select>
               </div>
               <!-- Drop Down für Format -->
               <div class="filter-section">
@@ -200,16 +247,22 @@
                   />
                   Format</label
                 >
-                <select name="formatFilter" onchange="this.form.submit()" class="filter-select">
+                <select
+                  name="formatFilter"
+                  onchange="this.form.submit()"
+                  class="filter-select"
+                >
                   <option value="">Alle</option>
                   <!-- Die Optionen über den Controler abrufen -->
-                  <option th:each="format : ${alleFormate}"
-                          th:value="${format.formatId}"
-                          th:text="${format.bezeichnung}"
-                          th:selected="${formatFilter != null && format.formatId == formatFilter}">
-                      Format
+                  <option
+                    th:each="format : ${alleFormate}"
+                    th:value="${format.formatId}"
+                    th:text="${format.bezeichnung}"
+                    th:selected="${formatFilter != null && format.formatId == formatFilter}"
+                  >
+                    Format
                   </option>
-              </select>
+                </select>
               </div>
             </div>
           </form>
