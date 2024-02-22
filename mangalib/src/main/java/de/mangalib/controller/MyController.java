@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.text.DecimalFormat;
 import java.time.Year;
@@ -81,15 +82,16 @@ public class MyController {
 
         // Filtern nach Jahr und Monat
         if (monatFilter != null && monatFilter >= 1 && monatFilter <= 12) {
-            int jahr = (jahrFilter != null) ? jahrFilter : Year.now().getValue(); // Aktuelles Jahr, wenn kein Jahr angegeben
+            int jahr = (jahrFilter != null) ? jahrFilter : Year.now().getValue(); // Aktuelles Jahr, wenn kein Jahr
+                                                                                  // angegeben
             alleMangaReihen = alleMangaReihen.stream()
-                .filter(mangaReihe -> mangaReihe.getErstelltAm().toLocalDateTime().getYear() == jahr &&
-                                      mangaReihe.getErstelltAm().toLocalDateTime().getMonthValue() == monatFilter)
-                .collect(Collectors.toList());
+                    .filter(mangaReihe -> mangaReihe.getErstelltAm().toLocalDateTime().getYear() == jahr &&
+                            mangaReihe.getErstelltAm().toLocalDateTime().getMonthValue() == monatFilter)
+                    .collect(Collectors.toList());
         } else if (jahrFilter != null) {
             alleMangaReihen = alleMangaReihen.stream()
-                .filter(mangaReihe -> mangaReihe.getErstelltAm().toLocalDateTime().getYear() == jahrFilter)
-                .collect(Collectors.toList());
+                    .filter(mangaReihe -> mangaReihe.getErstelltAm().toLocalDateTime().getYear() == jahrFilter)
+                    .collect(Collectors.toList());
         }
 
         if ("titel".equals(sortierung)) {
@@ -123,4 +125,20 @@ public class MyController {
 
         return "home"; // Name der HTML-Datei ohne .html
     }
+
+    @GetMapping("/resetFilters")
+    public String resetFilters(RedirectAttributes redirectAttributes) {
+        // Setzen Sie hier die Filter und Sortierparameter auf ihre Standardwerte
+        redirectAttributes.addAttribute("sortierung", "id"); // Standardwert für Sortierung
+        redirectAttributes.addAttribute("statusFilter", ""); // Standardwert für Status-Filter
+        redirectAttributes.addAttribute("verlagFilter", ""); // Standardwert für Verlag-Filter
+        redirectAttributes.addAttribute("typFilter", ""); // Standardwert für Typ-Filter
+        redirectAttributes.addAttribute("formatFilter", ""); // Standardwert für Format-Filter
+        redirectAttributes.addAttribute("monatFilter", ""); // Standardwert für Monats-Filter
+        redirectAttributes.addAttribute("jahrFilter", ""); // Standardwert für Jahres-Filter
+
+        // Leiten Sie zur Hauptseite um
+        return "redirect:/home";
+    }
+
 }
