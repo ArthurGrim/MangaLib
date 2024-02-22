@@ -14,7 +14,7 @@
       <nav class="header_headerInner">
         <div class="header_menuContainer">
           <ul class="main-menu">
-            <li><a href="/">Home</a></li>
+            <li class="main-menu-homeButton"><a href="/">Home</a></li>
             <li><a href="/Statistik">Statistik</a></li>
             <li><a href="/einkaufsliste">Einkaufsliste</a></li>
           </ul>
@@ -43,7 +43,12 @@
               class="search-reset"
               title="Filter zurücksetzen"
             >
-              <!-- SVG für Reset-Button -->
+              <!-- SVG Reset Icon -->
+              <img
+              th:src="@{/svg/reset_icon.svg}"
+              alt="SVG"
+              style="height: 1em; width: 1em"
+            />
             </button>
           </div>
           <div class="filter-main">
