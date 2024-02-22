@@ -1,2 +1,37 @@
-Hi
-Just a test
+MangaLib - Manga Bibliotheksverwaltung
+Überblick
+
+MangaLib ist eine Webanwendung zur Verwaltung einer Manga-Bibliothek. Sie ermöglicht es Benutzern, Manga-Reihen zu durchsuchen, zu sortieren und zu filtern. Die Anwendung bietet Funktionen wie das Filtern nach verschiedenen Kriterien (Status, Verlag, Typ, Format, Erstellungsdatum) und das Suchen nach Titel oder Index.
+Funktionen
+
+    Durchsuchen von Manga-Reihen: Benutzer können alle verfügbaren Manga-Reihen einsehen.
+    Filterung: Filtern Sie Manga-Reihen nach Status, Verlag, Typ, Format, Erstellungsdatum (Monat und Jahr).
+    Sortierung: Sortieren Sie Manga-Reihen nach ID oder Titel.
+    Suche: Suchen Sie nach Manga-Reihen anhand ihres Titels oder Index.
+    Reset-Funktion: Setzen Sie alle Filter und Sortierungen zurück.
+
+Technologien
+
+    Java/Spring Boot: Für das Backend und die Webanwendung. Java bietet eine robuste Plattform für die Entwicklung der Server-Logik.
+    Thymeleaf: Als Template-Engine für die Darstellung der HTML-Seiten. Thymeleaf ermöglicht die nahtlose Integration von serverseitigen Daten in HTML.
+    HTML/CSS: Für das Frontend-Design. HTML wird verwendet, um die Struktur der Webseiten zu definieren, während CSS für das Styling und Layout verantwortlich ist.
+    Bootstrap: Für das responsive Design und die Gestaltung der Benutzeroberfläche.
+    MySQL-Datenbank: Für die Speicherung der Daten.
+    Gradle: Als Build-Tool und für die Abhängigkeitsverwaltung.
+
+Installation und Ausführung
+
+    Voraussetzungen: Stellen Sie sicher, dass Java, Gradle und MySQL auf Ihrem System installiert sind.
+    Klonen des Repositories: git clone [URL Ihres Repositories]
+    Erstellen der Datenbankstruktur: Führen Sie die SQLQuery.sql-Datei in Ihrer MySQL-Datenbank aus, um die erforderlichen Tabellen zu erstellen.
+    Daten laden: Führen Sie die inserts.sql-Datei aus, um die Anfangsdaten in die Datenbank zu laden.
+    Starten der Anwendung: Navigieren Sie in das Projektverzeichnis und führen Sie gradle bootRun aus.
+    Zugriff auf die Anwendung: Öffnen Sie einen Webbrowser und navigieren Sie zu http://localhost:8080.
+
+Nutzung
+
+    Startseite: Zeigt alle Manga-Reihen mit den verfügbaren Filter- und Sortieroptionen.
+    Suchleiste: Geben Sie einen Titel oder Index ein, um nach Manga-Reihen zu suchen.
+    Filteroptionen: Wählen Sie aus den Dropdown-Menüs, um die Ergebnisse zu filtern.
+    Sortierung: Wählen Sie die Sortiermethode über das Dropdown-Menü.
+    Reset-Button: Setzt alle Filter und Sortierungen zurück.
