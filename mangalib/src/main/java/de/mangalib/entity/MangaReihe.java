@@ -44,8 +44,14 @@ public class MangaReihe {
     @Column(name = "preis_pro_band")
     private Double preisProBand;
 
+    @Transient
+    private String preisProBandString;
+
     @Column(name = "gesamtpreis")
     private Double gesamtpreis;
+
+    @Transient
+    private String gesamtpreisString;
 
     @Column(name = "erstellt_am")
     private java.sql.Timestamp erstelltAm;

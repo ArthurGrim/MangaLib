@@ -45,10 +45,10 @@
             >
               <!-- SVG Reset Icon -->
               <img
-              th:src="@{/svg/reset_icon.svg}"
-              alt="SVG"
-              style="height: 1em; width: 1em"
-            />
+                th:src="@{/svg/reset_icon.svg}"
+                alt="SVG"
+                style="height: 1em; width: 1em"
+              />
             </button>
           </div>
           <div class="filter-main">
@@ -206,6 +206,54 @@
           </div>
         </div>
       </form>
+    </div>
+
+    <div class="manga-reihen-container">
+      <div class="manga-reihen-header">
+        <div class="manga-reihe-bild">Bild</div>
+        <div class="manga-reihe-status">Status</div>
+        <div class="manga-reihe-verlag">Verlag</div>
+        <div class="manga-reihe-typ">Typ</div>
+        <div class="manga-reihe-format">Format</div>
+        <div class="manga-reihe-titel">Titel</div>
+        <div class="manga-reihe-baende">Bände</div>
+        <div class="manga-reihe-preis">Preis</div>
+        <div class="manga-reihe-gesamtpreis">Gesamtpreis</div>
+        <button type="button" class="add-button" title="Hinzufügen">
+          <!-- SVG Add Icon -->
+          <img
+            th:src="@{/svg/add_icon.svg}"
+            alt="SVG"
+            style="height: 1em; width: 1em"
+          />
+        </button>
+      </div>
+      <!-- Hier kommen die einzelnen MangaReihen -->
+      <div th:each="mangaReihe : ${alleMangaReihen}" class="manga-reihe-panel">
+        <div>
+          <img
+            th:src="@{/svg/filler_img2.png}"
+            alt="Filler Image"
+            style="width: 75%; height: auto"
+          />
+        </div>
+        <div class="status"><p th:text="${mangaReihe.status.beschreibung}">Status</p></div>
+        <div class="verlag"><p th:text="${mangaReihe.verlag.name}">Verlag</p></div>
+        <div class="typ"><p th:text="${mangaReihe.typ.bezeichnung}">Typ</p></div>
+        <div class="format"><p th:text="${mangaReihe.format.bezeichnung}">Format</p></div>
+        <div class="titel"><p th:text="${mangaReihe.titel}">Titel</p></div>
+        <div class="baende"><p th:text="${mangaReihe.anzahlBaende}">Bände</p></div>
+        <div class="preis"><p th:text="${mangaReihe.preisProBandString}">Preis</p></div>
+        <div class="gesamtpreis"><p th:text="${mangaReihe.gesamtpreisString}">Gesamtpreis</p></div>
+        <button type="button" class="edit-button" title="Edit">
+          <!-- SVG Edit Icon -->
+          <img
+            th:src="@{/svg/edit_icon.svg}"
+            alt="SVG"
+            style="height: 1em; width: 1em"
+          />
+        </button>
+      </div>
     </div>
   </body>
 </html>

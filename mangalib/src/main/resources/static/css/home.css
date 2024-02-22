@@ -36,7 +36,7 @@ body {
   justify-content: center; /* Zentrierte Ausrichtung */
 }
 
-.main-menu-homeButton a {
+.main-menu .main-menu-homeButton a {
   color: #72a2e5; /* Setzt die Schriftfarbe auf #72a2e5 */
 }
 
@@ -108,6 +108,19 @@ body {
   flex-direction: column; /* Vertikale Ausrichtung */
 }
 
+/* Stile für die Überschrift im Suchcontainer */
+.search-heading {
+  display: flex; /* Flexibles Box-Layout */
+  justify-content: space-between; /* Elemente gleichmäßig verteilen */
+  align-items: center; /* Vertikale Ausrichtung der Elemente */
+  margin-bottom: 1em; /* Abstand nach unten */
+  border-bottom: .0625rem solid #212122;
+  margin-left: 5px; /* Abstand nach links */
+  color: #cacaca; /* Hellgraue Textfarbe */
+  padding: 0 .5em .25em;
+  user-select: none; /* Verhindert das Auswählen des Textes */
+}
+
 .search-reset img {
   transform: scaleX(-1); /* Spiegelt das Bild horizontal */
   transition: transform 0.3s ease-in-out;
@@ -124,18 +137,6 @@ body {
 
 .search-reset img:hover {
   animation: rotateCounterClockwise 0.3s linear forwards; /* Kontinuierliche Drehung */
-}
-
-/* Stile für die Überschrift im Suchcontainer */
-.search-heading {
-  display: flex; /* Flexibles Box-Layout */
-  justify-content: space-between; /* Elemente gleichmäßig verteilen */
-  align-items: center; /* Vertikale Ausrichtung der Elemente */
-  margin-bottom: 1em; /* Abstand nach unten */
-  border-bottom: .0625rem solid #212122;
-  margin-left: 5px; /* Abstand nach links */
-  color: #cacaca; /* Hellgraue Textfarbe */
-  padding: 0 .5em .25em;
 }
 
 /* Stile für den Hauptfilterbereich */
@@ -199,13 +200,86 @@ body {
 .search-reset {
   background: none; /* Kein Hintergrund */
   border: none; /* Kein Rand */
-  color: white; /* Weiße Textfarbe */
+  color: #f8f8f8; /* Weiße Textfarbe */
   cursor: pointer; /* Mauszeiger als Zeiger */
 }
 
 /* Stile für SVG-Icons im Zurücksetzen-Button */
 .search-reset svg {
-  fill: white; /* Weiße Farbe des Icons */
+  fill: #f8f8f8; /* Weiße Farbe des Icons */
   width: 16px; /* Breite des Icons */
   height: 16px; /* Höhe des Icons */
 }
+
+.manga-reihen-container {
+  display: flex;
+  flex-direction: column;
+  margin-left: 280px; /* Abstand zur Sidebar */
+  padding: 20px;
+  margin-top: 60px; /* Abstand nach oben */
+}
+
+.manga-reihen-header {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 100px;; /* 9 Spalten plus eine für den Button */
+  gap: 10px;
+  background-color: #161516;
+  border-top: .125rem solid #274272;
+  color: #f8f8f8;
+  padding: 10px;
+  user-select: none; /* Verhindert das Auswählen des Textes */
+}
+
+/* Stil für das Panel, das jede MangaReihe darstellt */
+.manga-reihe-panel {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 100px; /* Definiert die Spaltenstruktur */
+  gap: 10px; /* Abstand zwischen den Spalten */
+  background-color: #1B1A1B; /* Hintergrundfarbe des Panels */
+  color: #cacaca; /* Textfarbe */
+  padding: 10px; /* Innenabstand */
+  border-radius: 5px; /* Abgerundete Ecken */
+  margin-top: 10px; /* Abstand zum vorherigen Element */
+  align-items: center; /* Zentriert die Inhalte vertikal */
+}
+
+/* Stil für die einzelnen Elemente innerhalb des Panels */
+.manga-reihe-panel div,
+.manga-reihen-header div {
+  display: flex;
+  flex-direction: column; /* Vertikale Anordnung der Elemente */
+  align-items: center; /* Zentriert horizontal */
+  justify-content: center; /* Zentriert vertikal */
+  text-align: center; /* Zentriert den Text */
+}
+
+/* Stil für den Hinzufügen-Button */
+.add-button {
+  background: transparent; /* Transparenter Hintergrund */
+  border: none; /* Kein Rand */
+  padding: 0; /* Kein Innenabstand */
+  cursor: pointer; /* Ändert den Mauszeiger */
+}
+
+/* Stil für das Bild im Hinzufügen-Button */
+.add-button img {
+  height: 2.5em; /* Höhe des Bildes */
+  width: 2.5em; /* Breite des Bildes */
+}
+
+/* Stil für den Bearbeiten-Button */
+.edit-button {
+  background: transparent; /* Transparenter Hintergrund */
+  border: none; /* Kein Rand */
+  padding: 0; /* Kein Innenabstand */
+  cursor: pointer; /* Ändert den Mauszeiger */
+}
+
+/* Stil für das Bild im Bearbeiten-Button */
+.edit-button img {
+  height: 2.5em; /* Höhe des Bildes */
+  width: 2.5em; /* Breite des Bildes */
+}
+
+
+
