@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.text.DecimalFormat;
+import java.time.Year;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +47,9 @@ public class MyController {
             @RequestParam(name = "statusFilter", required = false) Long statusId,
             @RequestParam(name = "verlagFilter", required = false) Long verlagId,
             @RequestParam(name = "typFilter", required = false) Long typId,
-            @RequestParam(name = "formatFilter", required = false) Long formatId) {
+            @RequestParam(name = "formatFilter", required = false) Long formatId,
+            @RequestParam(name = "jahrFilter", required = false) Integer jahrFilter,
+            @RequestParam(name = "monatFilter", required = false) Integer monatFilter) {
 
         List<Status> alleStatus = statusService.findAllSortById();
         List<Verlag> alleVerlage = verlagService.findAll();
@@ -55,30 +58,43 @@ public class MyController {
 
         List<MangaReihe> alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
 
-    if (statusId != null) {
-        alleMangaReihen = alleMangaReihen.stream()
-            .filter(mangaReihe -> mangaReihe.getStatus().getStatusId().equals(statusId))
-            .collect(Collectors.toList());
-    }
-    if (verlagId != null) {
-        alleMangaReihen = alleMangaReihen.stream()
-            .filter(mangaReihe -> mangaReihe.getVerlag().getVerlagId().equals(verlagId))
-            .collect(Collectors.toList());
-    }
-    if (typId != null) {
-        alleMangaReihen = alleMangaReihen.stream()
-            .filter(mangaReihe -> mangaReihe.getTyp().getTypId().equals(typId))
-            .collect(Collectors.toList());
-    }
-    if (formatId != null) {
-        alleMangaReihen = alleMangaReihen.stream()
-            .filter(mangaReihe -> mangaReihe.getFormat().getFormatId().equals(formatId))
-            .collect(Collectors.toList());
-    }
+        if (statusId != null) {
+            alleMangaReihen = alleMangaReihen.stream()
+                    .filter(mangaReihe -> mangaReihe.getStatus().getStatusId().equals(statusId))
+                    .collect(Collectors.toList());
+        }
+        if (verlagId != null) {
+            alleMangaReihen = alleMangaReihen.stream()
+                    .filter(mangaReihe -> mangaReihe.getVerlag().getVerlagId().equals(verlagId))
+                    .collect(Collectors.toList());
+        }
+        if (typId != null) {
+            alleMangaReihen = alleMangaReihen.stream()
+                    .filter(mangaReihe -> mangaReihe.getTyp().getTypId().equals(typId))
+                    .collect(Collectors.toList());
+        }
+        if (formatId != null) {
+            alleMangaReihen = alleMangaReihen.stream()
+                    .filter(mangaReihe -> mangaReihe.getFormat().getFormatId().equals(formatId))
+                    .collect(Collectors.toList());
+        }
 
-    if ("titel".equals(sortierung)) {
-        alleMangaReihen.sort(Comparator.comparing(MangaReihe::getTitel));
-    }
+        // Filtern nach Jahr und Monat
+        if (monatFilter != null && monatFilter >= 1 && monatFilter <= 12) {
+            int jahr = (jahrFilter != null) ? jahrFilter : Year.now().getValue(); // Aktuelles Jahr, wenn kein Jahr angegeben
+            alleMangaReihen = alleMangaReihen.stream()
+                .filter(mangaReihe -> mangaReihe.getErstelltAm().toLocalDateTime().getYear() == jahr &&
+                                      mangaReihe.getErstelltAm().toLocalDateTime().getMonthValue() == monatFilter)
+                .collect(Collectors.toList());
+        } else if (jahrFilter != null) {
+            alleMangaReihen = alleMangaReihen.stream()
+                .filter(mangaReihe -> mangaReihe.getErstelltAm().toLocalDateTime().getYear() == jahrFilter)
+                .collect(Collectors.toList());
+        }
+
+        if ("titel".equals(sortierung)) {
+            alleMangaReihen.sort(Comparator.comparing(MangaReihe::getTitel));
+        }
 
         DecimalFormat df = new DecimalFormat("0.00 €");
 
@@ -96,6 +112,8 @@ public class MyController {
         model.addAttribute("verlagFilter", verlagId);
         model.addAttribute("typFilter", typId);
         model.addAttribute("formatFilter", formatId);
+        model.addAttribute("jahrFilter", jahrFilter);
+        model.addAttribute("monatFilter", monatFilter);
 
         model.addAttribute("alleStatus", alleStatus);
         model.addAttribute("alleVerlage", alleVerlage);
