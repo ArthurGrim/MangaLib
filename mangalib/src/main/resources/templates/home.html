@@ -34,240 +34,251 @@
     </header>
 
     <div class="sidebar">
-      <form>
-        <div class="search-container">
-          <form action="/home" method="get">
-            <div class="search-heading">
-              <span>Filter</span>
-              <button
-                type="reset"
-                class="search-reset"
-                title="Filter zurücksetzen"
-              >
-                <!-- SVG Reset Icon -->
+      <div class="search-container">
+        <div class="search-heading">
+          <span>Filter</span>
+          <form action="/resetFilters" method="get">
+            <!-- Ihre Filter-Elemente hier -->
+
+            <button
+              type="submit"
+              class="search-reset"
+              title="Filter zurücksetzen"
+            >
+              <!-- SVG Reset Icon -->
+              <img
+                th:src="@{/svg/reset_icon.svg}"
+                alt="SVG"
+                style="height: 1em; width: 1em"
+              />
+            </button>
+          </form>
+        </div>
+        <form action="/home" method="get">
+          <div class="filter-main">
+            <!-- Date Bereich -->
+            <div class="filter-section">
+              <label class="filter-label">
+                <!-- SVG Datum Icon -->
                 <img
-                  th:src="@{/svg/reset_icon.svg}"
+                  th:src="@{/svg/datum_icon.svg}"
                   alt="SVG"
                   style="height: 1em; width: 1em"
                 />
-              </button>
-            </div>
-            <div class="filter-main">
-              <!-- Date Bereich -->
-              <div class="filter-section">
-                <label class="filter-label">
-                  <!-- SVG Datum Icon -->
-                  <img
-                    th:src="@{/svg/datum_icon.svg}"
-                    alt="SVG"
-                    style="height: 1em; width: 1em"
-                  />
-                  Datum</label
-                >
+                Datum</label
+              >
+              <!-- Drop Down für Monat -->
+              <div class="date-panel">
                 <!-- Drop Down für Monat -->
-                <div class="date-panel">
-                  <!-- Drop Down für Monat -->
-                  <!-- Drop Down für Monat -->
-                  <select
-                    name="monatFilter"
-                    onchange="this.form.submit()"
-                    class="filter-select"
-                  >
-                    <option hidden="" value="">Monat</option>
-                    <option value="" th:selected="${monatFilter == null}">Alle</option>
-                    <option value="1" th:selected="${monatFilter == 1}">
-                      Januar
-                    </option>
-                    <option value="2" th:selected="${monatFilter == 2}">
-                      Februar
-                    </option>
-                    <option value="3" th:selected="${monatFilter == 3}">
-                      März
-                    </option>
-                    <option value="4" th:selected="${monatFilter == 4}">
-                      April
-                    </option>
-                    <option value="5" th:selected="${monatFilter == 5}">
-                      Mai
-                    </option>
-                    <option value="6" th:selected="${monatFilter == 6}">
-                      Juni
-                    </option>
-                    <option value="7" th:selected="${monatFilter == 7}">
-                      Juli
-                    </option>
-                    <option value="8" th:selected="${monatFilter == 8}">
-                      August
-                    </option>
-                    <option value="9" th:selected="${monatFilter == 9}">
-                      September
-                    </option>
-                    <option value="10" th:selected="${monatFilter == 10}">
-                      Oktober
-                    </option>
-                    <option value="11" th:selected="${monatFilter == 11}">
-                      November
-                    </option>
-                    <option value="12" th:selected="${monatFilter == 12}">
-                      Dezember
-                    </option>
-                  </select>
+                <!-- Drop Down für Monat -->
+                <select
+                  name="monatFilter"
+                  onchange="this.form.submit()"
+                  class="filter-select"
+                >
+                  <option hidden="" value="">Monat</option>
+                  <option value="" th:selected="${monatFilter == null}">
+                    Alle
+                  </option>
+                  <option value="1" th:selected="${monatFilter == 1}">
+                    Januar
+                  </option>
+                  <option value="2" th:selected="${monatFilter == 2}">
+                    Februar
+                  </option>
+                  <option value="3" th:selected="${monatFilter == 3}">
+                    März
+                  </option>
+                  <option value="4" th:selected="${monatFilter == 4}">
+                    April
+                  </option>
+                  <option value="5" th:selected="${monatFilter == 5}">
+                    Mai
+                  </option>
+                  <option value="6" th:selected="${monatFilter == 6}">
+                    Juni
+                  </option>
+                  <option value="7" th:selected="${monatFilter == 7}">
+                    Juli
+                  </option>
+                  <option value="8" th:selected="${monatFilter == 8}">
+                    August
+                  </option>
+                  <option value="9" th:selected="${monatFilter == 9}">
+                    September
+                  </option>
+                  <option value="10" th:selected="${monatFilter == 10}">
+                    Oktober
+                  </option>
+                  <option value="11" th:selected="${monatFilter == 11}">
+                    November
+                  </option>
+                  <option value="12" th:selected="${monatFilter == 12}">
+                    Dezember
+                  </option>
+                </select>
 
-                  <!-- Drop Down für Jahr -->
-                  <select name="jahrFilter" onchange="this.form.submit()" class="filter-select">
-                    <option hidden="" value="">Jahr</option>
-                    <option value="" th:selected="${jahrFilter == null}">Alle</option>
-                    <option th:each="jahr : ${#numbers.sequence(2019, T(java.time.Year).now().getValue())}"
-                            th:value="${jahr}"
-                            th:text="${jahr}"
-                            th:selected="${jahrFilter != null and jahr == jahrFilter}">
-                    </option>
-                </select>
-                </div>
-              </div>
-              <!-- Drop Down für Sortierung -->
-              <div class="filter-section">
-                <label class="filter-label" for="sort"
-                  ><!-- Sortierung Datum Icon -->
-                  <img
-                    th:src="@{/svg/sortierung_icon.svg}"
-                    alt="SVG"
-                    style="height: 1em; width: 1em"
-                  />
-                  Sortierung</label
-                >
+                <!-- Drop Down für Jahr -->
                 <select
-                  name="sortierung"
+                  name="jahrFilter"
                   onchange="this.form.submit()"
                   class="filter-select"
                 >
+                  <option hidden="" value="">Jahr</option>
+                  <option value="" th:selected="${jahrFilter == null}">
+                    Alle
+                  </option>
                   <option
-                    value="id"
-                    th:selected="${sortierung == null || sortierung == 'id'}"
-                  >
-                    ID
-                  </option>
-                  <option value="titel" th:selected="${sortierung == 'titel'}">
-                    Titel
-                  </option>
-                </select>
-              </div>
-              <!-- Drop Down für Status -->
-              <div class="filter-section">
-                <label class="filter-label" for="publisher">
-                  <!-- SVG Status Icon -->
-                  <img
-                    th:src="@{/svg/status_icon.svg}"
-                    alt="SVG"
-                    style="height: 1em; width: 1em"
-                  />
-                  Status</label
-                >
-                <select
-                  name="statusFilter"
-                  onchange="this.form.submit()"
-                  class="filter-select"
-                >
-                  <option value="">Alle</option>
-                  <!-- Die Optionen über den Controler abrufen -->
-                  <option
-                    th:each="status : ${alleStatus}"
-                    th:value="${status.statusId}"
-                    th:text="${status.beschreibung}"
-                    th:selected="${statusFilter != null && status.statusId == statusFilter}"
-                  >
-                    Status
-                  </option>
-                </select>
-              </div>
-              <!-- Drop Down für Verlag -->
-              <div class="filter-section">
-                <label class="filter-label" for="publisher"
-                  ><!-- SVG Verlag Icon -->
-                  <img
-                    th:src="@{/svg/verlag_icon.svg}"
-                    alt="SVG"
-                    style="height: 1em; width: 1em"
-                  />
-                  Verlag</label
-                >
-                <select
-                  name="verlagFilter"
-                  onchange="this.form.submit()"
-                  class="filter-select"
-                >
-                  <option value="">Alle</option>
-                  <!-- Die Optionen über den Controler abrufen -->
-                  <option
-                    th:each="verlag : ${alleVerlage}"
-                    th:value="${verlag.verlagId}"
-                    th:text="${verlag.name}"
-                    th:selected="${verlagFilter != null && verlag.verlagId == verlagFilter}"
-                  >
-                    Verlag
-                  </option>
-                </select>
-              </div>
-              <!-- Drop Down für Typ -->
-              <div class="filter-section">
-                <label class="filter-label" for="sourceType"
-                  ><!-- SVG Typ Icon -->
-                  <img
-                    th:src="@{/svg/typ_icon.svg}"
-                    alt="SVG"
-                    style="height: 1em; width: 1em"
-                  />
-                  Typ</label
-                >
-                <select
-                  name="typFilter"
-                  onchange="this.form.submit()"
-                  class="filter-select"
-                >
-                  <option value="">Alle</option>
-                  <!-- Die Optionen über den Controler abrufen -->
-                  <option
-                    th:each="typ : ${alleTypen}"
-                    th:value="${typ.typId}"
-                    th:text="${typ.bezeichnung}"
-                    th:selected="${typFilter != null && typ.typId == typFilter}"
-                  >
-                    Typ
-                  </option>
-                </select>
-              </div>
-              <!-- Drop Down für Format -->
-              <div class="filter-section">
-                <label class="filter-label" for="format"
-                  ><!-- SVG Format Icon -->
-                  <img
-                    th:src="@{/svg/format_icon.svg}"
-                    alt="SVG"
-                    style="height: 1em; width: 1em"
-                  />
-                  Format</label
-                >
-                <select
-                  name="formatFilter"
-                  onchange="this.form.submit()"
-                  class="filter-select"
-                >
-                  <option value="">Alle</option>
-                  <!-- Die Optionen über den Controler abrufen -->
-                  <option
-                    th:each="format : ${alleFormate}"
-                    th:value="${format.formatId}"
-                    th:text="${format.bezeichnung}"
-                    th:selected="${formatFilter != null && format.formatId == formatFilter}"
-                  >
-                    Format
-                  </option>
+                    th:each="jahr : ${#numbers.sequence(2019, T(java.time.Year).now().getValue())}"
+                    th:value="${jahr}"
+                    th:text="${jahr}"
+                    th:selected="${jahrFilter != null and jahr == jahrFilter}"
+                  ></option>
                 </select>
               </div>
             </div>
-          </form>
-        </div>
-      </form>
+            <!-- Drop Down für Sortierung -->
+            <div class="filter-section">
+              <label class="filter-label" for="sort"
+                ><!-- Sortierung Datum Icon -->
+                <img
+                  th:src="@{/svg/sortierung_icon.svg}"
+                  alt="SVG"
+                  style="height: 1em; width: 1em"
+                />
+                Sortierung</label
+              >
+              <select
+                name="sortierung"
+                onchange="this.form.submit()"
+                class="filter-select"
+              >
+                <option
+                  value="id"
+                  th:selected="${sortierung == null || sortierung == 'id'}"
+                >
+                  ID
+                </option>
+                <option value="titel" th:selected="${sortierung == 'titel'}">
+                  Titel
+                </option>
+              </select>
+            </div>
+            <!-- Drop Down für Status -->
+            <div class="filter-section">
+              <label class="filter-label" for="publisher">
+                <!-- SVG Status Icon -->
+                <img
+                  th:src="@{/svg/status_icon.svg}"
+                  alt="SVG"
+                  style="height: 1em; width: 1em"
+                />
+                Status</label
+              >
+              <select
+                name="statusFilter"
+                onchange="this.form.submit()"
+                class="filter-select"
+              >
+                <option value="">Alle</option>
+                <!-- Die Optionen über den Controler abrufen -->
+                <option
+                  th:each="status : ${alleStatus}"
+                  th:value="${status.statusId}"
+                  th:text="${status.beschreibung}"
+                  th:selected="${statusFilter != null && status.statusId == statusFilter}"
+                >
+                  Status
+                </option>
+              </select>
+            </div>
+            <!-- Drop Down für Verlag -->
+            <div class="filter-section">
+              <label class="filter-label" for="publisher"
+                ><!-- SVG Verlag Icon -->
+                <img
+                  th:src="@{/svg/verlag_icon.svg}"
+                  alt="SVG"
+                  style="height: 1em; width: 1em"
+                />
+                Verlag</label
+              >
+              <select
+                name="verlagFilter"
+                onchange="this.form.submit()"
+                class="filter-select"
+              >
+                <option value="">Alle</option>
+                <!-- Die Optionen über den Controler abrufen -->
+                <option
+                  th:each="verlag : ${alleVerlage}"
+                  th:value="${verlag.verlagId}"
+                  th:text="${verlag.name}"
+                  th:selected="${verlagFilter != null && verlag.verlagId == verlagFilter}"
+                >
+                  Verlag
+                </option>
+              </select>
+            </div>
+            <!-- Drop Down für Typ -->
+            <div class="filter-section">
+              <label class="filter-label" for="sourceType"
+                ><!-- SVG Typ Icon -->
+                <img
+                  th:src="@{/svg/typ_icon.svg}"
+                  alt="SVG"
+                  style="height: 1em; width: 1em"
+                />
+                Typ</label
+              >
+              <select
+                name="typFilter"
+                onchange="this.form.submit()"
+                class="filter-select"
+              >
+                <option value="">Alle</option>
+                <!-- Die Optionen über den Controler abrufen -->
+                <option
+                  th:each="typ : ${alleTypen}"
+                  th:value="${typ.typId}"
+                  th:text="${typ.bezeichnung}"
+                  th:selected="${typFilter != null && typ.typId == typFilter}"
+                >
+                  Typ
+                </option>
+              </select>
+            </div>
+            <!-- Drop Down für Format -->
+            <div class="filter-section">
+              <label class="filter-label" for="format"
+                ><!-- SVG Format Icon -->
+                <img
+                  th:src="@{/svg/format_icon.svg}"
+                  alt="SVG"
+                  style="height: 1em; width: 1em"
+                />
+                Format</label
+              >
+              <select
+                name="formatFilter"
+                onchange="this.form.submit()"
+                class="filter-select"
+              >
+                <option value="">Alle</option>
+                <!-- Die Optionen über den Controler abrufen -->
+                <option
+                  th:each="format : ${alleFormate}"
+                  th:value="${format.formatId}"
+                  th:text="${format.bezeichnung}"
+                  th:selected="${formatFilter != null && format.formatId == formatFilter}"
+                >
+                  Format
+                </option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
 
     <div class="manga-reihen-container">
