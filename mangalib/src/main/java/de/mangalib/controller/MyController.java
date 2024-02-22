@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.text.DecimalFormat;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 public class MyController {
@@ -51,24 +53,32 @@ public class MyController {
         List<Typ> alleTypen = typService.findAllSortById();
         List<Format> alleFormate = formatService.findAllSortById();
 
-        List<MangaReihe> alleMangaReihen;
-        
+        List<MangaReihe> alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
 
-        if (statusId != null) {
-            alleMangaReihen = mangaReiheService.findByStatus(statusId);
-        } else if (verlagId != null) {
-            alleMangaReihen = mangaReiheService.findByVerlag(verlagId);
-        } else if (typId != null) {
-            alleMangaReihen = mangaReiheService.findByTyp(typId);
-        } else if (formatId != null) {
-            alleMangaReihen = mangaReiheService.findByFormat(formatId);
-        } else {
-            if ("titel".equals(sortierung)) {
-                alleMangaReihen = mangaReiheService.findAllSortByTitel();
-            } else {
-                alleMangaReihen = mangaReiheService.findAllSortById();
-            }
-        }
+    if (statusId != null) {
+        alleMangaReihen = alleMangaReihen.stream()
+            .filter(mangaReihe -> mangaReihe.getStatus().getStatusId().equals(statusId))
+            .collect(Collectors.toList());
+    }
+    if (verlagId != null) {
+        alleMangaReihen = alleMangaReihen.stream()
+            .filter(mangaReihe -> mangaReihe.getVerlag().getVerlagId().equals(verlagId))
+            .collect(Collectors.toList());
+    }
+    if (typId != null) {
+        alleMangaReihen = alleMangaReihen.stream()
+            .filter(mangaReihe -> mangaReihe.getTyp().getTypId().equals(typId))
+            .collect(Collectors.toList());
+    }
+    if (formatId != null) {
+        alleMangaReihen = alleMangaReihen.stream()
+            .filter(mangaReihe -> mangaReihe.getFormat().getFormatId().equals(formatId))
+            .collect(Collectors.toList());
+    }
+
+    if ("titel".equals(sortierung)) {
+        alleMangaReihen.sort(Comparator.comparing(MangaReihe::getTitel));
+    }
 
         DecimalFormat df = new DecimalFormat("0.00 €");
 
