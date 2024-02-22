@@ -106,10 +106,15 @@
                 />
                 Sortierung</label
               >
-              <select name="sort" class="filter-select">
-                <option value="id">ID</option>
-                <option value="titel">Titel</option>
-              </select>
+              <form action="/home" method="get">
+                <select name="sortierung" onchange="this.form.submit()" class="filter-select">
+                    <option value="id" th:selected="${sortierung == null || sortierung == 'id'}">ID</option>
+                    <option value="titel" th:selected="${sortierung == 'titel'}">Titel</option>
+                </select>
+            </form>
+            
+            
+            </form>
             </div>
             <!-- Drop Down für Status -->
             <div class="filter-section">

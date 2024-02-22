@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -38,12 +39,18 @@ public class MyController {
     private MangaReiheService mangaReiheService;
 
     @GetMapping("/home")
-    public String meineSeite(Model model) {
+    public String meineSeite(Model model, @RequestParam(name = "sortierung", required = false) String sortierung) {
         List<Status> alleStatus = statusService.findAllSortById();
         List<Verlag> alleVerlage = verlagService.findAll();
         List<Typ> alleTypen = typService.findAllSortById();
         List<Format> alleFormate = formatService.findAllSortById();
-        List<MangaReihe> alleMangaReihen = mangaReiheService.findAllSortById();
+
+        List<MangaReihe> alleMangaReihen;
+        if ("titel".equals(sortierung)) {
+            alleMangaReihen = mangaReiheService.findAllSortByTitel(); // Sortiert nach Titel
+        } else {
+            alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
+        }
 
         DecimalFormat df = new DecimalFormat("0.00 €");
 
@@ -55,6 +62,8 @@ public class MyController {
                 mangaReihe.setGesamtpreisString(df.format(mangaReihe.getGesamtpreis()));
             }
         });
+
+        model.addAttribute("sortierung", sortierung);
 
         model.addAttribute("alleStatus", alleStatus);
         model.addAttribute("alleVerlage", alleVerlage);

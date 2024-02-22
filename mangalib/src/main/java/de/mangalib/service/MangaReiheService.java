@@ -49,6 +49,10 @@ public class MangaReiheService {
         return result;
     }
 
+    public List<MangaReihe> findAllSortByTitel() {
+        return mangaReiheRepository.findAll(Sort.by(Sort.Direction.ASC, "titel"));
+    }
+
     /**
      * Speichert eine neuen MangaReihe in der Datenbank.
      * 
