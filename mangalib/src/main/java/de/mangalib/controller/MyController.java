@@ -39,17 +39,35 @@ public class MyController {
     private MangaReiheService mangaReiheService;
 
     @GetMapping("/home")
-    public String meineSeite(Model model, @RequestParam(name = "sortierung", required = false) String sortierung) {
+    public String meineSeite(Model model,
+            @RequestParam(name = "sortierung", required = false) String sortierung,
+            @RequestParam(name = "statusFilter", required = false) Long statusId,
+            @RequestParam(name = "verlagFilter", required = false) Long verlagId,
+            @RequestParam(name = "typFilter", required = false) Long typId,
+            @RequestParam(name = "formatFilter", required = false) Long formatId) {
+
         List<Status> alleStatus = statusService.findAllSortById();
         List<Verlag> alleVerlage = verlagService.findAll();
         List<Typ> alleTypen = typService.findAllSortById();
         List<Format> alleFormate = formatService.findAllSortById();
 
         List<MangaReihe> alleMangaReihen;
-        if ("titel".equals(sortierung)) {
-            alleMangaReihen = mangaReiheService.findAllSortByTitel(); // Sortiert nach Titel
+        
+
+        if (statusId != null) {
+            alleMangaReihen = mangaReiheService.findByStatus(statusId);
+        } else if (verlagId != null) {
+            alleMangaReihen = mangaReiheService.findByVerlag(verlagId);
+        } else if (typId != null) {
+            alleMangaReihen = mangaReiheService.findByTyp(typId);
+        } else if (formatId != null) {
+            alleMangaReihen = mangaReiheService.findByFormat(formatId);
         } else {
-            alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
+            if ("titel".equals(sortierung)) {
+                alleMangaReihen = mangaReiheService.findAllSortByTitel();
+            } else {
+                alleMangaReihen = mangaReiheService.findAllSortById();
+            }
         }
 
         DecimalFormat df = new DecimalFormat("0.00 €");
@@ -64,6 +82,10 @@ public class MyController {
         });
 
         model.addAttribute("sortierung", sortierung);
+        model.addAttribute("statusFilter", statusId);
+        model.addAttribute("verlagFilter", verlagId);
+        model.addAttribute("typFilter", typId);
+        model.addAttribute("formatFilter", formatId);
 
         model.addAttribute("alleStatus", alleStatus);
         model.addAttribute("alleVerlage", alleVerlage);
