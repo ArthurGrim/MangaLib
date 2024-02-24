@@ -317,5 +317,202 @@ body {
   height: auto;
 }
 
+/* Style für das Pop-up Fenster zum Hinzufügen neuer Reihen */
+.popup-container {
+  display: none; /* Versteckt das Pop-up standardmäßig */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Halbtransparenter Hintergrund */
+  z-index: 1000; /* Stellt sicher, dass das Pop-up über anderen Elementen liegt */
+  justify-content: center;
+  align-items: center;
+}
+
+.popup {
+  background-color: var(--bg-page);
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 600px;
+}
+
+.form-row-1 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.66fr 1fr;
+  gap: 10px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 15px;
+}
+
+.form-row-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.form-row-5 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 3.5fr 3.5fr;
+  gap: 10px;
+}
+
+.form-row-6 {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr;
+  gap: 10px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Stil für Labels */
+.input-group label {
+  margin-bottom: 5px;
+  color: var(--font-dark); /* Schriftfarbe für Labels */
+  border-bottom: 1px #274272;
+}
+
+/* Stil für die Eingabefelder und Select-Felder */
+.input-group input[type="text"],
+.input-group input[type="number"],
+.input-group select {
+  padding: 5px;
+  background-color: var(--bg-container); /* Hintergrundfarbe */
+  color: var(--font-container);          /* Schriftfarbe */
+  border: none; /* Rahmenfarbe anpassen */
+  margin-bottom: 15px;
+}
+
+/* Stil für Checkboxen */
+.checkbox-group {
+  display: grid;
+  grid-template-areas: 
+    "label"
+    "checkbox"; /* Definiert Bereiche für Label und Checkbox */
+  grid-template-rows: auto 1fr; /* Definiert die Höhe der Zeilen */
+  gap: 5px;
+  align-items: start; /* Startet die Ausrichtung am Anfang, um mit anderen Elementen übereinzustimmen */
+  text-align: center; /* Zentriert das Label horizontal */
+  height: 100%; /* Stellt sicher, dass die Checkbox-Gruppe die volle Höhe einnimmt */
+}
+
+.checkbox-group label {
+  grid-area: label; /* Weist das Label dem Bereich 'label' zu */
+  color: var(--font-dark);
+  font-size: 85%;
+}
+
+.checkbox-group input[type="checkbox"] {
+  grid-area: checkbox; /* Weist die Checkbox dem Bereich 'checkbox' zu */
+  justify-self: center; /* Zentriert die Checkbox horizontal */
+  accent-color: var(--bg-container); /* Hintergrundfarbe der Checkbox */
+  height: 50%;
+  width: 50%;
+}
+
+/* Hintergrundfarbe für nicht ausgewählte Checkboxen */
+.checkbox-group input[type="checkbox"]:not(:checked) {
+  background-color: var(--bg-container); /* Ihre gewünschte Hintergrundfarbe */
+  -webkit-appearance: none; /* Entfernt das Standard-Styling für Checkboxen */
+  appearance: none;
+  width: 25px; /* Feste Breite für Quadrat */
+  height: 25px; /* Feste Höhe für Quadrat */
+  border: 1px solid var(--font-dark); /* Ihre bevorzugte Rahmenfarbe */
+}
+
+/* Anpassungen für Buttons */
+.save-button,
+.cancel-button,
+.mp-autofill-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.save-button {
+  background-color: var(--blue-normal);
+  color: var(--font-page);
+  grid-column: 4/ 5; /* Nimmt eine Spalten ein */
+  margin-bottom: 25px;
+  width: 100%;
+}
+
+.cancel-button {
+  background-color: var(--font-dark);
+  color: var(--font-page);
+  grid-column: 3/ 4;
+  width: 100%;
+}
+
+.mp-autofill-button {
+  background-color: var(--blue-dark);
+  color: var(--font-page);
+  grid-column: 2/ 3;
+  width: 100%;
+}
+
+/* Anpassung der Positionierung für Cancel und MP Autofill Buttons */
+.form-row:last-child {
+  justify-content: flex-start; /* Buttons nach links ausrichten */
+}
+
+.cancel-button,
+.mp-autofill-button {
+  margin-right: 10px; /* Abstand zwischen den Buttons */
+}
+
+.number-input-container {
+  display: flex;
+  align-items: center;
+}
+
+/* Allgemeiner Stil für das Anzahl-Bände-Feld */
+.input-group .number-input {
+  -webkit-appearance: none; /* Für Safari und ältere Chrome-Versionen */
+  -moz-appearance: textfield; /* Für Firefox */
+  appearance: none; /* Standard-Eigenschaft */
+  margin: 0; /* Entfernt Standard-Margin */
+  text-align: center;
+  /* Weitere Stilangaben wie border, padding, etc. */
+}
+
+.number-input-container button {
+  padding: 5px 10px;
+  margin: 0;
+  border: 1px solid var(--font-container);
+  background-color: var(--bg-container);
+  cursor: pointer;
+}
+
+/* Stil für die Buttons */
+.spinner-button {
+  padding: 5px 10px;
+  margin-left: 2px; /* Kleiner Abstand zwischen Input und Buttons */
+  cursor: pointer; /* Cursor-Stil für Buttons */
+  background-color: var(--bg-container);
+  color: var(--font-container);
+}
+
+.number-spinner-controls {
+  display: flex; /* Flexbox für horizontale Anordnung */
+  align-items: center; /* Zentriert die Elemente vertikal */
+}
+
 
 
