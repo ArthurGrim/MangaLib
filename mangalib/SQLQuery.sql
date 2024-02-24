@@ -46,7 +46,6 @@ CREATE TABLE mangareihe (
     FOREIGN KEY (format_id) REFERENCES formate(format_id)
 );
 
-
 CREATE TABLE sammelbaende (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     multiplikator INT NOT NULL,
@@ -62,12 +61,12 @@ CREATE TABLE mangadetails (
     start_jahr INT,
     anzahl_baende_erstv INT,
     sammelbaende_id BIGINT,
+    anilist_url VARCHAR(255);
     PRIMARY KEY (id),
     FOREIGN KEY (id) REFERENCES mangareihe(id),
     FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)
 );
 
-Use mangalib;
 CREATE TABLE baende (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     manga_reihe_id BIGINT,
