@@ -30,5 +30,8 @@ public class MangaDetails {
     @JoinColumn(name = "sammelbaende_id", insertable = false, updatable = false)
     private Sammelbaende sammelbaende;
 
+    @Column(name = "anilist_url")
+    private String anilistUrl;
+
     // Getter und Setter
 }

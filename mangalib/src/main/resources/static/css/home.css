@@ -1,15 +1,29 @@
+:root {
+  --blue-normal: #274272;
+  --blue-dark: #172032;
+  --bg-page: #212122;
+  --bg-container: #161516;
+  --bg-panel: #1B1A1B;
+  --font-page: #f8f8f8;
+  --font-container: #cacaca;
+  --font-dark: #828282;
+  --font-light: #f8f8f8;
+  --font-link: #72a2e5;
+  --font-danger: #d06020;
+}
+
 /* Grundlegende Stile für den gesamten Body der Webseite */
 body {
   font-family: Arial, sans-serif; /* Schriftart */
   margin: 0; /* Kein Außenabstand */
   padding: 0; /* Kein Innenabstand */
-  background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
+  background-color: var(--bg-page); /* Dunkelgraue Hintergrundfarbe */
 }
 
 /* Stile für die Kopfzeile */
 .header {
-  background-color: #161516; /* Dunkelgraue Hintergrundfarbe */
-  color: white; /* Weiße Textfarbe */
+  background-color: var(--bg-container); /* Dunkelgraue Hintergrundfarbe */
+  color: var(--font-container); /* Weiße Textfarbe */
   padding: 11px 0; /* Vertikaler Innenabstand */
 }
 
@@ -37,7 +51,7 @@ body {
 }
 
 .main-menu .main-menu-homeButton a {
-  color: #72a2e5; /* Setzt die Schriftfarbe auf #72a2e5 */
+  color: var(--font-link); /* Setzt die Schriftfarbe auf #72a2e5 */
 }
 
 /* Stile für einzelne Menüpunkte */
@@ -48,7 +62,7 @@ body {
 
 /* Stile für Links im Menü */
 .main-menu a {
-  color: white; /* Weiße Textfarbe */
+  color: var(--font-container); /* Weiße Textfarbe */
   text-decoration: none; /* Keine Unterstreichung */
   font-weight: bold; /* Fette Schrift */
 }
@@ -57,8 +71,8 @@ body {
 .searchbar {
   display: flex; /* Flexibles Box-Layout */
   align-items: center; /* Vertikale Ausrichtung der Elemente */
-  background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
-  border-bottom: .0625rem solid #274272;
+  background-color: var(--bg-page); /* Dunkelgraue Hintergrundfarbe */
+  border-bottom: .0625rem solid var(--blue-normal);
   margin-right: 85px; /* Rechter Außenabstand */
 }
 
@@ -69,13 +83,13 @@ body {
   padding: 5px 10px; /* Innenabstand */
   border: none; /* Kein Rand */
   border-radius: 0; /* Eckige Form */
-  background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
-  color: #828282; /* Graue Schriftfarbe */
+  background-color: var(--bg-page); /* Dunkelgraue Hintergrundfarbe */
+  color: var(--font-dark); /* Graue Schriftfarbe */
 }
 
 /* Stile für den Suchbutton */
 .searchbar button {
-  background: #212122; /* Dunkelgraue Hintergrundfarbe */
+  background: var(--bg-page); /* Dunkelgraue Hintergrundfarbe */
   border: none; /* Kein Rand */
   padding: 5px; /* Innenabstand */
   cursor: pointer; /* Mauszeiger als Zeiger */
@@ -85,14 +99,13 @@ body {
 .searchbar button svg {
   height: 1.2em; /* Höhe des Icons */
   width: 1.5em; /* Breite des Icons */
-  fill: #828282; /* Graue Farbe des Icons */
+  fill: var(--font-dark); /* Graue Farbe des Icons */
 }
 
 /* Stile für die Seitenleiste */
 .sidebar {
-  background-color: #161516; /* Dunkelgraue Hintergrundfarbe */
-  border-top: .125rem solid #274272;
-  color: white; /* Weiße Textfarbe */
+  background-color: var(--bg-container); /* Dunkelgraue Hintergrundfarbe */
+  border-top: .125rem solid var(--blue-normal);
   padding: 10px; /* Innenabstand */
   margin-top: 130px; /* Abstand nach oben */
   margin-left: 20px; /* Abstand nach links */
@@ -114,9 +127,9 @@ body {
   justify-content: space-between; /* Elemente gleichmäßig verteilen */
   align-items: center; /* Vertikale Ausrichtung der Elemente */
   margin-bottom: 1em; /* Abstand nach unten */
-  border-bottom: .0625rem solid #212122;
+  border-bottom: .0625rem solid var(--bg-page);
   margin-left: 5px; /* Abstand nach links */
-  color: #cacaca; /* Hellgraue Textfarbe */
+  color: var(--font-container); /* Hellgraue Textfarbe */
   padding: 0 .5em .25em;
   user-select: none; /* Verhindert das Auswählen des Textes */
 }
@@ -147,7 +160,7 @@ body {
 
 /* Stile für das Datumsauswahl-Panel */
 .date-panel {
-  background-color: #1B1A1B; /* Dunkelgraue Hintergrundfarbe */
+  background-color: var(--bg-panel); /* Dunkelgraue Hintergrundfarbe */
   padding: 10px; /* Innenabstand */
   margin: 10px 0; /* Vertikaler Außenabstand */
   margin-top: -1px; /* Leichter negativer Abstand nach oben */
@@ -172,8 +185,8 @@ body {
 /* Stile für Filter-Labels */
 .filter-label {
   display: inline-block; /* Inline-Blockanzeige */
-  background-color: #274272; /* Dunkelblaue Hintergrundfarbe */
-  color: #f8f8f8; /* Hellgraue Textfarbe */
+  background-color: var(--blue-normal); /* Dunkelblaue Hintergrundfarbe */
+  color: var(--font-light); /* Hellgraue Textfarbe */
   padding: 6px 5px; /* Innenabstand */
   font-size: 10px; /* Kleine Schriftgröße */
   font-weight: bold; /* Fette Schrift */
@@ -191,8 +204,8 @@ body {
   width: 100%; /* Volle Breite */
   padding: .425em calc(1.2em + .5rem) .325em .75em; /* Innenabstand */
   border: none; /* Kein Rand */
-  background-color: #212122; /* Dunkelgraue Hintergrundfarbe */
-  color: #f8f8f8; /* Hellgraue Textfarbe */
+  background-color: var(--bg-page); /* Dunkelgraue Hintergrundfarbe */
+  color: var(--font-light); /* Hellgraue Textfarbe */
   font-family: noto-sans,Noto Sans,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
 }
 
@@ -200,13 +213,13 @@ body {
 .search-reset {
   background: none; /* Kein Hintergrund */
   border: none; /* Kein Rand */
-  color: #f8f8f8; /* Weiße Textfarbe */
+  color: var(--font-light); /* Weiße Textfarbe */
   cursor: pointer; /* Mauszeiger als Zeiger */
 }
 
 /* Stile für SVG-Icons im Zurücksetzen-Button */
 .search-reset svg {
-  fill: #f8f8f8; /* Weiße Farbe des Icons */
+  fill: var(--font-light); /* Weiße Farbe des Icons */
   width: 16px; /* Breite des Icons */
   height: 16px; /* Höhe des Icons */
 }
@@ -223,9 +236,9 @@ body {
   display: grid;
   grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 100px;; /* 9 Spalten plus eine für den Button */
   gap: 10px;
-  background-color: #161516;
-  border-top: .125rem solid #274272;
-  color: #f8f8f8;
+  background-color: var(--bg-container);
+  border-top: .125rem solid var(--blue-normal);
+  color: var(--font-light);
   padding: 10px;
   user-select: none; /* Verhindert das Auswählen des Textes */
 }
@@ -235,8 +248,8 @@ body {
   display: grid;
   grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 100px; /* Definiert die Spaltenstruktur */
   gap: 10px; /* Abstand zwischen den Spalten */
-  background-color: #1B1A1B; /* Hintergrundfarbe des Panels */
-  color: #cacaca; /* Textfarbe */
+  background-color: var(--bg-panel); /* Hintergrundfarbe des Panels */
+  color: var(--font-container); /* Textfarbe */
   padding: 10px; /* Innenabstand */
   border-radius: 5px; /* Abgerundete Ecken */
   margin-top: 10px; /* Abstand zum vorherigen Element */
@@ -294,7 +307,7 @@ body {
   width: 65px; /* Breite des Buttons */
   height: 65px; /* Höhe des Buttons */
   padding: 10px 10px;
-  background-color: #274272;
+  background-color: var(--blue-normal);
   border: none;
   border-radius: 5px;
 }
