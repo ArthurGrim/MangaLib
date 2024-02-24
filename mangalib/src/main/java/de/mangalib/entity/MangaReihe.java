@@ -65,4 +65,7 @@ public class MangaReihe {
     @Column(name = "ist_vergriffen")
     private Boolean istVergriffen;
 
+    @OneToOne(mappedBy = "mangaReihe", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private MangaDetails mangaDetails;
+
 }

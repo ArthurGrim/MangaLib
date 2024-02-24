@@ -47,7 +47,7 @@ INSERT INTO formate (bezeichnung) VALUES ('Softcover');
 INSERT INTO formate (bezeichnung) VALUES ('Hardcover');
 INSERT INTO formate (bezeichnung) VALUES ('Digital');
 
-Use mangalib;
+
 INSERT INTO mangareihe (manga_index, status_id, verlag_id, typ_id, format_id, titel, anzahl_baende, preis_pro_band, gesamtpreis) VALUES (1, 2, 1, 3, 1, 'Solo Leveling', 9, 16.00, 144.00);
 INSERT INTO mangareihe (manga_index, status_id, verlag_id, typ_id, format_id, titel, anzahl_baende, preis_pro_band, gesamtpreis) VALUES (2, 1, 3, 1, 1, 'Attack on Titan', 34, 6.95, 236.30);
 INSERT INTO mangareihe (manga_index, status_id, verlag_id, typ_id, format_id, titel, anzahl_baende, preis_pro_band, gesamtpreis) VALUES (3, 2, 4, 1, 2, 'One Piece', 100, 5.95, 595.00);
@@ -64,3 +64,7 @@ INSERT INTO mangareihe (manga_index, status_id, verlag_id, typ_id, format_id, ti
 INSERT INTO mangareihe (manga_index, status_id, verlag_id, typ_id, format_id, titel, anzahl_baende, preis_pro_band, gesamtpreis) VALUES (14, 3, 15, 1, 1, 'Jujutsu Kaisen', 18, 6.99, 125.82);
 INSERT INTO mangareihe (manga_index, status_id, verlag_id, typ_id, format_id, titel, anzahl_baende, preis_pro_band, gesamtpreis) VALUES (15, 2, 16, 1, 1, 'Dr. Stone', 22, 6.95, 152.90);
 INSERT INTO mangareihe (manga_index, status_id, verlag_id, typ_id, format_id, titel, anzahl_baende, preis_pro_band, gesamtpreis) VALUES (16, 1, 17, 1, 1, 'Vinland Saga', 25, 7.95, 198.75);
+
+Use mangalib;
+INSERT INTO sammelbaende (typ, multiplikator) VALUES ('2in1', 2);
+INSERT INTO sammelbaende (typ, multiplikator) VALUES ('3in1', 3);

@@ -3,6 +3,7 @@ package de.mangalib.service;
 import de.mangalib.repository.MangaReiheRepository;
 import de.mangalib.repository.StatusRepository;
 import de.mangalib.entity.Format;
+import de.mangalib.entity.MangaDetails;
 import de.mangalib.entity.MangaReihe;
 import de.mangalib.entity.Status;
 import de.mangalib.entity.Typ;
@@ -497,6 +498,18 @@ public class MangaReiheService {
         }
 
         return result;
+    }
+
+    public MangaReihe createMangaReihe(MangaReihe mangaReihe) {
+        // Erstellen eines neuen MangaDetails Objekts
+        MangaDetails mangaDetails = new MangaDetails();
+        mangaDetails.setMangaReihe(mangaReihe); // Setzen der Beziehung
+
+        // Setzen der MangaDetails in der MangaReihe
+        mangaReihe.setMangaDetails(mangaDetails);
+
+        // Speichern der MangaReihe (und automatisch der MangaDetails)
+        return mangaReiheRepository.save(mangaReihe);
     }
 
     // ------------------------------Sortieren--------------------------------

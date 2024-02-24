@@ -45,3 +45,37 @@ CREATE TABLE mangareihe (
     FOREIGN KEY (typ_id) REFERENCES typen(typ_id),
     FOREIGN KEY (format_id) REFERENCES formate(format_id)
 );
+
+
+CREATE TABLE sammelbaende (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    multiplikator INT NOT NULL,
+    typ VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE mangadetails (
+    id BIGINT NOT NULL,
+    status_de VARCHAR(255),
+    anzahl_baende_de INT,
+    status_erstv VARCHAR(255),
+    herkunft VARCHAR(255),
+    start_jahr INT,
+    anzahl_baende_erstv INT,
+    sammelbaende_id BIGINT,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES mangareihe(id),
+    FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)
+);
+
+Use mangalib;
+CREATE TABLE baende (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    manga_reihe_id BIGINT,
+    band_index INT,
+    band_nr INT,
+    preis DECIMAL(10, 2),
+    bild_url VARCHAR(255) DEFAULT 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png?20200912122019',
+    ist_special BOOLEAN,
+    FOREIGN KEY (manga_reihe_id) REFERENCES mangareihe(id)
+);
+
