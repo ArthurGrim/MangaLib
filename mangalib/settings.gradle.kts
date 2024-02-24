@@ -1,1 +1,1 @@
-rootProject.name = "mangalib"
+rootProject.name = "demo"
