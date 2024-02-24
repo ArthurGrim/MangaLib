@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="de.mangalib.ServiceTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-02-24T00:18:54" hostname="CARDINAL" time="0.296">
+  <properties/>
+  <testcase name="testAddAndRetrieveMangaReihe()" classname="de.mangalib.ServiceTest" time="0.296"/>
+  <system-out><![CDATA[2024-02-24T01:18:54.962+01:00  INFO 53620 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [de.mangalib.ServiceTest]: ServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2024-02-24T01:18:54.964+01:00  INFO 53620 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration de.mangalib.MangalibApplication for test class de.mangalib.ServiceTest
+Hibernate: select s1_0.status_id,s1_0.beschreibung from status s1_0 where s1_0.status_id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select t1_0.typ_id,t1_0.bezeichnung from typen t1_0 where t1_0.typ_id=?
+Hibernate: select f1_0.format_id,f1_0.bezeichnung from formate f1_0 where f1_0.format_id=?
+Hibernate: insert into mangareihe (aktualisiert_am,anzahl_baende,erstellt_am,format_id,gesamtpreis,ist_ebay_preis,ist_vergriffen,manga_index,preis_pro_band,status_id,titel,typ_id,verlag_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?)
+Hibernate: select mr1_0.id,mr1_0.aktualisiert_am,mr1_0.anzahl_baende,mr1_0.erstellt_am,mr1_0.format_id,mr1_0.gesamtpreis,mr1_0.ist_ebay_preis,mr1_0.ist_vergriffen,mr1_0.manga_index,mr1_0.preis_pro_band,mr1_0.status_id,mr1_0.titel,mr1_0.typ_id,mr1_0.verlag_id from mangareihe mr1_0
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select s1_0.status_id,s1_0.beschreibung from status s1_0 where s1_0.status_id=?
+Hibernate: select t1_0.typ_id,t1_0.bezeichnung from typen t1_0 where t1_0.typ_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select f1_0.format_id,f1_0.bezeichnung from formate f1_0 where f1_0.format_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select s1_0.status_id,s1_0.beschreibung from status s1_0 where s1_0.status_id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Hibernate: select md1_0.id,s1_0.id,s1_0.multiplikator,s1_0.typ,md1_0.sammelbaende_id from mangadetails md1_0 left join sammelbaende s1_0 on s1_0.id=md1_0.sammelbaende_id where md1_0.id=?
+Hibernate: select v1_0.verlag_id,v1_0.name from verlage v1_0 where v1_0.verlag_id=?
+Alle MangaReihen:
+ID: 8, Titel: Solo Leveling, Status: Aktuell, Verlag: altraverse, Typ: Webtoon, Format: Softcover
+ID: 9, Titel: Attack on Titan, Status: Vollständig, Verlag: Carlsen Manga, Typ: Manga, Format: Softcover
+ID: 10, Titel: One Piece, Status: Aktuell, Verlag: Chinabooks, Typ: Manga, Format: Hardcover
+ID: 11, Titel: Naruto, Status: Vollständig, Verlag: CROCU, Typ: Manga, Format: Softcover
+ID: 12, Titel: Death Note, Status: Unvollständig, Verlag: Crunchyroll, Typ: Manga, Format: Softcover
+ID: 13, Titel: My Hero Academia, Status: Aktuell, Verlag: dani books, Typ: Manga, Format: Softcover
+ID: 14, Titel: Fullmetal Alchemist, Status: Vollständig, Verlag: Dokico, Typ: Manga, Format: Softcover
+ID: 15, Titel: Dragon Ball, Status: Unvollständig, Verlag: Egmont Manga, Typ: Manga, Format: Softcover
+ID: 16, Titel: Bleach, Status: Aktuell, Verlag: Hayabusa, Typ: Manga, Format: Softcover
+ID: 17, Titel: Tokyo Ghoul, Status: Vollständig, Verlag: JNC Nina, Typ: Manga, Format: Softcover
+ID: 18, Titel: Hunter x Hunter, Status: Unvollständig, Verlag: KAZÉ Manga, Typ: Manga, Format: Softcover
+ID: 19, Titel: Demon Slayer, Status: Aktuell, Verlag: Loewe Verlag, Typ: Manga, Format: Softcover
+ID: 20, Titel: Black Clover, Status: Vollständig, Verlag: LYX, Typ: Manga, Format: Softcover
+ID: 21, Titel: Jujutsu Kaisen, Status: Unvollständig, Verlag: Manga Cult, Typ: Manga, Format: Softcover
+ID: 22, Titel: Dr. Stone, Status: Aktuell, Verlag: Manga JAM Session, Typ: Manga, Format: Softcover
+ID: 23, Titel: Vinland Saga, Status: Vollständig, Verlag: Manwha Cult, Typ: Manga, Format: Softcover
+ID: 26, Titel: TestMangaReihe2, Status: Vollständig, Verlag: altraverse, Typ: Manga, Format: Softcover
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

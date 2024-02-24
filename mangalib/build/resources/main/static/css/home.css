@@ -281,5 +281,28 @@ body {
   width: 2.5em; /* Breite des Bildes */
 }
 
+.scrollToTopButton {
+  display: none; /* Standardmäßig versteckt */
+  position: fixed;
+  bottom: 20px;
+  left: 205px;
+  cursor: pointer;
+}
+
+.scrollToTopButton button {
+  /* Stilangaben für den quadratischen Button */
+  width: 65px; /* Breite des Buttons */
+  height: 65px; /* Höhe des Buttons */
+  padding: 10px 10px;
+  background-color: #274272;
+  border: none;
+  border-radius: 5px;
+}
+
+.scrollToTopButton button img {
+  width: 100%; /* Bild füllt den gesamten Button aus */
+  height: auto;
+}
+
 
 
