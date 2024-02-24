@@ -5,16 +5,20 @@ import de.mangalib.entity.Verlag;
 import de.mangalib.entity.Typ;
 import de.mangalib.entity.Format;
 import de.mangalib.entity.MangaReihe;
+import de.mangalib.entity.Sammelbaende;
 import de.mangalib.service.StatusService;
 import de.mangalib.service.VerlagService;
 import de.mangalib.service.TypService;
 import de.mangalib.service.FormatService;
 import de.mangalib.service.MangaReiheService;
+import de.mangalib.service.SammelbaendeService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -42,6 +46,9 @@ public class MyController {
     @Autowired
     private MangaReiheService mangaReiheService;
 
+    @Autowired
+    private SammelbaendeService sammelbaendeService;
+
     @GetMapping("/home")
     public String meineSeite(Model model,
             @RequestParam(name = "sortierung", required = false) String sortierung,
@@ -57,6 +64,7 @@ public class MyController {
         List<Verlag> alleVerlage = verlagService.findAll();
         List<Typ> alleTypen = typService.findAllSortById();
         List<Format> alleFormate = formatService.findAllSortById();
+        List<Sammelbaende> alleSammelbaende = sammelbaendeService.findAll();
 
         List<MangaReihe> alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
 
@@ -116,8 +124,6 @@ public class MyController {
             }
         });
 
-        
-
         model.addAttribute("sortierung", sortierung);
         model.addAttribute("statusFilter", statusId);
         model.addAttribute("verlagFilter", verlagId);
@@ -131,6 +137,7 @@ public class MyController {
         model.addAttribute("alleTypen", alleTypen);
         model.addAttribute("alleFormate", alleFormate);
         model.addAttribute("alleMangaReihen", alleMangaReihen);
+        model.addAttribute("alleSammelbaende", alleSammelbaende);
 
         return "home"; // Name der HTML-Datei ohne .html
     }
@@ -150,4 +157,12 @@ public class MyController {
         return "redirect:/home";
     }
 
+    @PostMapping("/addMangaReihe")
+    public String addMangaReihe(@ModelAttribute MangaReihe mangaReihe) {
+        // Speichern des neuen MangaReihe-Objekts
+        mangaReiheService.saveMangaReihe(mangaReihe);
+
+        // Umleitung zurück zur Hauptseite
+        return "redirect:/home";
+    }
 }
