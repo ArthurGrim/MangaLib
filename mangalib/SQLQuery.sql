@@ -35,7 +35,7 @@ CREATE TABLE mangareihe (
     titel VARCHAR(255) NOT NULL,
     anzahl_baende INT,
     preis_pro_band DOUBLE,
-    gesamtpreis DOUBLE,
+    gesamtpreis DECIMAL(10, 2),
     erstellt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     aktualisiert_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     ist_ebay_preis BOOLEAN DEFAULT FALSE,

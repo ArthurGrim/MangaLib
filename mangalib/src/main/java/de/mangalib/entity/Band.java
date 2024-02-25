@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Baende {
+public class Band {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

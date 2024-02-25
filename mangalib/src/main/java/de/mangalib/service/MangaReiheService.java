@@ -2,19 +2,26 @@ package de.mangalib.service;
 
 import de.mangalib.repository.MangaReiheRepository;
 import de.mangalib.repository.StatusRepository;
+import de.mangalib.entity.Band;
 import de.mangalib.entity.Format;
 import de.mangalib.entity.MangaDetails;
 import de.mangalib.entity.MangaReihe;
+import de.mangalib.entity.Sammelband;
 import de.mangalib.entity.Status;
 import de.mangalib.entity.Typ;
 import de.mangalib.entity.Verlag;
 import de.mangalib.repository.VerlagRepository;
+import jakarta.transaction.Transactional;
 import de.mangalib.repository.TypRepository;
+import de.mangalib.repository.BandRepository;
 import de.mangalib.repository.FormatRepository;
+import de.mangalib.repository.MangaDetailsRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import java.math.BigDecimal;
 import java.time.Year;
 import java.util.*;
 
@@ -28,15 +35,35 @@ public class MangaReiheService {
     private final VerlagRepository verlagRepository;
     private final TypRepository typRepository;
     private final FormatRepository formatRepository;
+    private final BandRepository bandRepository;
+    private final MangaDetailsRepository mangaDetailsRepository;
+
+    @Autowired
+    private StatusService statusService;
+
+    @Autowired
+    private VerlagService verlagService;
+
+    @Autowired
+    private TypService typService;
+
+    @Autowired
+    private FormatService formatService;
+
+    @Autowired
+    private SammelbandService sammelbaendeService;
 
     // Konstruktorbasierte Dependency Injection des MangaReiheRepository
     public MangaReiheService(MangaReiheRepository mangaReiheRepository, StatusRepository statusRepository,
-            FormatRepository formatRepository, TypRepository typRepository, VerlagRepository verlagRepository) {
+            FormatRepository formatRepository, TypRepository typRepository, VerlagRepository verlagRepository,
+            BandRepository bandRepository, MangaDetailsRepository mangaDetailsRepository) {
         this.mangaReiheRepository = mangaReiheRepository;
         this.statusRepository = statusRepository;
         this.verlagRepository = verlagRepository;
         this.typRepository = typRepository;
         this.formatRepository = formatRepository;
+        this.bandRepository = bandRepository;
+        this.mangaDetailsRepository = mangaDetailsRepository;
     }
 
     // Eine Methode, um alle MangaReihe-Objekte aus der Datenbank abzurufen
@@ -67,6 +94,90 @@ public class MangaReiheService {
             throw new IllegalArgumentException("MangaReihe darf nicht null sein");
         }
         return mangaReiheRepository.save(mangaReihe);
+    }
+
+    /**
+     * Speichert eine neue MangaReihe in der Datenbank mit den zugehörigen
+     * MangaDetails und Bänden.
+     * 
+     * @param mangaIndex           Der Index der MangaReihe.
+     * @param statusId             Die ID des Status.
+     * @param verlagId             Die ID des Verlags.
+     * @param typId                Die ID des Typs.
+     * @param formatId             Die ID des Formats.
+     * @param titel                Der Titel der MangaReihe.
+     * @param anzahlBaende         Die Anzahl der Bände in der Reihe.
+     * @param preisProBand         Der Preis pro Band.
+     * @param istVergriffen        Gibt an, ob die Reihe vergriffen ist.
+     * @param istEbayPreis         Gibt an, ob es sich um einen eBay-Preis handelt.
+     * @param anilistUrl           Die URL zu AniList.
+     * @param sammelbandTypId      Die ID des Sammelbandtyps.
+     * @param gesamtpreisAenderung Die Änderung des Gesamtpreises.
+     * @return Das gespeicherte MangaReihe-Objekt.
+     */
+    @Transactional
+    public MangaReihe saveMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
+            String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
+            String anilistUrl, Long sammelbandTypId, Double gesamtpreisAenderung) {
+        // Erstellen der MangaReihe
+        MangaReihe mangaReihe = new MangaReihe();
+        mangaReihe.setMangaIndex(mangaIndex);
+        // Setzen der abhängigen Objekte wie Status, Verlag, Typ, Format basierend auf
+        // deren IDs
+        mangaReihe.setStatus(statusService.getStatusById(statusId).orElse(null));
+        mangaReihe.setVerlag(verlagService.getVerlagById(verlagId).orElse(null));
+        mangaReihe.setTyp(typService.getTypById(typId).orElse(null));
+        mangaReihe.setFormat(formatService.getFormatById(formatId).orElse(null));
+        // Setzen der anderen Attribute
+        mangaReihe.setTitel(titel);
+        mangaReihe.setAnzahlBaende(anzahlBaende);
+        mangaReihe.setPreisProBand(preisProBand);
+        mangaReihe.setIstVergriffen(istVergriffen);
+
+        // Berechnen des Gesamtpreises
+        BigDecimal preisProBandBigDecimal = BigDecimal.valueOf(preisProBand);
+        BigDecimal gesamtpreisAenderungBigDecimal = gesamtpreisAenderung != null
+                ? BigDecimal.valueOf(gesamtpreisAenderung)
+                : BigDecimal.ZERO;
+        BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(anzahlBaende);
+
+        BigDecimal gesamtpreis = preisProBandBigDecimal.multiply(anzahlBaendeBigDecimal)
+                .add(gesamtpreisAenderungBigDecimal);
+        mangaReihe.setGesamtpreis(gesamtpreis);
+
+        // Speichern in der Datenbank
+        MangaReihe savedMangaReihe = mangaReiheRepository.save(mangaReihe);
+
+        // Erstellen der MangaDetails
+        MangaDetails details = new MangaDetails();
+        details.setMangaReihe(savedMangaReihe);
+        if (anilistUrl != null)
+            details.setAnilistUrl(anilistUrl);
+        if (sammelbandTypId != null) {
+            System.out.println("Test 1: " + sammelbandTypId);
+            Sammelband sammelband = sammelbaendeService.findById(1L).orElse(null);
+            System.out.println("Test 2: " + sammelband.getId());
+            details.setSammelbaende(sammelband);
+            System.out.println(details.getSammelbaende().getId());
+        }
+        mangaDetailsRepository.save(details);
+
+        // Erstellen der Bände
+        for (int i = 1; i <= anzahlBaende; i++) {
+            Band band = new Band();
+            band.setMangaReiheId(mangaReihe.getId());
+            band.setPreis(BigDecimal.valueOf(preisProBand));
+            band.setBandNr(i);
+            // Speichern jedes Bandes
+            bandRepository.save(band);
+        }
+
+        return mangaReihe;
+    }
+
+    public Long getNextId() {
+        Long maxId = mangaReiheRepository.findMaxId();
+        return (maxId == null) ? 1 : maxId + 1;
     }
 
     // ------------------------------Aktualisieren--------------------------------
@@ -225,7 +336,7 @@ public class MangaReiheService {
      * @param neuerGesamtpreis Der Gesamtpreis der MangaReihe.
      * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
      */
-    public Optional<MangaReihe> updateMangaReiheGesamtpreis(Long mangaReiheId, Double neuerGesamtpreis) {
+    public Optional<MangaReihe> updateMangaReiheGesamtpreis(Long mangaReiheId, BigDecimal neuerGesamtpreis) {
         if (mangaReiheId == null || neuerGesamtpreis == null) {
             throw new IllegalArgumentException("ID und Gesamtpreis dürfen nicht null sein");
         }

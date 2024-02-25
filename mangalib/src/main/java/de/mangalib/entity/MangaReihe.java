@@ -1,5 +1,12 @@
 package de.mangalib.entity;
 
+import java.math.BigDecimal;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,15 +54,17 @@ public class MangaReihe {
     @Transient
     private String preisProBandString;
 
-    @Column(name = "gesamtpreis")
-    private Double gesamtpreis;
+    @Column(name = "gesamtpreis", precision = 10, scale = 2)
+    private BigDecimal gesamtpreis;
 
     @Transient
     private String gesamtpreisString;
 
+    @CreationTimestamp
     @Column(name = "erstellt_am")
     private java.sql.Timestamp erstelltAm;
 
+    @UpdateTimestamp
     @Column(name = "aktualisiert_am")
     private java.sql.Timestamp aktualisiertAm;
 
@@ -65,6 +74,7 @@ public class MangaReihe {
     @Column(name = "ist_vergriffen")
     private Boolean istVergriffen;
 
+    @JsonManagedReference
     @OneToOne(mappedBy = "mangaReihe", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private MangaDetails mangaDetails;
 

@@ -1,8 +1,8 @@
 package de.mangalib.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import de.mangalib.entity.Baende;
+import de.mangalib.entity.Band;
 
-public interface BaendeRepository extends JpaRepository<Baende, Long> {
+public interface BandRepository extends JpaRepository<Band, Long> {
     // Weitere benutzerdefinierte Abfragen nach Bedarf
 }

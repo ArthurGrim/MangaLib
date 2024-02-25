@@ -8,8 +8,6 @@
       th:href="@{/css/home.css}"
       href="../static/css/home.css"
     />
-    <script src="/js/scrollToTop.js"></script>
-    <script src="/js/popup_add_reihe.js"></script>
   </head>
   <body>
     <header class="header">
@@ -327,27 +325,27 @@
           />
         </div>
         <div class="status">
-          <p th:text="${mangaReihe.status.beschreibung}">Status</p>
+          <p th:text="${mangaReihe.status?.beschreibung ?: 'Status nicht verfügbar'}">Status</p>
         </div>
         <div class="verlag">
-          <p th:text="${mangaReihe.verlag.name}">Verlag</p>
+          <p th:text="${mangaReihe.verlag?.name ?: 'Verlag nicht verfügbar'}">Verlag</p>
         </div>
         <div class="typ">
-          <p th:text="${mangaReihe.typ.bezeichnung}">Typ</p>
+          <p th:text="${mangaReihe.typ?.bezeichnung ?: 'Typ nicht verfügbar'}">Typ</p>
         </div>
         <div class="format">
-          <p th:text="${mangaReihe.format.bezeichnung}">Format</p>
+          <p th:text="${mangaReihe.format?.bezeichnung ?: 'Format nicht verfügbar'}">Format</p>
         </div>
-        <div class="titel"><p th:text="${mangaReihe.titel}">Titel</p></div>
+        <div class="titel"><p th:text="${mangaReihe.titel ?: 'Titel nicht verfügbar'}">Titel</p></div>
         <div class="baende">
-          <p th:text="${mangaReihe.anzahlBaende}">Bände</p>
+          <p th:text="${mangaReihe.anzahlBaende ?: 'Bände nicht verfügbar'}">Bände</p>
         </div>
         <div class="preis">
-          <p th:text="${mangaReihe.preisProBandString}">Preis</p>
+          <p th:text="${mangaReihe.preisProBandString ?: 'Preis nicht verfügbar'}">Preis</p>
         </div>
         <div class="gesamtpreis">
-          <p th:text="${mangaReihe.gesamtpreisString}">Gesamtpreis</p>
-        </div>
+          <p th:text="${mangaReihe.gesamtpreisString ?: 'Gesamtpreis nicht verfügbar'}">Gesamtpreis</p>
+        </div>        
         <button type="button" class="edit-button" title="Edit">
           <!-- SVG Edit Icon -->
           <img
@@ -359,21 +357,23 @@
       </div>
     </div>
 
+    <!-- Pop-Up Fenster um neue Reihen hinzuzufügen -->
     <div id="popupContainer" class="popup-container">
       <div class="popup">
         <form action="/addMangaReihe" method="post">
+
           <!-- Erste Reihe -->
           <div class="form-row form-row-1">
             <div class="input-group">
               <label for="id">ID</label>
-              <input type="text" id="id" name="id" />
-            </div>
+              <label id="id" class="id-label" th:text="${nextId}"></label>
+          </div>                    
             <div class="input-group">
               <label for="manga_index">Manga Index</label>
               <input type="text" id="manga_index" name="manga_index" />
             </div>
             <div class="spacer"></div>
-            <button type="submit" class="save-button">Save</button>
+            <button type="button" class="save-button">Save</button>
           </div>
 
           <!-- Zweite Reihe -->
@@ -460,7 +460,7 @@
               <input type="checkbox" id="istvergriffen" name="istvergriffen" />
             </div>
             <div class="checkbox-group">
-              <label for="istebaypreis">eBay</label>
+              <label for="istebaypreis">eBay-Preis</label>
               <input type="checkbox" id="istebaypreis" name="istebaypreis" />
             </div>
             <div class="checkbox-group">
@@ -498,5 +498,7 @@
         </form>
       </div>
     </div>
+    <script src="/js/scrollToTop.js"></script>
+    <script src="/js/popup_add_reihe.js"></script>
   </body>
 </html>

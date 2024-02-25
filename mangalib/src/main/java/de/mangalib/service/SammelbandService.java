@@ -2,17 +2,17 @@ package de.mangalib.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import de.mangalib.repository.SammelbaendeRepository;
-import de.mangalib.entity.Sammelbaende;
+import de.mangalib.repository.SammelbandRepository;
+import de.mangalib.entity.Sammelband;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class SammelbaendeService {
+public class SammelbandService {
 
     @Autowired
-    private SammelbaendeRepository sammelbaendeRepository;
+    private SammelbandRepository sammelbaendeRepository;
 
     /**
      * Findet Sammelbaende anhand der ID.
@@ -20,7 +20,7 @@ public class SammelbaendeService {
      * @param id Die ID der Sammelbaende.
      * @return Ein Optional von Sammelbaende.
      */
-    public Optional<Sammelbaende> findById(Long id) {
+    public Optional<Sammelband> findById(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("ID darf nicht null sein");
         }
@@ -33,7 +33,7 @@ public class SammelbaendeService {
      * @param sammelbaende Die zu speichernden Sammelbaende.
      * @return Die gespeicherten Sammelbaende.
      */
-    public Sammelbaende save(Sammelbaende sammelbaende) {
+    public Sammelband save(Sammelband sammelbaende) {
         if (sammelbaende == null) {
             throw new IllegalArgumentException("Sammelbaende dürfen nicht null sein");
         }
@@ -58,7 +58,7 @@ public class SammelbaendeService {
      * 
      * @return Eine Liste von Sammelbaende.
      */
-    public List<Sammelbaende> findAll() {
+    public List<Sammelband> findAll() {
         return sammelbaendeRepository.findAll();
     }
 
