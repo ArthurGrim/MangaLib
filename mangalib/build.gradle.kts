@@ -32,6 +32,9 @@ dependencies {
 	runtimeOnly("com.mysql:mysql-connector-j")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	implementation("org.jsoup:jsoup:1.17.2")
+	implementation("org.seleniumhq.selenium:selenium-java:4.18.1")
+	implementation("io.github.bonigarcia:webdrivermanager:5.7.0")
 }
 
 tasks.withType<Test> {
