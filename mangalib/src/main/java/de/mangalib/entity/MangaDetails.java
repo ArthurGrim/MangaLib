@@ -1,5 +1,7 @@
 package de.mangalib.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,19 +18,33 @@ public class MangaDetails {
     @Column(name = "id")
     private Long id;
 
-    // Andere Attribute...
+    @Column(name = "status_de")
+    private String statusDe;
 
-    @Column(name = "sammelbaende_id")
-    private Long sammelbaendeId;
+    @Column(name = "anzahl_baende_de")
+    private Integer anzahlBaendeDe;
 
+    @Column(name = "status_erstv")
+    private String statusErstv;
+
+    @Column(name = "herkunft")
+    private String herkunft;
+
+    @Column(name = "start_jahr")
+    private Integer startJahr;
+
+    @Column(name = "anzahl_baende_erstv")
+    private Integer anzahlBaendeErstv;
+
+    @JsonBackReference
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "id", referencedColumnName = "id")
     private MangaReihe mangaReihe;
 
     @ManyToOne
-    @JoinColumn(name = "sammelbaende_id", insertable = false, updatable = false)
-    private Sammelbaende sammelbaende;
+    @JoinColumn(name = "sammelbaende_id", referencedColumnName = "id")
+    private Sammelband sammelbaende;
 
     @Column(name = "anilist_url")
     private String anilistUrl;

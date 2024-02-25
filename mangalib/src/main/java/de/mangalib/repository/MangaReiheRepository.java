@@ -25,4 +25,7 @@ public interface MangaReiheRepository extends JpaRepository<MangaReihe, Long> {
 
     @Query("SELECT m FROM MangaReihe m WHERE YEAR(m.erstelltAm) = :jahr AND MONTH(m.erstelltAm) = :monat")
     List<MangaReihe> findByErstelltAmYearAndMonth(int jahr, int monat);
+
+    @Query("SELECT MAX(m.id) FROM MangaReihe m")
+    Long findMaxId();
 }

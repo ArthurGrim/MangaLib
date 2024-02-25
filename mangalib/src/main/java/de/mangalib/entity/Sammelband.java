@@ -1,5 +1,7 @@
 package de.mangalib.entity;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Sammelbaende {
+public class Sammelband {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,5 +23,8 @@ public class Sammelbaende {
 
     @Column(nullable = false)
     private String typ;
+
+    @OneToMany(mappedBy = "sammelbaende", cascade = CascadeType.ALL)
+    private List<MangaDetails> mangaDetails;
 
 }

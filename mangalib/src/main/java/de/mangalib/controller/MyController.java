@@ -5,27 +5,31 @@ import de.mangalib.entity.Verlag;
 import de.mangalib.entity.Typ;
 import de.mangalib.entity.Format;
 import de.mangalib.entity.MangaReihe;
-import de.mangalib.entity.Sammelbaende;
+import de.mangalib.entity.Sammelband;
 import de.mangalib.service.StatusService;
 import de.mangalib.service.VerlagService;
 import de.mangalib.service.TypService;
 import de.mangalib.service.FormatService;
 import de.mangalib.service.MangaReiheService;
-import de.mangalib.service.SammelbaendeService;
+import de.mangalib.service.SammelbandService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.text.DecimalFormat;
 import java.time.Year;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -47,7 +51,7 @@ public class MyController {
     private MangaReiheService mangaReiheService;
 
     @Autowired
-    private SammelbaendeService sammelbaendeService;
+    private SammelbandService sammelbaendeService;
 
     @GetMapping("/home")
     public String meineSeite(Model model,
@@ -64,7 +68,7 @@ public class MyController {
         List<Verlag> alleVerlage = verlagService.findAll();
         List<Typ> alleTypen = typService.findAllSortById();
         List<Format> alleFormate = formatService.findAllSortById();
-        List<Sammelbaende> alleSammelbaende = sammelbaendeService.findAll();
+        List<Sammelband> alleSammelbaende = sammelbaendeService.findAll();
 
         List<MangaReihe> alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
 
@@ -139,6 +143,10 @@ public class MyController {
         model.addAttribute("alleMangaReihen", alleMangaReihen);
         model.addAttribute("alleSammelbaende", alleSammelbaende);
 
+        // Gibt die ID des nächsten Datensatzes zurück
+        Long nextId = mangaReiheService.getNextId();
+        model.addAttribute("nextId", nextId);
+
         return "home"; // Name der HTML-Datei ohne .html
     }
 
@@ -157,12 +165,35 @@ public class MyController {
         return "redirect:/home";
     }
 
-    @PostMapping("/addMangaReihe")
-    public String addMangaReihe(@ModelAttribute MangaReihe mangaReihe) {
-        // Speichern des neuen MangaReihe-Objekts
-        mangaReiheService.saveMangaReihe(mangaReihe);
+    // Methode zum Hinzufügen einer MangaReihe
+    @PostMapping(value = "/addMangaReihe", consumes = "application/json")
+    @ResponseBody // Damit der Rückgabewert als Response Body gesendet wird
+    public ResponseEntity<?> addMangaReihe(@RequestBody Map<String, Object> requestData) {
+        try {
+            // Extrahieren der Daten aus dem requestData-Map
+            Integer mangaIndex = (Integer) requestData.get("mangaIndex");
+            Long statusId = Long.valueOf((String) requestData.get("statusId"));
+            Long verlagId = Long.valueOf((String) requestData.get("verlagId"));
+            Long typId = Long.valueOf((String) requestData.get("typId")) ;
+            Long formatId = Long.valueOf((String) requestData.get("formatId"));
+            String titel = (String) requestData.get("titel");
+            Integer anzahlBaende = (Integer) requestData.get("anzahlBaende");
+            Double preisProBand = Double.valueOf((String) requestData.get("preisProBand"));
+            Boolean istVergriffen = (Boolean) requestData.get("istVergriffen");
+            Boolean istEbayPreis = (Boolean) requestData.get("istEbayPreis");
+            String anilistUrl = (String) requestData.get("anilistUrl");
+            Long sammelbandTypId = requestData.get("sammelbandTypId") != null ? Long.valueOf((String) requestData.get("sammelbandTypId")) : null;
+            Double gesamtpreisAenderung = Double.valueOf((String) requestData.get("gesamtpreisAenderung"));
+            // Verwendung der saveMangaReihe-Methode aus dem Service
+            MangaReihe savedMangaReihe = mangaReiheService.saveMangaReihe(mangaIndex, statusId, verlagId, typId,
+                    formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
+                    sammelbandTypId, gesamtpreisAenderung);
 
-        // Umleitung zurück zur Hauptseite
-        return "redirect:/home";
+            return ResponseEntity.ok(savedMangaReihe);
+        } catch (Exception e) {
+            System.out.println("Fehler");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Fehler bei der Verarbeitung der Anfrage: " + e.getMessage());
+        }
     }
 }

@@ -2,17 +2,17 @@ package de.mangalib.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import de.mangalib.entity.Baende;
-import de.mangalib.repository.BaendeRepository;
+import de.mangalib.entity.Band;
+import de.mangalib.repository.BandRepository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class BaendeService {
+public class BandService {
 
     @Autowired
-    private BaendeRepository baendeRepository;
+    private BandRepository baendeRepository;
 
     /**
      * Findet einen Band anhand der ID.
@@ -20,7 +20,7 @@ public class BaendeService {
      * @param id Die ID des Bandes.
      * @return Ein Optional von Baende.
      */
-    public Optional<Baende> findById(Long id) {
+    public Optional<Band> findById(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("ID darf nicht null sein");
         }
@@ -33,7 +33,7 @@ public class BaendeService {
      * @param baende Der zu speichernde Band.
      * @return Der gespeicherte Band.
      */
-    public Baende save(Baende baende) {
+    public Band save(Band baende) {
         if (baende == null) {
             throw new IllegalArgumentException("Baende darf nicht null sein");
         }
@@ -57,7 +57,7 @@ public class BaendeService {
      * 
      * @return Eine Liste von Baende.
      */
-    public List<Baende> findAll() {
+    public List<Band> findAll() {
         return baendeRepository.findAll();
     }
 

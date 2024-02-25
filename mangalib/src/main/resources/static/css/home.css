@@ -3,7 +3,7 @@
   --blue-dark: #172032;
   --bg-page: #212122;
   --bg-container: #161516;
-  --bg-panel: #1B1A1B;
+  --bg-panel: #1b1a1b;
   --font-page: #f8f8f8;
   --font-container: #cacaca;
   --font-dark: #828282;
@@ -72,7 +72,7 @@ body {
   display: flex; /* Flexibles Box-Layout */
   align-items: center; /* Vertikale Ausrichtung der Elemente */
   background-color: var(--bg-page); /* Dunkelgraue Hintergrundfarbe */
-  border-bottom: .0625rem solid var(--blue-normal);
+  border-bottom: 0.0625rem solid var(--blue-normal);
   margin-right: 85px; /* Rechter Außenabstand */
 }
 
@@ -105,7 +105,7 @@ body {
 /* Stile für die Seitenleiste */
 .sidebar {
   background-color: var(--bg-container); /* Dunkelgraue Hintergrundfarbe */
-  border-top: .125rem solid var(--blue-normal);
+  border-top: 0.125rem solid var(--blue-normal);
   padding: 10px; /* Innenabstand */
   margin-top: 130px; /* Abstand nach oben */
   margin-left: 20px; /* Abstand nach links */
@@ -127,10 +127,10 @@ body {
   justify-content: space-between; /* Elemente gleichmäßig verteilen */
   align-items: center; /* Vertikale Ausrichtung der Elemente */
   margin-bottom: 1em; /* Abstand nach unten */
-  border-bottom: .0625rem solid var(--bg-page);
+  border-bottom: 0.0625rem solid var(--bg-page);
   margin-left: 5px; /* Abstand nach links */
   color: var(--font-container); /* Hellgraue Textfarbe */
-  padding: 0 .5em .25em;
+  padding: 0 0.5em 0.25em;
   user-select: none; /* Verhindert das Auswählen des Textes */
 }
 
@@ -196,17 +196,21 @@ body {
   margin-bottom: -5px; /* Leichter negativer Abstand nach unten */
   margin-left: 5px; /* Abstand nach links */
   pointer-events: none; /* Keine Mausereignisse */
-  font-family: noto-sans,Noto Sans,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+  font-family: noto-sans, Noto Sans, -apple-system, BlinkMacSystemFont, Segoe UI,
+    Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji,
+    Segoe UI Symbol, Noto Color Emoji;
 }
 
 /* Stile für die Select-Elemente */
 .filter-select {
   width: 100%; /* Volle Breite */
-  padding: .425em calc(1.2em + .5rem) .325em .75em; /* Innenabstand */
+  padding: 0.425em calc(1.2em + 0.5rem) 0.325em 0.75em; /* Innenabstand */
   border: none; /* Kein Rand */
   background-color: var(--bg-page); /* Dunkelgraue Hintergrundfarbe */
   color: var(--font-light); /* Hellgraue Textfarbe */
-  font-family: noto-sans,Noto Sans,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+  font-family: noto-sans, Noto Sans, -apple-system, BlinkMacSystemFont, Segoe UI,
+    Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji,
+    Segoe UI Symbol, Noto Color Emoji;
 }
 
 /* Stile für den Zurücksetzen-Button */
@@ -234,10 +238,10 @@ body {
 
 .manga-reihen-header {
   display: grid;
-  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 100px;; /* 9 Spalten plus eine für den Button */
+  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 100px; /* 9 Spalten plus eine für den Button */
   gap: 10px;
   background-color: var(--bg-container);
-  border-top: .125rem solid var(--blue-normal);
+  border-top: 0.125rem solid var(--blue-normal);
   color: var(--font-light);
   padding: 10px;
   user-select: none; /* Verhindert das Auswählen des Textes */
@@ -272,6 +276,8 @@ body {
   border: none; /* Kein Rand */
   padding: 0; /* Kein Innenabstand */
   cursor: pointer; /* Ändert den Mauszeiger */
+  width: 100%;
+  height: 100%;
 }
 
 /* Stil für das Bild im Hinzufügen-Button */
@@ -335,105 +341,96 @@ body {
   background-color: var(--bg-page);
   padding: 20px;
   border-radius: 10px;
-  width: 80%;
+  width: 90%;
   max-width: 600px;
+  box-sizing: border-box; /* Stellt sicher, dass padding und border in der width enthalten sind */
 }
 
-.form-row-1 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.66fr 1fr;
+.form-row {
+  display: flex;
+  flex-wrap: wrap; /* Erlaubt das Umfließen von Elementen auf kleinen Bildschirmen */
   gap: 10px;
-}
-
-.form-row-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-}
-
-.form-row-3 {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 15px;
-}
-
-.form-row-4 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-}
-
-.form-row-5 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 3.5fr 3.5fr;
-  gap: 10px;
-}
-
-.form-row-6 {
-  display: grid;
-  grid-template-columns: 3fr 1fr 1fr;
-  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .input-group {
+  flex: 1 1 150px; /* Jedes Feld nimmt mindestens 150px ein, aber kann wachsen */
   display: flex;
   flex-direction: column;
 }
 
-/* Stil für Labels */
 .input-group label {
   margin-bottom: 5px;
-  color: var(--font-dark); /* Schriftfarbe für Labels */
-  border-bottom: 1px #274272;
+  color: var(--font-dark); /* Stil für Labels */
 }
 
-/* Stil für die Eingabefelder und Select-Felder */
+.id-label {
+  background-color: var(--bg-container); /* Ersetzen Sie #IhreFarbe mit der gewünschten Farbe */
+  padding: 10px; /* Optional: Fügt etwas Innenabstand hinzu */
+  border-radius: 5px; /* Optional: Fügt abgerundete Ecken hinzu */
+  color: var(--font-container); /* Optional: Ändert die Textfarbe, falls erforderlich */
+}
+
 .input-group input[type="text"],
 .input-group input[type="number"],
 .input-group select {
-  padding: 5px;
-  background-color: var(--bg-container); /* Hintergrundfarbe */
-  color: var(--font-container);          /* Schriftfarbe */
-  border: none; /* Rahmenfarbe anpassen */
-  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 100%;
+  border: none;
+  background-color: var(--bg-container);
+  color: var(--font-dark);
 }
 
-/* Stil für Checkboxen */
-.checkbox-group {
+.form-row-3 {
   display: grid;
-  grid-template-areas: 
-    "label"
-    "checkbox"; /* Definiert Bereiche für Label und Checkbox */
-  grid-template-rows: auto 1fr; /* Definiert die Höhe der Zeilen */
-  gap: 5px;
-  align-items: start; /* Startet die Ausrichtung am Anfang, um mit anderen Elementen übereinzustimmen */
-  text-align: center; /* Zentriert das Label horizontal */
-  height: 100%; /* Stellt sicher, dass die Checkbox-Gruppe die volle Höhe einnimmt */
+  grid-template-columns: 2fr 1fr; /* Zwei Drittel für Titel und ein Drittel für Format */
+  gap: 10px;
+}
+
+/* Stil für Checkbox-Gruppen */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1; /* Flex-Item kann wachsen und schrumpfen */
+  min-width: 150px; /* Mindestbreite für jedes Feld */
 }
 
 .checkbox-group label {
-  grid-area: label; /* Weist das Label dem Bereich 'label' zu */
+  text-align: center; /* Zentriert das Label horizontal */
   color: var(--font-dark);
-  font-size: 85%;
+  font-size: 0.875em; /* Anpassung der Schriftgröße */
 }
 
 .checkbox-group input[type="checkbox"] {
-  grid-area: checkbox; /* Weist die Checkbox dem Bereich 'checkbox' zu */
-  justify-self: center; /* Zentriert die Checkbox horizontal */
-  accent-color: var(--bg-container); /* Hintergrundfarbe der Checkbox */
-  height: 50%;
-  width: 50%;
+  accent-color: var(--bg-container); /* Farbe des Häkchens */
+  width: 25px; /* Breite der Checkbox */
+  height: 25px; /* Höhe der Checkbox */
+  margin-top: 0.5em; /* Abstand von Label zur Checkbox */
+  border-radius: 5px; /* Abgerundete Ecken für Checkbox */
+  -webkit-appearance: none; /* Entfernt das Standard-Styling für Checkboxen */
+  -moz-appearance: none; /* Entfernt das Standard-Styling für Checkboxen in Firefox */
+  appearance: none; /* Entfernt das Standard-Styling für Checkboxen */
+  background-color: var(--bg-container); /* Hintergrundfarbe für nicht ausgewählte Checkboxen */
+  border: 1px solid var(--font-dark); /* Rahmenfarbe */
+  display: flex; /* Ermöglicht die Zentrierung des Häkchens */
+  align-items: center; /* Zentriert das Häkchen vertikal */
+  justify-content: center; /* Zentriert das Häkchen horizontal */
 }
 
-/* Hintergrundfarbe für nicht ausgewählte Checkboxen */
+/* Hintergrundfarbe für nicht ausgewählte Checkboxen anpassen */
 .checkbox-group input[type="checkbox"]:not(:checked) {
-  background-color: var(--bg-container); /* Ihre gewünschte Hintergrundfarbe */
-  -webkit-appearance: none; /* Entfernt das Standard-Styling für Checkboxen */
-  appearance: none;
-  width: 25px; /* Feste Breite für Quadrat */
-  height: 25px; /* Feste Höhe für Quadrat */
-  border: 1px solid var(--font-dark); /* Ihre bevorzugte Rahmenfarbe */
+  background-color: var(--bg-unchecked-checkbox); /* Setzen Sie die Hintergrundfarbe für nicht ausgewählte Checkboxen */
 }
+
+/* Stil für das Häkchen innerhalb der Checkbox */
+.checkbox-group input[type="checkbox"]:checked::before {
+  content: '✓'; /* Häkchensymbol */
+  color: var(--font-page); /* Farbe des Häkchens */
+  font-size: 0.875em; /* Größe des Häkchens */
+}
+
 
 /* Anpassungen für Buttons */
 .save-button,
@@ -443,76 +440,56 @@ body {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  flex: 1 1 auto; /* Buttons nehmen den verfügbaren Platz ein, aber nicht weniger als ihren Inhalt */
+  font-size: 100%;
 }
 
 .save-button {
   background-color: var(--blue-normal);
-  color: var(--font-page);
-  grid-column: 4/ 5; /* Nimmt eine Spalten ein */
-  margin-bottom: 25px;
-  width: 100%;
+  color: var(--font-light);
+}
+
+.mp-autofill-button {
+  background-color: var(--blue-dark);
+  color: var(--font-dark);
 }
 
 .cancel-button {
   background-color: var(--font-dark);
   color: var(--font-page);
-  grid-column: 3/ 4;
-  width: 100%;
 }
 
-.mp-autofill-button {
-  background-color: var(--blue-dark);
-  color: var(--font-page);
-  grid-column: 2/ 3;
-  width: 100%;
+/* Media Queries für verschiedene Bildschirmgrößen */
+@media (max-width: 768px) {
+  .input-group,
+  .checkbox-group {
+    flex-basis: 100%; /* Auf kleinen Bildschirmen nehmen die Elemente die volle Breite ein */
+  }
+
+  .save-button,
+  .cancel-button,
+  .mp-autofill-button {
+    flex-basis: calc(
+      50% - 10px
+    ); /* Zwei Buttons pro Zeile mit einem Abstand von 10px */
+  }
+
+  .cancel-button {
+    margin-right: 0; /* Entfernt den rechten Margin vom Cancel-Button auf kleinen Bildschirmen */
+  }
 }
 
-/* Anpassung der Positionierung für Cancel und MP Autofill Buttons */
-.form-row:last-child {
-  justify-content: flex-start; /* Buttons nach links ausrichten */
+@media (max-width: 480px) {
+  .form-row {
+    flex-direction: column; /* Stapelt alle Elemente vertikal auf sehr kleinen Bildschirmen */
+  }
+
+  .input-group.title,
+  .input-group.format {
+    flex-basis: 100%; /* Auf sehr kleinen Bildschirmen nehmen beide Elemente die volle Breite ein */
+  }
+
+  .form-row-3 {
+    grid-template-columns: 1fr; /* Lässt beide Felder die gesamte Zeile einnehmen auf kleinen Bildschirmen */
+  }
 }
-
-.cancel-button,
-.mp-autofill-button {
-  margin-right: 10px; /* Abstand zwischen den Buttons */
-}
-
-.number-input-container {
-  display: flex;
-  align-items: center;
-}
-
-/* Allgemeiner Stil für das Anzahl-Bände-Feld */
-.input-group .number-input {
-  -webkit-appearance: none; /* Für Safari und ältere Chrome-Versionen */
-  -moz-appearance: textfield; /* Für Firefox */
-  appearance: none; /* Standard-Eigenschaft */
-  margin: 0; /* Entfernt Standard-Margin */
-  text-align: center;
-  /* Weitere Stilangaben wie border, padding, etc. */
-}
-
-.number-input-container button {
-  padding: 5px 10px;
-  margin: 0;
-  border: 1px solid var(--font-container);
-  background-color: var(--bg-container);
-  cursor: pointer;
-}
-
-/* Stil für die Buttons */
-.spinner-button {
-  padding: 5px 10px;
-  margin-left: 2px; /* Kleiner Abstand zwischen Input und Buttons */
-  cursor: pointer; /* Cursor-Stil für Buttons */
-  background-color: var(--bg-container);
-  color: var(--font-container);
-}
-
-.number-spinner-controls {
-  display: flex; /* Flexbox für horizontale Anordnung */
-  align-items: center; /* Zentriert die Elemente vertikal */
-}
-
-
-
