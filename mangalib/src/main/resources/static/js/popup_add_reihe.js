@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Event-Handler, um das Pop-up zu verbergen
   cancelButton.addEventListener("click", function () {
     popupContainer.style.display = "none";
+    resetPopupFields();
   });
 
   // Referenzen auf Checkboxen, Felder und Labels
@@ -166,9 +167,32 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Antwort vom Server:", data); // Erfolgsmeldung oder Datenverarbeitung
         // Schließen des Popups
         document.querySelector("#popupContainer").style.display = "none";
+        resetPopupFields();
+        window.location.reload()
       })
       .catch((error) => {
         console.error("Error:", error);
       });
   });
+
+  function resetPopupFields() {
+    // Zurücksetzen aller Eingabefelder
+    document.querySelectorAll('.popup input[type="text"], .popup input[type="number"]').forEach(input => {
+      input.value = '';
+    });
+  
+    // Zurücksetzen aller Select-Elemente
+    document.querySelectorAll('.popup select').forEach(select => {
+      select.selectedIndex = 0;
+    });
+  
+    // Zurücksetzen der Checkboxen
+    document.querySelectorAll('.popup input[type="checkbox"]').forEach(checkbox => {
+      checkbox.checked = false;
+    });
+  
+    // Aktualisieren der Sichtbarkeit basierend auf Checkboxen
+    updateVisibility();
+  }
+  
 });
