@@ -3,12 +3,14 @@ package de.mangalib.controller;
 import de.mangalib.entity.Status;
 import de.mangalib.entity.Verlag;
 import de.mangalib.entity.Typ;
+import de.mangalib.entity.Band;
 import de.mangalib.entity.Format;
 import de.mangalib.entity.MangaReihe;
 import de.mangalib.entity.Sammelband;
 import de.mangalib.service.StatusService;
 import de.mangalib.service.VerlagService;
 import de.mangalib.service.TypService;
+import de.mangalib.service.BandService;
 import de.mangalib.service.FormatService;
 import de.mangalib.service.MangaReiheService;
 import de.mangalib.service.MangaScraper;
@@ -55,6 +57,9 @@ public class MyController {
     @Autowired
     private SammelbandService sammelbaendeService;
 
+    @Autowired
+    private BandService bandService;
+
     @GetMapping("/home")
     public String meineSeite(Model model,
             @RequestParam(name = "sortierung", required = false) String sortierung,
@@ -64,15 +69,21 @@ public class MyController {
             @RequestParam(name = "typFilter", required = false) Long typId,
             @RequestParam(name = "formatFilter", required = false) Long formatId,
             @RequestParam(name = "jahrFilter", required = false) Integer jahrFilter,
-            @RequestParam(name = "monatFilter", required = false) Integer monatFilter) {
+            @RequestParam(name = "monatFilter", required = false) Integer monatFilter,
+            @RequestParam(name = "vergriffenFilter", required = false) String vergriffenFilter) {
 
         List<Status> alleStatus = statusService.findAllSortById();
         List<Verlag> alleVerlage = verlagService.findAll();
         List<Typ> alleTypen = typService.findAllSortById();
         List<Format> alleFormate = formatService.findAllSortById();
         List<Sammelband> alleSammelbaende = sammelbaendeService.findAll();
-
         List<MangaReihe> alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
+        Map<Long, Band> ersteBaendeMap = new HashMap<>();
+
+        for (MangaReihe mangaReihe : alleMangaReihen) {
+            Band ersterBand = bandService.getFirstBandByMangaReiheId(mangaReihe.getId());
+            ersteBaendeMap.put(mangaReihe.getId(), ersterBand);
+        }
 
         if (suche != null && !suche.trim().isEmpty()) {
             alleMangaReihen = mangaReiheService.searchByTitelOrIndex(suche);
@@ -115,6 +126,16 @@ public class MyController {
                     .collect(Collectors.toList());
         }
 
+        if ("true".equals(vergriffenFilter)) {
+            alleMangaReihen = alleMangaReihen.stream()
+                    .filter(MangaReihe::getIstVergriffen)
+                    .collect(Collectors.toList());
+        } else if ("false".equals(vergriffenFilter)) {
+            alleMangaReihen = alleMangaReihen.stream()
+                    .filter(mangaReihe -> !mangaReihe.getIstVergriffen())
+                    .collect(Collectors.toList());
+        }
+
         if ("titel".equals(sortierung)) {
             alleMangaReihen.sort(Comparator.comparing(MangaReihe::getTitel));
         }
@@ -137,6 +158,7 @@ public class MyController {
         model.addAttribute("formatFilter", formatId);
         model.addAttribute("jahrFilter", jahrFilter);
         model.addAttribute("monatFilter", monatFilter);
+        model.addAttribute("vergriffenFilter", vergriffenFilter);
 
         model.addAttribute("alleStatus", alleStatus);
         model.addAttribute("alleVerlage", alleVerlage);
@@ -144,6 +166,7 @@ public class MyController {
         model.addAttribute("alleFormate", alleFormate);
         model.addAttribute("alleMangaReihen", alleMangaReihen);
         model.addAttribute("alleSammelbaende", alleSammelbaende);
+        model.addAttribute("ersteBaendeMap", ersteBaendeMap);
 
         // Gibt die ID des nächsten Datensatzes zurück
         Long nextId = mangaReiheService.getNextId();
@@ -188,15 +211,12 @@ public class MyController {
                     ? Long.valueOf((String) requestData.get("sammelbandTypId"))
                     : null;
             Double gesamtpreisAenderung = Double.valueOf((String) requestData.get("gesamtpreisAenderung"));
-            System.out.println("Test 1");
             @SuppressWarnings("unchecked")
             Map<String, String> scrapedData = (Map<String, String>) requestData.get("scrapedData");
-            System.out.println("Test 2");
             // Verwendung der saveMangaReihe-Methode aus dem Service
             MangaReihe savedMangaReihe = mangaReiheService.saveMangaReihe(mangaIndex, statusId, verlagId, typId,
                     formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
                     sammelbandTypId, gesamtpreisAenderung, scrapedData);
-            System.out.println("Test 3");
             return ResponseEntity.ok(savedMangaReihe);
         } catch (Exception e) {
             System.out.println("Fehler");
@@ -212,14 +232,21 @@ public class MyController {
             Map<String, String> mangaData = MangaScraper.scrapeMangaData(mangaIndex);
             // Umwandlung der Namen in IDs
             Long verlagId = verlagService.findVerlagIdByName(mangaData.get("Deutsche Ausgabe Verlag"));
-            Long typId; 
-            if (mangaData.get("Erstveröffentlichung Herkunft").equals("Japan")) {
+            Long typId;
+            if (((mangaData.get("Erstveröffentlichung Herkunft").equals("China")
+                    || mangaData.get("Erstveröffentlichung Herkunft").equals("Südkorea"))
+                    && !mangaData.get("Erstveröffentlichung Typ").equals("Light Novel"))
+                    && !mangaData.get("Erstveröffentlichung Typ").equals("Artbook & Sonstiges")) {
+                typId = typService.findTypIdByBezeichnung("Webtoon");
+            } else {
                 typId = typService.findTypIdByBezeichnung(mangaData.get("Erstveröffentlichung Typ"));
             }
-            else{
-                typId = typService.findTypIdByBezeichnung("Webtoon");
+            Long formatId;
+            if (mangaData.get("Deutsche Ausgabe Format").equals("Print")) {
+                formatId = formatService.findFormatIdByBezeichnung("Softcover");
+            } else {
+                formatId = formatService.findFormatIdByBezeichnung(mangaData.get("Deutsche Ausgabe Format"));
             }
-            Long formatId = formatService.findFormatIdByBezeichnung(mangaData.get("Deutsche Ausgabe Format"));
 
             // Erstellen einer neuen Map, die sowohl Strings als auch Longs enthält
             Map<String, Object> response = new HashMap<>(mangaData);

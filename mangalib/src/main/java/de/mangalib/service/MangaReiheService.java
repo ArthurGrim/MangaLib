@@ -136,6 +136,7 @@ public class MangaReiheService {
         mangaReihe.setTitel(titel);
         mangaReihe.setAnzahlBaende(anzahlBaende);
         mangaReihe.setPreisProBand(preisProBand);
+        mangaReihe.setIstEbayPreis(istEbayPreis);
         mangaReihe.setIstVergriffen(istVergriffen);
 
         // Berechnen des Gesamtpreises
@@ -202,7 +203,7 @@ public class MangaReiheService {
         // Erstellen der Bände
         for (int i = 1; i <= anzahlBaende; i++) {
             Band band = new Band();
-            band.setMangaReiheId(mangaReihe.getId());
+            band.setMangaReihe(mangaReihe);
             band.setPreis(BigDecimal.valueOf(preisProBand));
             band.setBandNr(i);
             // Setzen der Bild-URL und des Preises, falls vorhanden

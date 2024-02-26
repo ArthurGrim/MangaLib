@@ -12,7 +12,7 @@ import java.util.Optional;
 public class BandService {
 
     @Autowired
-    private BandRepository baendeRepository;
+    private BandRepository bandRepository;
 
     /**
      * Findet einen Band anhand der ID.
@@ -24,7 +24,7 @@ public class BandService {
         if (id == null) {
             throw new IllegalArgumentException("ID darf nicht null sein");
         }
-        return baendeRepository.findById(id);
+        return bandRepository.findById(id);
     }
 
     /**
@@ -37,7 +37,7 @@ public class BandService {
         if (baende == null) {
             throw new IllegalArgumentException("Baende darf nicht null sein");
         }
-        return baendeRepository.save(baende);
+        return bandRepository.save(baende);
     }
 
     /**
@@ -49,7 +49,7 @@ public class BandService {
         if (id == null) {
             throw new IllegalArgumentException("ID darf nicht null sein");
         }
-        baendeRepository.deleteById(id);
+        bandRepository.deleteById(id);
     }
 
     /**
@@ -58,9 +58,24 @@ public class BandService {
      * @return Eine Liste von Baende.
      */
     public List<Band> findAll() {
-        return baendeRepository.findAll();
+        return bandRepository.findAll();
     }
 
-    // Weitere Methoden nach Bedarf...
-}
+    /**
+     * Findet den ersten Band einer MangaReihe anhand der MangaReihe-ID.
+     * 
+     * @param mangaReiheId Die ID der MangaReihe, für die der erste Band gesucht
+     *                     wird.
+     * @return Der erste Band der MangaReihe, falls vorhanden, sonst null.
+     */
+    public Band getFirstBandByMangaReiheId(Long mangaReiheId) {
+        if (mangaReiheId == null) {
+            // Optional: Werfen Sie eine Ausnahme oder geben Sie null zurück, wenn die
+            // mangaReiheId null ist
+            throw new IllegalArgumentException("MangaReiheId darf nicht null sein.");
+        }
 
+        return bandRepository.findFirstBandByMangaReiheId(mangaReiheId)
+                .orElse(null); // oder werfen Sie eine Ausnahme, wenn der Band nicht gefunden wird
+    }
+}

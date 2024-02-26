@@ -78,4 +78,5 @@ public class MangaReihe {
     @OneToOne(mappedBy = "mangaReihe", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private MangaDetails mangaDetails;
 
+
 }
