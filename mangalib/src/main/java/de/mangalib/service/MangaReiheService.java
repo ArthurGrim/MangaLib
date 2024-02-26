@@ -22,6 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.Year;
 import java.util.*;
 
@@ -118,7 +122,7 @@ public class MangaReiheService {
     @Transactional
     public MangaReihe saveMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
             String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
-            String anilistUrl, Long sammelbandTypId, Double gesamtpreisAenderung) {
+            String anilistUrl, Long sammelbandTypId, Double gesamtpreisAenderung, Map<String, String> scrapedData) {
         // Erstellen der MangaReihe
         MangaReihe mangaReihe = new MangaReihe();
         mangaReihe.setMangaIndex(mangaIndex);
@@ -160,6 +164,39 @@ public class MangaReiheService {
             details.setSammelbaende(sammelband);
             System.out.println(details.getSammelbaende().getId());
         }
+        if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
+            details.setStatusDe(String.valueOf(scrapedData.get("Deutsche Ausgabe Status")));
+        }
+        if (scrapedData.containsKey("Deutsche Ausgabe Bände")) {
+            try {
+                String baendeString = scrapedData.get("Deutsche Ausgabe Bände").replace("+", "").trim();
+                details.setAnzahlBaendeDe(Integer.parseInt(baendeString));
+            } catch (NumberFormatException e) {
+                // Behandlung des Fehlers oder Setzen eines Standardwerts
+            }
+        }
+        if (scrapedData.containsKey("Erstveröffentlichung Status")) {
+            details.setStatusErstv(String.valueOf(scrapedData.get("Erstveröffentlichung Status")));
+        }
+        if (scrapedData.containsKey("Erstveröffentlichung Herkunft")) {
+            details.setHerkunft(String.valueOf(scrapedData.get("Erstveröffentlichung Herkunft")));
+        }
+        if (scrapedData.containsKey("Erstveröffentlichung Startjahr")) {
+            try {
+                details.setStartJahr(Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr")));
+            } catch (NumberFormatException e) {
+                // Behandlung des Fehlers oder Setzen eines Standardwerts
+            }
+        }
+        if (scrapedData.containsKey("Erstveröffentlichung Bände")) {
+            try {
+                String baendeString = scrapedData.get("Erstveröffentlichung Bände").replace("+", "").trim();
+                details.setAnzahlBaendeErstv(Integer.parseInt(baendeString));
+            } catch (NumberFormatException e) {
+                // Behandlung des Fehlers oder Setzen eines Standardwerts
+            }
+        }
+
         mangaDetailsRepository.save(details);
 
         // Erstellen der Bände
@@ -168,6 +205,41 @@ public class MangaReiheService {
             band.setMangaReiheId(mangaReihe.getId());
             band.setPreis(BigDecimal.valueOf(preisProBand));
             band.setBandNr(i);
+            // Setzen der Bild-URL und des Preises, falls vorhanden
+            String bildUrlKey = "Band " + i + " Bild Url";
+            try {
+                String bildUrlString = scrapedData.get(bildUrlKey);
+                if (bildUrlString != null && !bildUrlString.isEmpty()) {
+                    URI bildUri = new URI(bildUrlString);
+                    URL bildUrl = bildUri.toURL();
+                    band.setBildUrl(bildUrl);
+                }
+            } catch (URISyntaxException | MalformedURLException e) {
+                e.printStackTrace();
+                // Behandeln Sie den Fehler entsprechend
+            }
+
+            String mpUrlKey = "Band " + i + " href";
+            try {
+                String mpUrlString = scrapedData.get(mpUrlKey);
+                if (mpUrlString != null && !mpUrlString.isEmpty()) {
+                    URI mpUri = new URI(mpUrlString);
+                    URL mpUrl = mpUri.toURL();
+                    band.setMpUrl(mpUrl);
+                }
+            } catch (URISyntaxException | MalformedURLException e) {
+                e.printStackTrace();
+                // Behandeln Sie den Fehler entsprechend
+            }
+
+            String preisKey = "Band " + i + " Preis";
+            if (scrapedData.containsKey(preisKey)) {
+                try {
+                    band.setPreis(new BigDecimal(scrapedData.get(preisKey)));
+                } catch (NumberFormatException e) {
+                    // Behandlung des Fehlers oder Setzen eines Standardwerts
+                }
+            }
             // Speichern jedes Bandes
             bandRepository.save(band);
         }

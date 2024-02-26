@@ -34,6 +34,9 @@ public class Band {
     @Column(name = "bild_url")
     private URL bildUrl;
 
+    @Column(name = "mp_url")
+    private URL mpUrl;
+
     @Column(name = "ist_special")
     private Boolean istSpecial;   
 }

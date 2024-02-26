@@ -79,4 +79,9 @@ public class FormatService {
         return formatRepository.findById(formatId);
     }
 
+    public Long findFormatIdByBezeichnung(String name) {
+        return formatRepository.findByBezeichnung(name)
+                .map(Format::getFormatId)
+                .orElse(null); // oder eine Standard-ID zurückgeben
+    }
 }

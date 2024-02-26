@@ -1,12 +1,16 @@
 document.addEventListener("DOMContentLoaded", function () {
   console.log("Skript geladen");
 
+  let scrapedData = null;
+
   // Referenzen auf Elemente
   const popupContainer = document.getElementById("popupContainer");
   const addButton = document.getElementById("addButton"); // Geändert zu getElementById
   const cancelButton = document.querySelector(".cancel-button");
   const saveButton = document.querySelector(".save-button");
   const nextId = document.getElementById("id").textContent;
+  const autofillButton = document.querySelector(".mp-autofill-button");
+  const mangaIndexInput = document.querySelector("#manga_index");
 
   // Event-Handler, um das Pop-up anzuzeigen
   addButton.addEventListener("click", function () {
@@ -18,6 +22,51 @@ document.addEventListener("DOMContentLoaded", function () {
   cancelButton.addEventListener("click", function () {
     popupContainer.style.display = "none";
     resetPopupFields();
+  });
+
+  // Event-Handler, für den MangaPassion-Autofill Button
+  autofillButton.addEventListener("click", function () {
+    const mangaIndex = mangaIndexInput.value.trim();
+
+    // Validierung des Manga-Index
+    if (!mangaIndex || isNaN(mangaIndex)) {
+      alert("Bitte geben Sie einen gültigen Manga-Index ein.");
+      return;
+    }
+
+    // Senden des Manga-Index an den Web Scraper
+    fetch("/scrape", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ mangaIndex: mangaIndex }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // Daten in die Eingabefelder und Selects einfügen
+        document.querySelector("#verlag").value = data["verlagId"];
+        document.querySelector("#typ").value = data["typId"];
+        document.querySelector("#titel").value = data["Titel"];
+        document.querySelector("#format").value = data["formatId"];
+        document.querySelector("#anzahl_baende").value = data[
+          "Deutsche Ausgabe Bände"
+        ]
+          .replace("+", "")
+          .trim();
+        document.querySelector("#preis_pro_band").value = data["Band 1 Preis"];
+
+        // Entfernen der nicht mehr benötigten Schlüssel
+        delete data["verlagId"];
+        delete data["typId"];
+        delete data["formatId"];
+
+        // Speichern der gesamten Map für den Save-Button
+        scrapedData = JSON.parse(JSON.stringify(data));
+      })
+      .catch((error) => {
+        console.error("Fehler beim Abrufen der Manga-Daten:", error);
+      });
   });
 
   // Referenzen auf Checkboxen, Felder und Labels
@@ -79,7 +128,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const formatId = document.querySelector("#format").value;
     const titel = document.querySelector("#titel").value.trim();
     const anzahlBaende = document.querySelector("#anzahl_baende").value.trim();
-    const preisProBand = document.querySelector("#preis_pro_band").value.trim();
+    const preisProBandString = document
+      .querySelector("#preis_pro_band")
+      .value.trim();
+    const preisProBand = preisProBandString.replace(",", ".");
     const anilistUrl = document.querySelector("#anilist_url").value.trim();
     const istVergriffen = document.querySelector("#istvergriffen").checked;
     const istEbayPreis = document.querySelector("#istebaypreis").checked;
@@ -92,6 +144,26 @@ document.addEventListener("DOMContentLoaded", function () {
     // Validierung der Werte
     if (mangaIndex && !isNum(mangaIndex)) {
       alert("MangaIndex muss eine positive ganze Zahl sein.");
+      return;
+    }
+    if (!statusId) {
+      alert("Bitte wählen Sie einen Status aus.");
+      return;
+    }
+    if (!verlagId) {
+      alert("Bitte wählen Sie einen Verlag aus.");
+      return;
+    }
+    if (!typId) {
+      alert("Bitte wählen Sie einen Typ aus.");
+      return;
+    }
+    if (!formatId) {
+      alert("Bitte wählen Sie ein Format aus.");
+      return;
+    }
+    if (!titel) {
+      alert("Bitte geben Sie einen Titel ein.");
       return;
     }
     if (!isNum(anzahlBaende)) {
@@ -145,8 +217,9 @@ document.addEventListener("DOMContentLoaded", function () {
       istEbayPreis,
       gesamtpreisAenderung: istEbayPreis ? gesamtpreisAenderung : "0",
       anilistUrl,
-      sammelbandTypId: istSammelband ? sammelbandTypId : null
-  };
+      sammelbandTypId: istSammelband ? sammelbandTypId : null,
+      scrapedData: scrapedData,
+    };
 
     // Loggen der zu sendenden Daten
     console.log("Zu sendende Daten:", mangaReiheData);
@@ -168,7 +241,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Schließen des Popups
         document.querySelector("#popupContainer").style.display = "none";
         resetPopupFields();
-        window.location.reload()
+        window.location.reload();
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -177,22 +250,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function resetPopupFields() {
     // Zurücksetzen aller Eingabefelder
-    document.querySelectorAll('.popup input[type="text"], .popup input[type="number"]').forEach(input => {
-      input.value = '';
-    });
-  
+    document
+      .querySelectorAll(
+        '.popup input[type="text"], .popup input[type="number"]'
+      )
+      .forEach((input) => {
+        input.value = "";
+      });
+
     // Zurücksetzen aller Select-Elemente
-    document.querySelectorAll('.popup select').forEach(select => {
+    document.querySelectorAll(".popup select").forEach((select) => {
       select.selectedIndex = 0;
     });
-  
+
     // Zurücksetzen der Checkboxen
-    document.querySelectorAll('.popup input[type="checkbox"]').forEach(checkbox => {
-      checkbox.checked = false;
-    });
-  
+    document
+      .querySelectorAll('.popup input[type="checkbox"]')
+      .forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+
     // Aktualisieren der Sichtbarkeit basierend auf Checkboxen
     updateVisibility();
   }
-  
 });

@@ -2,6 +2,9 @@ package de.mangalib;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
 import de.mangalib.entity.MangaReihe;
@@ -29,10 +32,11 @@ public class ServiceTest {
         String anilistUrl = "https://testurl.com";
         Long sammelbandTypId = null; // Angenommen, dies ist optional
         Double gesamtpreisAenderung = null; // Optional
+        Map <String, String> erweitereDetails = null;
     
         // Methode aufrufen
         MangaReihe gespeicherteMangaReihe = mangaReiheService.saveMangaReihe(mangaIndex, statusId, verlagId, typId, formatId, titel,
-                anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung);
+                anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, erweitereDetails);
     
         System.out.println("Gespeicherte MangaReihe: " + gespeicherteMangaReihe);
         // Ergebnisse überprüfen
