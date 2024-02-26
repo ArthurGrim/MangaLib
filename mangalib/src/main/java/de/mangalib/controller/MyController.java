@@ -11,6 +11,7 @@ import de.mangalib.service.VerlagService;
 import de.mangalib.service.TypService;
 import de.mangalib.service.FormatService;
 import de.mangalib.service.MangaReiheService;
+import de.mangalib.service.MangaScraper;
 import de.mangalib.service.SammelbandService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.text.DecimalFormat;
 import java.time.Year;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -174,7 +176,7 @@ public class MyController {
             Integer mangaIndex = (Integer) requestData.get("mangaIndex");
             Long statusId = Long.valueOf((String) requestData.get("statusId"));
             Long verlagId = Long.valueOf((String) requestData.get("verlagId"));
-            Long typId = Long.valueOf((String) requestData.get("typId")) ;
+            Long typId = Long.valueOf((String) requestData.get("typId"));
             Long formatId = Long.valueOf((String) requestData.get("formatId"));
             String titel = (String) requestData.get("titel");
             Integer anzahlBaende = (Integer) requestData.get("anzahlBaende");
@@ -182,18 +184,53 @@ public class MyController {
             Boolean istVergriffen = (Boolean) requestData.get("istVergriffen");
             Boolean istEbayPreis = (Boolean) requestData.get("istEbayPreis");
             String anilistUrl = (String) requestData.get("anilistUrl");
-            Long sammelbandTypId = requestData.get("sammelbandTypId") != null ? Long.valueOf((String) requestData.get("sammelbandTypId")) : null;
+            Long sammelbandTypId = requestData.get("sammelbandTypId") != null
+                    ? Long.valueOf((String) requestData.get("sammelbandTypId"))
+                    : null;
             Double gesamtpreisAenderung = Double.valueOf((String) requestData.get("gesamtpreisAenderung"));
+            System.out.println("Test 1");
+            @SuppressWarnings("unchecked")
+            Map<String, String> scrapedData = (Map<String, String>) requestData.get("scrapedData");
+            System.out.println("Test 2");
             // Verwendung der saveMangaReihe-Methode aus dem Service
             MangaReihe savedMangaReihe = mangaReiheService.saveMangaReihe(mangaIndex, statusId, verlagId, typId,
                     formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
-                    sammelbandTypId, gesamtpreisAenderung);
-
+                    sammelbandTypId, gesamtpreisAenderung, scrapedData);
+            System.out.println("Test 3");
             return ResponseEntity.ok(savedMangaReihe);
         } catch (Exception e) {
             System.out.println("Fehler");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Fehler bei der Verarbeitung der Anfrage: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/scrape")
+    public ResponseEntity<Map<String, Object>> scrapeManga(@RequestBody Map<String, String> request) {
+        try {
+            String mangaIndex = request.get("mangaIndex");
+            Map<String, String> mangaData = MangaScraper.scrapeMangaData(mangaIndex);
+            // Umwandlung der Namen in IDs
+            Long verlagId = verlagService.findVerlagIdByName(mangaData.get("Deutsche Ausgabe Verlag"));
+            Long typId; 
+            if (mangaData.get("Erstveröffentlichung Herkunft").equals("Japan")) {
+                typId = typService.findTypIdByBezeichnung(mangaData.get("Erstveröffentlichung Typ"));
+            }
+            else{
+                typId = typService.findTypIdByBezeichnung("Webtoon");
+            }
+            Long formatId = formatService.findFormatIdByBezeichnung(mangaData.get("Deutsche Ausgabe Format"));
+
+            // Erstellen einer neuen Map, die sowohl Strings als auch Longs enthält
+            Map<String, Object> response = new HashMap<>(mangaData);
+            response.put("verlagId", verlagId);
+            response.put("typId", typId);
+            response.put("formatId", formatId);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

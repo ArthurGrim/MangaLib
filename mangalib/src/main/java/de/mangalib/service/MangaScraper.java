@@ -33,7 +33,7 @@ public class MangaScraper {
             if (!document.select("div.manga_sidebarInfoBlock__rJiuy:nth-child(2)").isEmpty()) {
                 // Titel extrahieren
                 String title = document.select(".manga_mainHeadingWrapper__sGPUj > h1:nth-child(1)").text();
-                mangaData.put("title", title);
+                mangaData.put("Titel", title);
 
                 // Extraktion von Verlag, Status, Format, Bänden und Preis
                 Elements infoBlocks = document.select("div.manga_sidebarInfoBlock__rJiuy");

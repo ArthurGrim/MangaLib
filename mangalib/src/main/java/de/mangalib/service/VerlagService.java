@@ -23,7 +23,8 @@ public class VerlagService {
         return verlagRepository.findAll();
     }
 
-    // Eine Methode, um alle Verlag-Objekte aus der Datenbank geordnet nach ID abzurufen
+    // Eine Methode, um alle Verlag-Objekte aus der Datenbank geordnet nach ID
+    // abzurufen
     public List<Verlag> findAllSortById() {
         List<Verlag> result = verlagRepository.findAll();
         result.sort(Comparator.comparing(Verlag::getVerlagId));
@@ -79,4 +80,10 @@ public class VerlagService {
         return verlagRepository.findById(verlagId);
     }
 
+    public Long findVerlagIdByName(String bezeichnung) {
+        System.out.println(bezeichnung);
+        return verlagRepository.findByName(bezeichnung)
+                .map(Verlag::getVerlagId)
+                .orElse(null); // oder eine Standard-ID zurückgeben
+    }
 }
