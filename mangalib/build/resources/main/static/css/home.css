@@ -22,9 +22,13 @@ body {
 
 /* Stile für die Kopfzeile */
 .header {
+  position: fixed;
+  top: 0;
+  width: 100%;
   background-color: var(--bg-container); /* Dunkelgraue Hintergrundfarbe */
   color: var(--font-container); /* Weiße Textfarbe */
   padding: 11px 0; /* Vertikaler Innenabstand */
+  z-index: 100;
 }
 
 /* Innerer Container der Kopfzeile für Layout und Ausrichtung */
@@ -107,7 +111,7 @@ body {
   background-color: var(--bg-container); /* Dunkelgraue Hintergrundfarbe */
   border-top: 0.125rem solid var(--blue-normal);
   padding: 10px; /* Innenabstand */
-  margin-top: 130px; /* Abstand nach oben */
+  margin-top: 110px; /* Abstand nach oben */
   margin-left: 20px; /* Abstand nach links */
   width: 230px; /* Breite der Seitenleiste */
   position: absolute; /* Absolute Positionierung */
@@ -233,7 +237,7 @@ body {
   flex-direction: column;
   margin-left: 280px; /* Abstand zur Sidebar */
   padding: 20px;
-  margin-top: 60px; /* Abstand nach oben */
+  margin-top: 90px; /* Abstand nach oben */
 }
 
 .manga-reihen-header {
@@ -268,6 +272,15 @@ body {
   align-items: center; /* Zentriert horizontal */
   justify-content: center; /* Zentriert vertikal */
   text-align: center; /* Zentriert den Text */
+}
+
+.cover-bild img {
+  max-width: 100%;  /* Maximale Breite auf 100% des umgebenden Elements setzen */
+  max-height: 200px; /* Maximale Höhe festlegen */
+  height: auto; /* Höhe automatisch anpassen, um das Seitenverhältnis zu erhalten */
+  width: 75%;
+  display: block; /* Block-Element, um unerwünschte Ränder zu vermeiden */
+  margin: 0 auto; /* Zentrieren des Bildes, falls es kleiner als der umgebende Bereich ist */
 }
 
 /* Stil für den Hinzufügen-Button */
@@ -338,12 +351,26 @@ body {
 }
 
 .popup {
+  position: relative;
   background-color: var(--bg-page);
   padding: 20px;
   border-radius: 10px;
   width: 90%;
   max-width: 600px;
   box-sizing: border-box; /* Stellt sicher, dass padding und border in der width enthalten sind */
+}
+
+.loading-label {
+  position: absolute; /* oder eine andere Positionierung */
+  top: 10%; /* Zentriert das Label vertikal */
+  left: 50%; /* Zentriert das Label horizontal */
+  transform: translate(-50%, -50%); /* Korrigiert die Positionierung */
+  background-color: var(--blue-normal);
+  color: var(--font-dark);
+  z-index: 1010;
+  padding: 10px 15px;
+  font-size: 100%;
+  border-radius: 10px;
 }
 
 .form-row {
@@ -492,4 +519,6 @@ body {
   .form-row-3 {
     grid-template-columns: 1fr; /* Lässt beide Felder die gesamte Zeile einnehmen auf kleinen Bildschirmen */
   }
+
+  
 }

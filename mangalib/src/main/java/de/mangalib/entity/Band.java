@@ -1,26 +1,28 @@
 package de.mangalib.entity;
 
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "baende")
 @Getter
 @Setter
-@NoArgsConstructor
 public class Band {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "manga_reihe_id", nullable = false)
-    private Long mangaReiheId;
+    @ManyToOne
+    @JoinColumn(name = "manga_reihe_id", nullable = false)
+    private MangaReihe mangaReihe;
 
     @Column(name = "band_index")
     private Integer bandIndex;
@@ -39,4 +41,13 @@ public class Band {
 
     @Column(name = "ist_special")
     private Boolean istSpecial;   
+
+    public Band() {
+        try {
+            this.bildUrl = new URI("https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png?20200912122019").toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            // Loggen Sie den Fehler oder behandeln Sie ihn entsprechend
+            e.printStackTrace();
+        } 
+    }
 }

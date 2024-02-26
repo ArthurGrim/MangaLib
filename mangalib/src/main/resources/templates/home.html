@@ -276,6 +276,39 @@
                 </option>
               </select>
             </div>
+            <!-- Drop Down für Vergriffen -->
+            <div class="filter-section">
+              <label class="filter-label" for="vergriffen"
+                ><!-- SVG Vergriffen Icon -->
+                <img
+                  th:src="@{/svg/vergriffen_icon.svg}"
+                  alt="SVG"
+                  style="height: 1em; width: 1em"
+                />
+                Vergriffen</label
+              >
+              <select
+                name="vergriffenFilter"
+                onchange="this.form.submit()"
+                class="filter-select"
+              >
+                <option value="" th:selected="${vergriffenFilter == null}">
+                  Alle
+                </option>
+                <option
+                  value="true"
+                  th:selected="${vergriffenFilter == 'true'}"
+                >
+                  Ja
+                </option>
+                <option
+                  value="false"
+                  th:selected="${vergriffenFilter == 'false'}"
+                >
+                  Nein
+                </option>
+              </select>
+            </div>
           </div>
         </form>
       </div>
@@ -317,35 +350,69 @@
       </div>
       <!-- Hier kommen die einzelnen MangaReihen -->
       <div th:each="mangaReihe : ${alleMangaReihen}" class="manga-reihe-panel">
-        <div>
-          <img
-            th:src="@{/svg/filler_img2.png}"
-            alt="Filler Image"
-            style="width: 75%; height: auto"
-          />
+        <div class="cover-bild">
+          <th:block th:with="ersterBand=${ersteBaendeMap[mangaReihe.id]}">
+            <!-- Prüfen, ob ersterBand nicht null ist und bildUrl vorhanden ist -->
+            <img
+              th:if="${ersterBand != null and ersterBand.bildUrl != null}"
+              th:src="${ersterBand.bildUrl}"
+            />
+            <!-- Optional: Etwas anzeigen, wenn ersterBand null ist oder keine bildUrl hat -->
+            <div th:if="${ersterBand == null or ersterBand.bildUrl == null}">
+              <img
+                th:src="@{/svg/filler_img2.png}"
+                alt="Filler Image"
+                style="width: 75%; height: auto"
+              />
+            </div>
+          </th:block>
         </div>
         <div class="status">
-          <p th:text="${mangaReihe.status?.beschreibung ?: 'Status nicht verfügbar'}">Status</p>
+          <p
+            th:text="${mangaReihe.status?.beschreibung ?: 'Status nicht verfügbar'}"
+          >
+            Status
+          </p>
         </div>
         <div class="verlag">
-          <p th:text="${mangaReihe.verlag?.name ?: 'Verlag nicht verfügbar'}">Verlag</p>
+          <p th:text="${mangaReihe.verlag?.name ?: 'Verlag nicht verfügbar'}">
+            Verlag
+          </p>
         </div>
         <div class="typ">
-          <p th:text="${mangaReihe.typ?.bezeichnung ?: 'Typ nicht verfügbar'}">Typ</p>
+          <p th:text="${mangaReihe.typ?.bezeichnung ?: 'Typ nicht verfügbar'}">
+            Typ
+          </p>
         </div>
         <div class="format">
-          <p th:text="${mangaReihe.format?.bezeichnung ?: 'Format nicht verfügbar'}">Format</p>
+          <p
+            th:text="${mangaReihe.format?.bezeichnung ?: 'Format nicht verfügbar'}"
+          >
+            Format
+          </p>
         </div>
-        <div class="titel"><p th:text="${mangaReihe.titel ?: 'Titel nicht verfügbar'}">Titel</p></div>
+        <div class="titel">
+          <p th:text="${mangaReihe.titel ?: 'Titel nicht verfügbar'}">Titel</p>
+        </div>
         <div class="baende">
-          <p th:text="${mangaReihe.anzahlBaende ?: 'Bände nicht verfügbar'}">Bände</p>
+          <p th:text="${mangaReihe.anzahlBaende ?: 'Bände nicht verfügbar'}">
+            Bände
+          </p>
         </div>
         <div class="preis">
-          <p th:text="${mangaReihe.preisProBandString ?: 'Preis nicht verfügbar'}">Preis</p>
+          <p
+            th:text="${mangaReihe.preisProBandString ?: 'Preis nicht verfügbar'}"
+          >
+            Preis
+          </p>
         </div>
         <div class="gesamtpreis">
-          <p th:text="${mangaReihe.gesamtpreisString ?: 'Gesamtpreis nicht verfügbar'}">Gesamtpreis</p>
-        </div>        
+          <p
+            th:text="${mangaReihe.gesamtpreisString ?: 'Gesamtpreis nicht verfügbar'}"
+          >
+            Gesamtpreis
+          </p>
+        </div>
         <button type="button" class="edit-button" title="Edit">
           <!-- SVG Edit Icon -->
           <img
@@ -361,13 +428,13 @@
     <div id="popupContainer" class="popup-container">
       <div class="popup">
         <form action="/addMangaReihe" method="post">
-
+          <div class="loading-label" style="display: none">Lädt...</div>
           <!-- Erste Reihe -->
           <div class="form-row form-row-1">
             <div class="input-group">
               <label for="id">ID</label>
               <label id="id" class="id-label" th:text="${nextId}"></label>
-          </div>                    
+            </div>
             <div class="input-group">
               <label for="manga_index">Manga Index</label>
               <input type="text" id="manga_index" name="manga_index" />

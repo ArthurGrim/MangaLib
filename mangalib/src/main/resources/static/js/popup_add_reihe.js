@@ -27,12 +27,16 @@ document.addEventListener("DOMContentLoaded", function () {
   // Event-Handler, für den MangaPassion-Autofill Button
   autofillButton.addEventListener("click", function () {
     const mangaIndex = mangaIndexInput.value.trim();
+    const loadingLabel = document.querySelector('.loading-label');
 
     // Validierung des Manga-Index
     if (!mangaIndex || isNaN(mangaIndex)) {
       alert("Bitte geben Sie einen gültigen Manga-Index ein.");
       return;
     }
+
+    // Anzeigen des Lade-Labels
+    loadingLabel.style.display = "block";
 
     // Senden des Manga-Index an den Web Scraper
     fetch("/scrape", {
@@ -55,6 +59,9 @@ document.addEventListener("DOMContentLoaded", function () {
           .replace("+", "")
           .trim();
         document.querySelector("#preis_pro_band").value = data["Band 1 Preis"];
+
+        // Verstecken des Lade-Labels
+        loadingLabel.style.display = "none";
 
         // Entfernen der nicht mehr benötigten Schlüssel
         delete data["verlagId"];
