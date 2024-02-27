@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const autofillButton = document.querySelector(".mp-autofill-button");
   const mangaIndexInput = document.querySelector("#manga_index");
 
+  
+
   // Event-Handler, um das Pop-up anzuzeigen
   addButton.addEventListener("click", function () {
     console.log("Add-Button geklickt");
@@ -27,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Event-Handler, für den MangaPassion-Autofill Button
   autofillButton.addEventListener("click", function () {
     const mangaIndex = mangaIndexInput.value.trim();
-    const loadingLabel = document.querySelector('.loading-label');
+    const loadingLabel = document.querySelector(".loading-label");
 
     // Validierung des Manga-Index
     if (!mangaIndex || isNaN(mangaIndex)) {
@@ -280,4 +282,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Aktualisieren der Sichtbarkeit basierend auf Checkboxen
     updateVisibility();
   }
+  
+
+  
+  
 });

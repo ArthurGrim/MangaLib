@@ -275,7 +275,7 @@ body {
 }
 
 .cover-bild img {
-  max-width: 100%;  /* Maximale Breite auf 100% des umgebenden Elements setzen */
+  max-width: 100%; /* Maximale Breite auf 100% des umgebenden Elements setzen */
   max-height: 200px; /* Maximale Höhe festlegen */
   height: auto; /* Höhe automatisch anpassen, um das Seitenverhältnis zu erhalten */
   width: 75%;
@@ -392,10 +392,14 @@ body {
 }
 
 .id-label {
-  background-color: var(--bg-container); /* Ersetzen Sie #IhreFarbe mit der gewünschten Farbe */
+  background-color: var(
+    --bg-container
+  ); /* Ersetzen Sie #IhreFarbe mit der gewünschten Farbe */
   padding: 10px; /* Optional: Fügt etwas Innenabstand hinzu */
   border-radius: 5px; /* Optional: Fügt abgerundete Ecken hinzu */
-  color: var(--font-container); /* Optional: Ändert die Textfarbe, falls erforderlich */
+  color: var(
+    --font-container
+  ); /* Optional: Ändert die Textfarbe, falls erforderlich */
 }
 
 .input-group input[type="text"],
@@ -439,7 +443,9 @@ body {
   -webkit-appearance: none; /* Entfernt das Standard-Styling für Checkboxen */
   -moz-appearance: none; /* Entfernt das Standard-Styling für Checkboxen in Firefox */
   appearance: none; /* Entfernt das Standard-Styling für Checkboxen */
-  background-color: var(--bg-container); /* Hintergrundfarbe für nicht ausgewählte Checkboxen */
+  background-color: var(
+    --bg-container
+  ); /* Hintergrundfarbe für nicht ausgewählte Checkboxen */
   border: 1px solid var(--font-dark); /* Rahmenfarbe */
   display: flex; /* Ermöglicht die Zentrierung des Häkchens */
   align-items: center; /* Zentriert das Häkchen vertikal */
@@ -448,16 +454,17 @@ body {
 
 /* Hintergrundfarbe für nicht ausgewählte Checkboxen anpassen */
 .checkbox-group input[type="checkbox"]:not(:checked) {
-  background-color: var(--bg-unchecked-checkbox); /* Setzen Sie die Hintergrundfarbe für nicht ausgewählte Checkboxen */
+  background-color: var(
+    --bg-unchecked-checkbox
+  ); /* Setzen Sie die Hintergrundfarbe für nicht ausgewählte Checkboxen */
 }
 
 /* Stil für das Häkchen innerhalb der Checkbox */
 .checkbox-group input[type="checkbox"]:checked::before {
-  content: '✓'; /* Häkchensymbol */
+  content: "✓"; /* Häkchensymbol */
   color: var(--font-page); /* Farbe des Häkchens */
   font-size: 0.875em; /* Größe des Häkchens */
 }
-
 
 /* Anpassungen für Buttons */
 .save-button,
@@ -519,6 +526,86 @@ body {
   .form-row-3 {
     grid-template-columns: 1fr; /* Lässt beide Felder die gesamte Zeile einnehmen auf kleinen Bildschirmen */
   }
+}
 
-  
+.popup-edit {
+  position: relative;
+  background-color: var(--bg-page);
+  border-radius: 10px;
+  width: 90%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.popup-body {
+  position: relative;
+  background-color: var(--bg-page);
+  padding: 20px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center; /* Zentriert die Elemente vertikal */
+  justify-content: flex-start; /* Startet die Anordnung am Anfang des Containers */
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: var(--font-link);
+  border-radius: 10px 10px 0px 0px;
+}
+
+.cover-bild-edit {
+  flex: 0 0 auto; /* Das Bild soll seine Größe beibehalten und nicht schrumpfen oder wachsen */
+  margin-right: 20px; /* Abstand zwischen Bild und Titel */
+}
+
+.cover-bild-edit img {
+  max-width: 100px; /* Maximale Breite des Bildes */
+  max-height: 150px; /* Maximale Höhe des Bildes */
+  height: auto; /* Höhe automatisch anpassen, um das Seitenverhältnis zu erhalten */
+  display: block;
+}
+
+.title-label {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #cacaca;
+  flex: 1; /* Nimmt den verfügbaren Platz ein */
+  margin-top: auto;
+}
+
+.save-button-edit {
+  background-color: var(--blue-normal);
+  color: var(--font-light);
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 100%;
+  white-space: nowrap; /* Verhindert, dass der Text im Button umbricht */
+  margin-top: auto;
+}
+
+.cancel-button-edit {
+  background-color: var(--font-dark);
+  color: var(--font-page);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  flex: 1 1 auto;
+  font-size: 100%;
+}
+
+.mp-autofill-button-edit {
+  background-color: var(--blue-dark);
+  color: var(--font-dark);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  flex: 1 1 auto;
+  font-size: 100%;
 }

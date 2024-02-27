@@ -160,7 +160,7 @@ public class MangaReiheService {
             details.setAnilistUrl(anilistUrl);
         if (sammelbandTypId != null) {
             System.out.println("Test 1: " + sammelbandTypId);
-            Sammelband sammelband = sammelbaendeService.findById(1L).orElse(null);
+            Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId).orElse(null);
             System.out.println("Test 2: " + sammelband.getId());
             details.setSammelbaende(sammelband);
             System.out.println(details.getSammelbaende().getId());
