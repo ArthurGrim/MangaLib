@@ -283,7 +283,7 @@
                 <img
                   th:src="@{/svg/vergriffen_icon.svg}"
                   alt="SVG"
-                  style="height: 100%; width: 100%"
+                  style="height: 1em; width: 1em"
                 />
                 Vergriffen</label
               >
@@ -413,7 +413,13 @@
             Gesamtpreis
           </p>
         </div>
-        <button type="button" class="edit-button" title="Edit">
+
+        <button
+          type="button"
+          class="edit-button"
+          title="Edit"
+          th:data-id="${mangaReihe.id}"
+        >
           <!-- SVG Edit Icon -->
           <img
             th:src="@{/svg/edit_icon.svg}"
@@ -565,7 +571,172 @@
         </form>
       </div>
     </div>
+
+    <!-- Pop-Up Fenster um MangaReihe zu bearbeiten -->
+    <div id="editPopupContainer" class="popup-container">
+      <div class="popup-edit">
+        <div class="popup-header">
+          <div class="cover-bild-edit">
+            <img id="editCoverImage" src="" alt="Cover Bild" />
+          </div>
+          <label id="editTitleLabel" class="title-label">Titel</label>
+          <button type="button" class="save-button-edit">Save</button>
+        </div>
+        <div class="popup-body">
+          <!-- Formular zum Bearbeiten -->
+          <form action="/editMangaReihe" method="post">
+            <div class="loading-label" style="display: none">Lädt...</div>
+            <!-- Erste Reihe -->
+            <div class="form-row form-row-1">
+              <div class="input-group">
+                <label for="id-edit">ID</label>
+                <label id="id-edit" class="id-label"></label>
+              </div>
+              <div class="input-group">
+                <label for="manga_index-edit">Manga Index</label>
+                <input type="text" id="manga_index-edit" name="manga_index" />
+              </div>
+              <div class="spacer"></div>
+            </div>
+
+            <!-- Zweite Reihe -->
+            <div class="form-row form-row-2">
+              <div class="input-group">
+                <label for="status-edit">Status</label>
+                <select id="status-edit" name="status">
+                  <option value=""></option>
+                  <!-- Die Optionen über den Controler abrufen -->
+                  <option
+                    th:each="status : ${alleStatus}"
+                    th:value="${status.statusId}"
+                    th:text="${status.beschreibung}"
+                  ></option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="verlag-edit">Verlag</label>
+                <select id="verlag-edit" name="verlag">
+                  <option value=""></option>
+                  <!-- Die Optionen über den Controler abrufen -->
+                  <option
+                    th:each="verlag : ${alleVerlage}"
+                    th:value="${verlag.verlagId}"
+                    th:text="${verlag.name}"
+                  ></option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="typ-edit">Typ</label>
+                <select id="typ-edit" name="typ">
+                  <option value=""></option>
+                  <!-- Die Optionen über den Controler abrufen -->
+                  <option
+                    th:each="typ : ${alleTypen}"
+                    th:value="${typ.typId}"
+                    th:text="${typ.bezeichnung}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Dritte Reihe -->
+            <div class="form-row form-row-3">
+              <div class="input-group">
+                <label for="titel-edit">Titel</label>
+                <input type="text" id="titel-edit" name="titel" />
+              </div>
+              <div class="input-group">
+                <label for="format-edit">Format</label>
+                <select id="format-edit" name="format">
+                  <option value=""></option>
+                  <!-- Die Optionen über den Controler abrufen -->
+                  <option
+                    th:each="format : ${alleFormate}"
+                    th:value="${format.formatId}"
+                    th:text="${format.bezeichnung}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Vierte Reihe -->
+            <div class="form-row form-row-4">
+              <div class="input-group">
+                <label for="anzahl_baende-edit">Anzahl Bände</label>
+                <input type="number" id="anzahl_baende-edit" name="anzahl_baende" />
+                <!-- Buttons zum Erhöhen/Vermindern -->
+              </div>
+              <div class="input-group">
+                <label for="preis_pro_band-edit">Preis pro Band</label>
+                <input type="text" id="preis_pro_band-edit" name="preis_pro_band" />
+              </div>
+              <div class="input-group">
+                <label for="anilist_url-edit">AniList URL</label>
+                <input type="text" id="anilist_url-edit" name="anilist_url" />
+              </div>
+            </div>
+
+            <!-- Fünfte Reihe -->
+            <div class="form-row form-row-5">
+              <div class="checkbox-group">
+                <label for="istvergriffen-edit">Vergriffen</label>
+                <input
+                  type="checkbox"
+                  id="istvergriffen-edit"
+                  name="istvergriffen"
+                />
+              </div>
+              <div class="checkbox-group">
+                <label for="istebaypreis-edit">eBay-Preis</label>
+                <input
+                  type="checkbox"
+                  id="istebaypreis-edit"
+                  name="istebaypreis"
+                />
+              </div>
+              <div class="checkbox-group">
+                <label for="istsammelband-edit">Sammelband</label>
+                <input
+                  type="checkbox"
+                  id="istsammelband-edit"
+                  name="istsammelband"
+                />
+              </div>
+              <div class="input-group">
+                <label for="gesamtpreis_aenderung-edit">Änderung Preis</label>
+                <input
+                  type="text"
+                  id="gesamtpreis_aenderung-edit"
+                  name="gesamtpreis_aenderung"
+                />
+              </div>
+              <div class="input-group">
+                <label for="sammelband_typ-edit">Sammelband Typ</label>
+                <select id="sammelband_typ-edit" name="sammelband_typ">
+                  <!-- Die Optionen über den Controler abrufen -->
+                  <option
+                    th:each="sammelband : ${alleSammelbaende}"
+                    th:value="${sammelband.id}"
+                    th:text="${sammelband.typ}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Letzte Reihe -->
+            <div class="form-row form-row-6">
+              <button type="button" class="mp-autofill-button-edit">
+                MP Autofill
+              </button>
+              <button type="button" class="cancel-button-edit">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <script src="/js/scrollToTop.js"></script>
     <script src="/js/popup_add_reihe.js"></script>
+    <script src="/js/popup_edit_reihe.js"></script>
   </body>
 </html>

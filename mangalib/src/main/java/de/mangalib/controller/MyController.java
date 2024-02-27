@@ -5,6 +5,7 @@ import de.mangalib.entity.Verlag;
 import de.mangalib.entity.Typ;
 import de.mangalib.entity.Band;
 import de.mangalib.entity.Format;
+import de.mangalib.entity.MangaDetails;
 import de.mangalib.entity.MangaReihe;
 import de.mangalib.entity.Sammelband;
 import de.mangalib.service.StatusService;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,6 +36,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -259,5 +262,52 @@ public class MyController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/getMangaReiheData/{id}")
+    public ResponseEntity<Map<String, Object>> getMangaReiheData(@PathVariable Long id) {
+        System.out.println(id);
+        Optional<MangaReihe> mangaReiheOpt = mangaReiheService.findById(id);
+
+        if (!mangaReiheOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        MangaReihe mangaReihe = mangaReiheOpt.get();
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("id", mangaReihe.getId());
+        response.put("mangaIndex", mangaReihe.getMangaIndex());
+        response.put("statusId", mangaReihe.getStatus() != null ? mangaReihe.getStatus().getStatusId() : null);
+        response.put("verlagId", mangaReihe.getVerlag() != null ? mangaReihe.getVerlag().getVerlagId() : null);
+        response.put("typId", mangaReihe.getTyp() != null ? mangaReihe.getTyp().getTypId() : null);
+        response.put("formatId", mangaReihe.getFormat() != null ? mangaReihe.getFormat().getFormatId() : null);
+        response.put("titel", mangaReihe.getTitel());
+        response.put("anzahlBaende", mangaReihe.getAnzahlBaende());
+        response.put("preisProBand", mangaReihe.getPreisProBand());
+        response.put("istEbayPreis", mangaReihe.getIstEbayPreis());
+        response.put("istVergriffen", mangaReihe.getIstVergriffen());
+
+        if (mangaReihe.getMangaDetails() != null) {
+            MangaDetails details = mangaReihe.getMangaDetails();
+            response.put("anilistUrl", details.getAnilistUrl());
+            // Überprüfen Sie zuerst, ob details.getSammelbaende() nicht null ist
+            if (details.getSammelbaende() != null) {
+                response.put("istSammelband", true);
+                response.put("sammelbandTypId", details.getSammelbaende().getId());
+                response.put("sammelbandTyp", details.getSammelbaende().getTyp());
+                System.out.println("IstSammelband: " + response.get("istSammelband"));
+            } else {
+                response.put("istSammelband", false);
+                response.put("sammelbandTypId", null);
+            }
+        }
+
+        Band ersterBand = bandService.getFirstBandByMangaReiheId(mangaReihe.getId());
+        if (ersterBand != null) {
+            response.put("bildUrl", ersterBand.getBildUrl() != null ? ersterBand.getBildUrl().toString() : null);
+        }
+
+        return ResponseEntity.ok(response);
     }
 }
