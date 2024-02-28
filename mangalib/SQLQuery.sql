@@ -24,7 +24,15 @@ CREATE TABLE formate (
     bezeichnung VARCHAR(255) UNIQUE NOT NULL
 );
 
--- Angepasste Tabelle MangaReihe mit zusätzlichen boolischen Feldern
+-- Tabelle für Sammelbandarten
+CREATE TABLE sammelbaende (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    multiplikator INT NOT NULL,
+    typ VARCHAR(255) NOT NULL
+);
+
+-- Tabelle für die MangaReihen
+Use mangalib;
 CREATE TABLE mangareihe (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     manga_index INT,
@@ -45,12 +53,6 @@ CREATE TABLE mangareihe (
     FOREIGN KEY (verlag_id) REFERENCES verlage(verlag_id),
     FOREIGN KEY (typ_id) REFERENCES typen(typ_id),
     FOREIGN KEY (format_id) REFERENCES formate(format_id)
-);
-
-CREATE TABLE sammelbaende (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    multiplikator INT NOT NULL,
-    typ VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE mangadetails (

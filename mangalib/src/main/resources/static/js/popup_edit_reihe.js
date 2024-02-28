@@ -90,6 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("preis_pro_band-edit").value =
           data.preisProBand;
         document.getElementById("anilist_url-edit").value = data.anilistUrl;
+        document.getElementById("coverUrl-edit").value = data.coverUrl;
         document.getElementById("istvergriffen-edit").checked =
           data.istVergriffen;
         document.getElementById("istebaypreis-edit").checked =
@@ -143,6 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
     })
       .then((response) => response.json())
       .then((data) => {
+        console.log("Gescrapte Daten", data);
         // Daten in die Eingabefelder und Selects einfügen
         document.querySelector("#verlag-edit").value = data["verlagId"];
         document.querySelector("#typ-edit").value = data["typId"];
@@ -203,6 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .value.trim();
     const preisProBand = preisProBandString.replace(",", ".");
     const anilistUrl = document.querySelector("#anilist_url-edit").value.trim();
+    const coverUrl = document.querySelector("#coverUrl-edit").value.trim();
     const istVergriffen = document.querySelector("#istvergriffen-edit").checked;
     const istEbayPreis = document.querySelector("#istebaypreis-edit").checked;
     const gesamtpreisAenderungString = document
@@ -261,6 +264,11 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    if(coverUrl && !coverUrl.match(/^https?:\/\/.+$/)) {
+      alert("Bitte geben Sie eine gültige Cover-URL ein.");
+      return;
+    }
+
     console.log("Ausgelesene Werte:");
     console.log("MangaIndex: ", mangaIndex);
     console.log("VerlagID: ", verlagId);
@@ -293,6 +301,7 @@ document.addEventListener("DOMContentLoaded", function () {
       istEbayPreis,
       gesamtpreisAenderung: istEbayPreis ? gesamtpreisAenderung : "0",
       anilistUrl,
+      coverUrl,
       sammelbandTypId: istSammelband ? sammelbandTypId : null,
       scrapedData: scrapedData,
     };
