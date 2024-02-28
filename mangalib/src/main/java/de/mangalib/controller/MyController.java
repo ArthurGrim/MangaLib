@@ -82,11 +82,12 @@ public class MyController {
         List<Format> alleFormate = formatService.findAllSortById();
         List<Sammelband> alleSammelbaende = sammelbaendeService.findAll();
         List<MangaReihe> alleMangaReihen = mangaReiheService.findAllSortById(); // Standard: Sortiert nach ID
-        Map<Long, Band> ersteBaendeMap = new HashMap<>();
+        Map<Long, String> coverUrlsMap = new HashMap<>();
 
         for (MangaReihe mangaReihe : alleMangaReihen) {
-            Band ersterBand = bandService.getFirstBandByMangaReiheId(mangaReihe.getId());
-            ersteBaendeMap.put(mangaReihe.getId(), ersterBand);
+            MangaDetails details = mangaReihe.getMangaDetails();
+            String coverUrl = (details != null) ? details.getCoverUrl() : null;
+            coverUrlsMap.put(mangaReihe.getId(), coverUrl);
         }
 
         if (suche != null && !suche.trim().isEmpty()) {
@@ -170,7 +171,7 @@ public class MyController {
         model.addAttribute("alleFormate", alleFormate);
         model.addAttribute("alleMangaReihen", alleMangaReihen);
         model.addAttribute("alleSammelbaende", alleSammelbaende);
-        model.addAttribute("ersteBaendeMap", ersteBaendeMap);
+        model.addAttribute("coverUrlsMap", coverUrlsMap);
 
         // Gibt die ID des nächsten Datensatzes zurück
         Long nextId = mangaReiheService.getNextId();
@@ -206,6 +207,7 @@ public class MyController {
                     : null;
             System.out.println("Die Id der Reihe ist: " + mangaReiheId);
             Integer mangaIndex = (Integer) requestData.get("mangaIndex");
+            System.out.println("Der Index der Manga Reihe ist: " + mangaIndex);
             Long statusId = Long.valueOf((String) requestData.get("statusId"));
             Long verlagId = Long.valueOf((String) requestData.get("verlagId"));
             Long typId = Long.valueOf((String) requestData.get("typId"));
@@ -216,18 +218,16 @@ public class MyController {
             Boolean istVergriffen = (Boolean) requestData.get("istVergriffen");
             Boolean istEbayPreis = (Boolean) requestData.get("istEbayPreis");
             String anilistUrl = (String) requestData.get("anilistUrl");
+            String coverUrl = (String) requestData.get("coverUrl");
             Long sammelbandTypId = requestData.get("sammelbandTypId") != null
                     ? Long.valueOf((String) requestData.get("sammelbandTypId"))
                     : null;
             Double gesamtpreisAenderung = Double.valueOf((String) requestData.get("gesamtpreisAenderung"));
-            System.out.println("Test 1");
             @SuppressWarnings("unchecked")
             Map<String, String> scrapedData = (Map<String, String>) requestData.get("scrapedData");
-            System.out.println("Test 2");
             Boolean istEdit = Boolean.valueOf(scrapedData.get("istEdit"));
             System.out.println("Ist Edit? " + istEdit);
             System.out.println("Extrahieren der übermittelten Werte abgeschlossen");
-            
 
             // Verwendung der saveMangaReihe-Methode aus dem Service
             MangaReihe savedMangaReihe;
@@ -241,6 +241,7 @@ public class MyController {
                 savedMangaReihe = mangaReiheService
                         .updateMangaReihe(mangaReiheId, mangaIndex, statusId, verlagId, typId,
                                 formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
+                                coverUrl,
                                 sammelbandTypId, gesamtpreisAenderung, scrapedData)
                         .orElse(null);
             }
@@ -332,6 +333,7 @@ public class MyController {
                 response.put("istSammelband", false);
                 response.put("sammelbandTypId", null);
             }
+            response.put("coverUrl", details.getCoverUrl());
         }
 
         Band ersterBand = bandService.getFirstBandByMangaReiheId(mangaReihe.getId());

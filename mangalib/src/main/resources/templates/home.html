@@ -351,14 +351,11 @@
       <!-- Hier kommen die einzelnen MangaReihen -->
       <div th:each="mangaReihe : ${alleMangaReihen}" class="manga-reihe-panel">
         <div class="cover-bild">
-          <th:block th:with="ersterBand=${ersteBaendeMap[mangaReihe.id]}">
-            <!-- Prüfen, ob ersterBand nicht null ist und bildUrl vorhanden ist -->
-            <img
-              th:if="${ersterBand != null and ersterBand.bildUrl != null}"
-              th:src="${ersterBand.bildUrl}"
-            />
-            <!-- Optional: Etwas anzeigen, wenn ersterBand null ist oder keine bildUrl hat -->
-            <div th:if="${ersterBand == null or ersterBand.bildUrl == null}">
+          <th:block th:with="coverUrl=${coverUrlsMap[mangaReihe.id]}">
+            <!-- Prüfen, ob coverUrl nicht null ist -->
+            <img th:if="${coverUrl != null}" th:src="${coverUrl}" />
+            <!-- Optional: Etwas anzeigen, wenn coverUrl null ist -->
+            <div th:if="${coverUrl == null}">
               <img
                 th:src="@{/svg/filler_img2.png}"
                 alt="Filler Image"
@@ -683,6 +680,10 @@
                 <label for="anilist_url-edit">AniList URL</label>
                 <input type="text" id="anilist_url-edit" name="anilist_url" />
               </div>
+              <div class="input-group">
+                <label for="coverUrl-edit">Cover Url</label>
+                <input type="text" id="coverUrl-edit" name="coverUrl">
+              </div> 
             </div>
 
             <!-- Fünfte Reihe -->

@@ -164,9 +164,12 @@ public class MangaReiheService {
             details.setSammelbaende(sammelband);
             System.out.println(details.getSammelbaende().getId());
         }
+        
+        if (scrapedData.containsKey("Band 1 Bild Url")) {
+            details.setCoverUrl(scrapedData.get("Band 1 Bild Url"));
+        }
 
         if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
-            System.out.println("Test");
             details.setStatusDe(String.valueOf(scrapedData.get("Deutsche Ausgabe Status")));
         }
 
@@ -288,7 +291,7 @@ public class MangaReiheService {
             Long typId,
             Long formatId, String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen,
             Boolean istEbayPreis,
-            String anilistUrl, Long sammelbandTypId, Double gesamtpreisAenderung, Map<String, String> scrapedData) {
+            String anilistUrl, String coverUrl, Long sammelbandTypId, Double gesamtpreisAenderung, Map<String, String> scrapedData) {
 
         // Überprüfen, ob die MangaReihe existiert
         Optional<MangaReihe> mangaReiheOptional = findById(mangaReiheId);
@@ -347,6 +350,11 @@ public class MangaReiheService {
             System.out.println("Anilist-Url gesetzt auf: " + anilistUrl);
         }
 
+        if (coverUrl != null) {
+            details.setCoverUrl(coverUrl);
+            System.out.println("Cover-Url gesetzt auf: " + coverUrl);
+        }
+
         // Setzen des Sammelbandtyps, falls vorhanden
         if (sammelbandTypId != null) {
             Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId)
@@ -357,13 +365,11 @@ public class MangaReiheService {
             details.setSammelbaende(null);
             System.out.println("Kein Sammelband");
         }
-        System.out.println("Test 1");
         // Weitere Details aktualisieren
         if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
             details.setStatusDe(scrapedData.get("Deutsche Ausgabe Status"));
             System.out.println("StatusDe gesetzt auf: " + scrapedData.get("Deutsche Ausgabe Status"));
         }
-        System.out.println("Test 2");
         if (scrapedData.containsKey("Deutsche Ausgabe Bände")) {
             try {
                 details.setAnzahlBaendeDe(Integer.parseInt(scrapedData.get("Deutsche Ausgabe Bände")));
@@ -373,17 +379,14 @@ public class MangaReiheService {
                 // Fehlerbehandlung
             }
         }
-        System.out.println("Test 3");
         if (scrapedData.containsKey("Erstveröffentlichung Status")) {
             details.setStatusErstv(scrapedData.get("Erstveröffentlichung Status"));
             System.out.println("StatusErstV gesetzt auf: " + scrapedData.get("Erstveröffentlichung Status"));
         }
-        System.out.println("Test 4");
         if (scrapedData.containsKey("Erstveröffentlichung Herkunft")) {
             details.setHerkunft(scrapedData.get("Erstveröffentlichung Herkunft"));
             System.out.println("Herkunft gesetzt auf: " + scrapedData.get("Erstveröffentlichung Herkunft"));
         }
-        System.out.println("Test 5");
         if (scrapedData.containsKey("Erstveröffentlichung Startjahr")) {
             try {
                 details.setStartJahr(Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr")));
@@ -393,7 +396,6 @@ public class MangaReiheService {
                 // Fehlerbehandlung
             }
         }
-        System.out.println("Test 6");
         if (scrapedData.containsKey("Erstveröffentlichung Bände")) {
             try {
                 details.setAnzahlBaendeErstv(Integer.parseInt(scrapedData.get("Erstveröffentlichung Bände")));
@@ -403,7 +405,6 @@ public class MangaReiheService {
                 // Fehlerbehandlung
             }
         }
-        System.out.println("Test 7");
         mangaDetailsRepository.save(details);
         System.out.println("Manga Details aktualisiert");
 

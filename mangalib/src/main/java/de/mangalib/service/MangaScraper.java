@@ -100,6 +100,24 @@ public class MangaScraper {
                         }
 
                         driver.quit();
+                    } else {
+                        mangaData.put("Deutsche Ausgabe Bände", "1");
+                        mangaData.put("Band 1 href", url);
+
+                        WebDriver driver = setupWebDriver();
+                        driver.get(url);
+                        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(4));
+                        wait.until(
+                                ExpectedConditions
+                                        .visibilityOfElementLocated(By.cssSelector("div.manga_mangaCover__WdSrA")));
+                        // Bild-Element finden und src-Attribut extrahieren
+                        WebElement imgElement = driver.findElement(By.cssSelector(".img_img__jkdIh"));
+                        String bildUrl = imgElement.getAttribute("src");
+                        mangaData.put("Band 1 Bild Url", bildUrl);
+                        System.out.println("Band 1 Bild Url: " + bildUrl);
+                        mangaData.put("Band 1 Preis",
+                                (mangaData.get("Deutsche Ausgabe Preis").trim().replace("€", "")));
+                        driver.quit();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

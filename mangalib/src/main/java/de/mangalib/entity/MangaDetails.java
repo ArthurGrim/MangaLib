@@ -49,5 +49,8 @@ public class MangaDetails {
     @Column(name = "anilist_url")
     private String anilistUrl;
 
+    @Column(name = "cover_url")
+    private String coverUrl;
+
     // Getter und Setter
 }
