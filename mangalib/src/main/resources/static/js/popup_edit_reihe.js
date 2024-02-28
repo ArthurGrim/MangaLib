@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // Event Listener für den Edit-Button
   document.querySelectorAll(".edit-button").forEach((button) => {
     button.addEventListener("click", function () {
       var mangaReiheId = this.getAttribute("data-id");
@@ -6,6 +7,25 @@ document.addEventListener("DOMContentLoaded", function () {
       openEditPopup(mangaReiheId);
     });
   });
+
+  // Event Listener für den MP-Button
+  document.querySelectorAll(".MP-button").forEach((button) => {
+    button.addEventListener("click", function () {
+      var mangaReiheId = this.getAttribute("data-id");
+      console.log("MangaReihe ID:", mangaReiheId);
+      openMangaPassion(mangaReiheId);
+    });
+  });
+
+  // Event Listener für den AL-Button
+  document.querySelectorAll(".AL-button").forEach((button) => {
+    button.addEventListener("click", function () {
+      var mangaReiheId = this.getAttribute("data-id");
+      console.log("MangaReihe ID:", mangaReiheId);
+      openAniList(mangaReiheId);
+    });
+  });
+
   console.log("Skript geladen");
 
   let scrapedData = {};
@@ -120,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Event-Handler, für den MangaPassion-Autofill Button
   autofillButton.addEventListener("click", function () {
-    console.log("Der MP-Autofill Button wurde gedrückt")
+    console.log("Der MP-Autofill Button wurde gedrückt");
     const mangaIndex = mangaIndexInput.value.trim();
     const loadingLabel = document.querySelector(".loading-label-edit");
 
@@ -155,7 +175,8 @@ document.addEventListener("DOMContentLoaded", function () {
         ]
           .replace("+", "")
           .trim();
-        document.querySelector("#preis_pro_band-edit").value = data["Band 1 Preis"];
+        document.querySelector("#preis_pro_band-edit").value =
+          data["Band 1 Preis"];
         document.querySelector("#editCoverImage").src = data["Band 1 Bild Url"];
 
         // Verstecken des Lade-Labels
@@ -264,7 +285,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    if(coverUrl && !coverUrl.match(/^https?:\/\/.+$/)) {
+    if (coverUrl && !coverUrl.match(/^https?:\/\/.+$/)) {
       alert("Bitte geben Sie eine gültige Cover-URL ein.");
       return;
     }
@@ -335,7 +356,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function resetPopupFields() {
     // Zurücksetzen aller Eingabefelder
-    document.querySelectorAll('.popup-edit input[type="text"], .popup-edit input[type="number"]')
+    document
+      .querySelectorAll(
+        '.popup-edit input[type="text"], .popup-edit input[type="number"]'
+      )
       .forEach((input) => {
         input.value = "";
       });
@@ -346,12 +370,53 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Zurücksetzen der Checkboxen
-    document.querySelectorAll('.popup-edit input[type="checkbox"]')
+    document
+      .querySelectorAll('.popup-edit input[type="checkbox"]')
       .forEach((checkbox) => {
         checkbox.checked = false;
       });
 
     // Aktualisieren der Sichtbarkeit basierend auf Checkboxen
     updateVisibility();
-}
+  }
+
+  // Zum öffnen der entsprechenden Manga Passion Seite zur MangaReihe
+  function openMangaPassion(mangaReiheId) {
+    console.log("Edit-Button geklickt für MangaReihe ID: ", mangaReiheId);
+
+    // Senden einer Anfrage an den Server, um die Daten der MangaReihe zu erhalten
+    fetch(`/getMangaReiheData/${mangaReiheId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.mangaIndex == null) alert("Kein MangaIndex hinterlegt!");
+        else
+          window.open(
+            "https://www.manga-passion.de/editions/" + data.mangaIndex,
+            "_blank"
+          );
+      })
+      .catch((error) => {
+        console.error("Fehler beim Abrufen der MangaReihe-Daten:", error);
+      });
+  }
+
+  //Zum öffnen der entsprechenden AniList Seite zur MangaReihe
+  function openAniList(mangaReiheId) {
+    console.log("Edit-Button geklickt für MangaReihe ID: ", mangaReiheId);
+
+    // Senden einer Anfrage an den Server, um die Daten der MangaReihe zu erhalten
+    fetch(`/getMangaReiheData/${mangaReiheId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.mangaIndex == null) alert("Kein AniList URL hinterlegt!");
+        else
+          window.open(
+            data.anilistUrl,
+            "_blank"
+          );
+      })
+      .catch((error) => {
+        console.error("Fehler beim Abrufen der MangaReihe-Daten:", error);
+      });
+  }
 });

@@ -14,7 +14,7 @@
       <nav class="header_headerInner">
         <div class="header_menuContainer">
           <ul class="main-menu">
-            <li class="main-menu-homeButton"><a href="/">Home</a></li>
+            <li class="main-menu-homeButton"><a href="/home">Home</a></li>
             <li><a href="/Statistik">Statistik</a></li>
             <li><a href="/einkaufsliste">Einkaufsliste</a></li>
           </ul>
@@ -334,6 +334,37 @@
         <div class="manga-reihe-baende">Bände</div>
         <div class="manga-reihe-preis">Preis</div>
         <div class="manga-reihe-gesamtpreis">Gesamtpreis</div>
+        <!-- Verlinkung auf Manga Passion Übersicht -->
+        <a
+          class="MP-link"
+          href="https://www.manga-passion.de/manga"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+        <!-- PNG Manga Passion Logo -->
+          <img
+            th:src="@{/svg/MangaPassion_logo.png}"
+            alt="SVG"
+            style="height: 100%; width: 100%"
+          />
+        </a>
+
+        <!-- Verlinkung auf die AniList Start Page -->
+        <a
+          class="AL-link"
+          href="https://anilist.co/home"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+        <!-- PNG AniList Logo -->
+          <img
+            th:src="@{/svg/AniList_logo.png}"
+            alt="AniList Logo"
+            style="height: 100%; width: 100%"
+          />
+        </a>
+
+        <!-- Button zum Hinzufügen neuer Reihen -->
         <button
           type="button"
           id="addButton"
@@ -344,7 +375,7 @@
           <img
             th:src="@{/svg/add_icon.svg}"
             alt="SVG"
-            style="height: 1em; width: 1em"
+            style="height: 100%; width: 100%"
           />
         </button>
       </div>
@@ -410,7 +441,37 @@
             Gesamtpreis
           </p>
         </div>
+        <!-- Button welcher einen auf Manga Passion weiterleitet -->
+        <button
+          type="button"
+          class="MP-button"
+          title="Manga Passion"
+          th:data-id="${mangaReihe.id}"
+        >
+          <!-- SVG Manga Passion Icon -->
+          <img
+            th:src="@{/svg/MangaPassion_logo.png}"
+            alt="SVG"
+            style="height: 19px; width: 19px"
+          />
+        </button>
 
+        <!-- Button welcher einen auf AniList weiterleitet -->
+        <button
+          type="button"
+          class="AL-button"
+          title="AniList"
+          th:data-id="${mangaReihe.id}"
+        >
+          <!-- SVG AniList Icon -->
+          <img
+            th:src="@{/svg/AniList_logo.png}"
+            alt="SVG"
+            style="height: 19px; width: 19px"
+          />
+        </button>
+
+        <!-- Button um die Reihe zu bearbeiten -->
         <button
           type="button"
           class="edit-button"
@@ -421,7 +482,7 @@
           <img
             th:src="@{/svg/edit_icon.svg}"
             alt="SVG"
-            style="height: 1em; width: 1em"
+            style="height: 17px; width: 17px"
           />
         </button>
       </div>
@@ -682,8 +743,8 @@
               </div>
               <div class="input-group">
                 <label for="coverUrl-edit">Cover Url</label>
-                <input type="text" id="coverUrl-edit" name="coverUrl">
-              </div> 
+                <input type="text" id="coverUrl-edit" name="coverUrl" />
+              </div>
             </div>
 
             <!-- Fünfte Reihe -->

@@ -302,7 +302,7 @@ public class MyController {
         Map<String, Object> response = new HashMap<>();
 
         response.put("id", mangaReihe.getId());
-        response.put("mangaIndex", mangaReihe.getMangaIndex());
+        response.put("mangaIndex", mangaReihe.getMangaIndex() != null ? mangaReihe.getMangaIndex() : null);
         response.put("statusId", mangaReihe.getStatus() != null ? mangaReihe.getStatus().getStatusId() : null);
         response.put("verlagId", mangaReihe.getVerlag() != null ? mangaReihe.getVerlag().getVerlagId() : null);
         response.put("typId", mangaReihe.getTyp() != null ? mangaReihe.getTyp().getTypId() : null);
@@ -322,7 +322,7 @@ public class MyController {
 
         if (mangaReihe.getMangaDetails() != null) {
             MangaDetails details = mangaReihe.getMangaDetails();
-            response.put("anilistUrl", details.getAnilistUrl());
+            response.put("anilistUrl", details.getAnilistUrl() != null ? details.getAnilistUrl() : null);
             // Überprüfen Sie zuerst, ob details.getSammelbaende() nicht null ist
             if (details.getSammelbaende() != null) {
                 response.put("istSammelband", true);
