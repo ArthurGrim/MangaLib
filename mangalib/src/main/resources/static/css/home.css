@@ -36,6 +36,7 @@ body {
   display: flex; /* Flexibles Box-Layout */
   justify-content: space-between; /* Elemente gleichmäßig verteilen */
   align-items: center; /* Vertikale Ausrichtung der Elemente */
+  position: relative;
 }
 
 /* Container für das Menü in der Kopfzeile */
@@ -43,15 +44,20 @@ body {
   display: flex; /* Flexibles Box-Layout */
   justify-content: center; /* Zentrierte Ausrichtung */
   flex-grow: 1; /* Nimmt verfügbaren Platz ein */
+  height: 100%;
 }
 
 /* Stile für das Hauptmenü */
 .main-menu {
   list-style: none; /* Keine Listenpunkte */
   padding: 0; /* Kein Innenabstand */
-  margin: 0; /* Kein Außenabstand */
   display: flex; /* Flexibles Box-Layout */
   justify-content: center; /* Zentrierte Ausrichtung */
+  left: 50%;
+  transform: translateX(-50%);
+  position: absolute;
+  height: 100%;
+  margin-top: -10px;
 }
 
 .main-menu .main-menu-homeButton a {
@@ -242,11 +248,11 @@ body {
 
 .manga-reihen-header {
   display: grid;
-  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 100px; /* 9 Spalten plus eine für den Button */
-  gap: 10px;
+  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 30px 30px 30px;
+  gap: 5px;
   background-color: var(--bg-container);
   border-top: 0.125rem solid var(--blue-normal);
-  color: var(--font-light);
+  color: var(--font-container);
   padding: 10px;
   user-select: none; /* Verhindert das Auswählen des Textes */
 }
@@ -254,8 +260,8 @@ body {
 /* Stil für das Panel, das jede MangaReihe darstellt */
 .manga-reihe-panel {
   display: grid;
-  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 100px; /* Definiert die Spaltenstruktur */
-  gap: 10px; /* Abstand zwischen den Spalten */
+  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 30px 30px 30px;
+  gap: 5px; /* Abstand zwischen den Spalten */
   background-color: var(--bg-panel); /* Hintergrundfarbe des Panels */
   color: var(--font-container); /* Textfarbe */
   padding: 10px; /* Innenabstand */
@@ -289,28 +295,30 @@ body {
   border: none; /* Kein Rand */
   padding: 0; /* Kein Innenabstand */
   cursor: pointer; /* Ändert den Mauszeiger */
-  width: 100%;
-  height: 100%;
+  width: 19px;
+  height: 19px;
+  margin: auto;
 }
 
-/* Stil für das Bild im Hinzufügen-Button */
-.add-button img {
-  height: 2.5em; /* Höhe des Bildes */
-  width: 2.5em; /* Breite des Bildes */
-}
-
-/* Stil für den Bearbeiten-Button */
-.edit-button {
+.AL-link,
+.MP-link {
   background: transparent; /* Transparenter Hintergrund */
   border: none; /* Kein Rand */
   padding: 0; /* Kein Innenabstand */
   cursor: pointer; /* Ändert den Mauszeiger */
+  height: 17px; 
+  width: 17px;
+  margin: auto;
 }
 
-/* Stil für das Bild im Bearbeiten-Button */
-.edit-button img {
-  height: 2.5em; /* Höhe des Bildes */
-  width: 2.5em; /* Breite des Bildes */
+/* Stil für den Bearbeiten-Button */
+.edit-button,
+.AL-button,
+.MP-button {
+  background: transparent; /* Transparenter Hintergrund */
+  border: none; /* Kein Rand */
+  padding: 0; /* Kein Innenabstand */
+  cursor: pointer; /* Ändert den Mauszeiger */
 }
 
 .scrollToTopButton {
@@ -553,7 +561,7 @@ body {
   justify-content: flex-start; /* Startet die Anordnung am Anfang des Containers */
   margin-bottom: 20px;
   padding: 20px;
-  background-color: var(--font-link);
+  background-color: var(--bg-container);
   border-radius: 10px 10px 0px 0px;
 }
 
