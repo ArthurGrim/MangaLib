@@ -60,6 +60,9 @@ public class MangaReihe {
     @Transient
     private String gesamtpreisString;
 
+    @Column(name = "aenderung_gesamtpreis", precision = 10, scale = 2)
+    private BigDecimal aenderungGesamtpreis;
+
     @CreationTimestamp
     @Column(name = "erstellt_am")
     private java.sql.Timestamp erstelltAm;
