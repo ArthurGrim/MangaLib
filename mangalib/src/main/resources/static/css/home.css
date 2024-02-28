@@ -238,6 +238,31 @@ body {
   height: 16px; /* Höhe des Icons */
 }
 
+/* Stile für den ScrollToTop Button */
+.scrollToTopButton {
+  display: none; /* Standardmäßig versteckt */
+  position: fixed;
+  bottom: 20px;
+  left: 205px;
+  cursor: pointer;
+}
+
+.scrollToTopButton button {
+  /* Stilangaben für den quadratischen Button */
+  width: 65px; /* Breite des Buttons */
+  height: 65px; /* Höhe des Buttons */
+  padding: 10px 10px;
+  background-color: var(--blue-normal);
+  border: none;
+  border-radius: 5px;
+}
+
+.scrollToTopButton button img {
+  width: 100%; /* Bild füllt den gesamten Button aus */
+  height: auto;
+}
+
+/* Stile für den Breich in welchem die Manga Reihen angezeigt werden */
 .manga-reihen-container {
   display: flex;
   flex-direction: column;
@@ -319,29 +344,6 @@ body {
   border: none; /* Kein Rand */
   padding: 0; /* Kein Innenabstand */
   cursor: pointer; /* Ändert den Mauszeiger */
-}
-
-.scrollToTopButton {
-  display: none; /* Standardmäßig versteckt */
-  position: fixed;
-  bottom: 20px;
-  left: 205px;
-  cursor: pointer;
-}
-
-.scrollToTopButton button {
-  /* Stilangaben für den quadratischen Button */
-  width: 65px; /* Breite des Buttons */
-  height: 65px; /* Höhe des Buttons */
-  padding: 10px 10px;
-  background-color: var(--blue-normal);
-  border: none;
-  border-radius: 5px;
-}
-
-.scrollToTopButton button img {
-  width: 100%; /* Bild füllt den gesamten Button aus */
-  height: auto;
 }
 
 /* Style für das Pop-up Fenster zum Hinzufügen neuer Reihen */

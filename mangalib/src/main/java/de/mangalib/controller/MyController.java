@@ -65,7 +65,7 @@ public class MyController {
     private BandService bandService;
 
     @GetMapping("/home")
-    public String meineSeite(Model model,
+    public String home(Model model,
             @RequestParam(name = "sortierung", required = false) String sortierung,
             @RequestParam(name = "suche", required = false) String suche,
             @RequestParam(name = "statusFilter", required = false) Long statusId,
@@ -342,5 +342,10 @@ public class MyController {
         }
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/einkaufsliste")
+    public String einkaufsliste() {
+        return "einkaufsliste"; // Name der HTML-Datei ohne .html
     }
 }
