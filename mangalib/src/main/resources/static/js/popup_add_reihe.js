@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   console.log("Skript geladen");
 
-  let scrapedData = null;
+  let scrapedData = {};
 
   // Referenzen auf Elemente
   const popupContainer = document.getElementById("popupContainer");
@@ -11,8 +11,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const nextId = document.getElementById("id").textContent;
   const autofillButton = document.querySelector(".mp-autofill-button");
   const mangaIndexInput = document.querySelector("#manga_index");
-
-  
 
   // Event-Handler, um das Pop-up anzuzeigen
   addButton.addEventListener("click", function () {
@@ -71,7 +69,9 @@ document.addEventListener("DOMContentLoaded", function () {
         delete data["formatId"];
 
         // Speichern der gesamten Map für den Save-Button
-        scrapedData = JSON.parse(JSON.stringify(data));
+        Object.keys(data).forEach((key) => {
+          scrapedData[key] = data[key];
+        });
       })
       .catch((error) => {
         console.error("Fehler beim Abrufen der Manga-Daten:", error);
@@ -144,9 +144,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const anilistUrl = document.querySelector("#anilist_url").value.trim();
     const istVergriffen = document.querySelector("#istvergriffen").checked;
     const istEbayPreis = document.querySelector("#istebaypreis").checked;
-    const gesamtpreisAenderung = document
+    const gesamtpreisAenderungString = document
       .querySelector("#gesamtpreis_aenderung")
       .value.trim();
+    const gesamtpreisAenderung = gesamtpreisAenderungString.replace(",", ".");
     const istSammelband = document.querySelector("#istsammelband").checked;
     const sammelbandTypId = document.querySelector("#sammelband_typ").value;
 
@@ -211,6 +212,8 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("gesamtpreisAenderung: ", gesamtpreisAenderung);
     console.log("istSammelband: ", istSammelband);
     console.log("sammelbandTypId: ", sammelbandTypId);
+
+    scrapedData["istEdit"] = "false";
 
     // Objekt erstellen, das gesendet werden soll
     const mangaReiheData = {
@@ -282,8 +285,4 @@ document.addEventListener("DOMContentLoaded", function () {
     // Aktualisieren der Sichtbarkeit basierend auf Checkboxen
     updateVisibility();
   }
-  
-
-  
-  
 });

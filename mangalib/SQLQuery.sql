@@ -1,4 +1,5 @@
 USE mangalib;
+
 -- Tabelle für Verlage
 CREATE TABLE verlage (
     verlag_id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -35,6 +36,7 @@ CREATE TABLE mangareihe (
     anzahl_baende INT,
     preis_pro_band DOUBLE,
     gesamtpreis DECIMAL(10, 2),
+    aenderung_gesamtpreis DECIMAL(10 ,2),
     erstellt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     aktualisiert_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     ist_ebay_preis BOOLEAN DEFAULT FALSE,
@@ -60,7 +62,8 @@ CREATE TABLE mangadetails (
     start_jahr INT,
     anzahl_baende_erstv INT,
     sammelbaende_id BIGINT,
-    anilist_url VARCHAR(255);
+    anilist_url VARCHAR(255),
+    cover_url VARCHAR(255),
     PRIMARY KEY (id),
     FOREIGN KEY (id) REFERENCES mangareihe(id),
     FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)

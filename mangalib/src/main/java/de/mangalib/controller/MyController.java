@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.Year;
 import java.util.Comparator;
@@ -198,7 +199,12 @@ public class MyController {
     @ResponseBody // Damit der Rückgabewert als Response Body gesendet wird
     public ResponseEntity<?> addMangaReihe(@RequestBody Map<String, Object> requestData) {
         try {
+            System.out.println("Start des Extrahierens der übermittelten Werte");
             // Extrahieren der Daten aus dem requestData-Map
+            Long mangaReiheId = requestData.get("mangaReiheId") != null
+                    ? Long.valueOf(((String) requestData.get("mangaReiheId")))
+                    : null;
+            System.out.println("Die Id der Reihe ist: " + mangaReiheId);
             Integer mangaIndex = (Integer) requestData.get("mangaIndex");
             Long statusId = Long.valueOf((String) requestData.get("statusId"));
             Long verlagId = Long.valueOf((String) requestData.get("verlagId"));
@@ -214,12 +220,30 @@ public class MyController {
                     ? Long.valueOf((String) requestData.get("sammelbandTypId"))
                     : null;
             Double gesamtpreisAenderung = Double.valueOf((String) requestData.get("gesamtpreisAenderung"));
+            System.out.println("Test 1");
             @SuppressWarnings("unchecked")
             Map<String, String> scrapedData = (Map<String, String>) requestData.get("scrapedData");
+            System.out.println("Test 2");
+            Boolean istEdit = Boolean.valueOf(scrapedData.get("istEdit"));
+            System.out.println("Ist Edit? " + istEdit);
+            System.out.println("Extrahieren der übermittelten Werte abgeschlossen");
+            
+
             // Verwendung der saveMangaReihe-Methode aus dem Service
-            MangaReihe savedMangaReihe = mangaReiheService.saveMangaReihe(mangaIndex, statusId, verlagId, typId,
-                    formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
-                    sammelbandTypId, gesamtpreisAenderung, scrapedData);
+            MangaReihe savedMangaReihe;
+            if (!istEdit) {
+                System.out.println("Eine neue Reihe wird hinzugefügt");
+                savedMangaReihe = mangaReiheService.saveMangaReihe(mangaIndex, statusId, verlagId, typId,
+                        formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
+                        sammelbandTypId, gesamtpreisAenderung, scrapedData);
+            } else {
+                System.out.println("Die Reihe wird aktualisiert");
+                savedMangaReihe = mangaReiheService
+                        .updateMangaReihe(mangaReiheId, mangaIndex, statusId, verlagId, typId,
+                                formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
+                                sammelbandTypId, gesamtpreisAenderung, scrapedData)
+                        .orElse(null);
+            }
             return ResponseEntity.ok(savedMangaReihe);
         } catch (Exception e) {
             System.out.println("Fehler");
@@ -266,7 +290,7 @@ public class MyController {
 
     @GetMapping("/getMangaReiheData/{id}")
     public ResponseEntity<Map<String, Object>> getMangaReiheData(@PathVariable Long id) {
-        System.out.println(id);
+        System.out.println("Edit ID: " + id);
         Optional<MangaReihe> mangaReiheOpt = mangaReiheService.findById(id);
 
         if (!mangaReiheOpt.isPresent()) {
@@ -284,9 +308,16 @@ public class MyController {
         response.put("formatId", mangaReihe.getFormat() != null ? mangaReihe.getFormat().getFormatId() : null);
         response.put("titel", mangaReihe.getTitel());
         response.put("anzahlBaende", mangaReihe.getAnzahlBaende());
-        response.put("preisProBand", mangaReihe.getPreisProBand());
+        double preisProBand = mangaReihe.getPreisProBand();
+        response.put("preisProBand", String.valueOf(preisProBand).replace(".", ","));
         response.put("istEbayPreis", mangaReihe.getIstEbayPreis());
         response.put("istVergriffen", mangaReihe.getIstVergriffen());
+        BigDecimal gesamtpreisAenderung = mangaReihe.getAenderungGesamtpreis() != null
+                ? mangaReihe.getAenderungGesamtpreis()
+                : null;
+        response.put("gesamtpreisAenderung",
+                gesamtpreisAenderung != null ? gesamtpreisAenderung.toString().replace(".", ",") : null);
+        System.out.println("Gesamtpreis Änderung: " + response.get("gesamtpreisAenderung"));
 
         if (mangaReihe.getMangaDetails() != null) {
             MangaDetails details = mangaReihe.getMangaDetails();

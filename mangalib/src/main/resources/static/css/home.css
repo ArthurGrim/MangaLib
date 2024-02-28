@@ -586,6 +586,7 @@ body {
   font-size: 100%;
   white-space: nowrap; /* Verhindert, dass der Text im Button umbricht */
   margin-top: auto;
+  cursor: pointer;
 }
 
 .cancel-button-edit {
@@ -608,4 +609,17 @@ body {
   cursor: pointer;
   flex: 1 1 auto;
   font-size: 100%;
+}
+
+.loading-label-edit {
+  position: absolute; /* oder eine andere Positionierung */
+  top: 10%; /* Zentriert das Label vertikal */
+  left: 50%; /* Zentriert das Label horizontal */
+  transform: translate(-50%, -50%); /* Korrigiert die Positionierung */
+  background-color: var(--blue-normal);
+  color: var(--font-dark);
+  z-index: 1010;
+  padding: 10px 15px;
+  font-size: 100%;
+  border-radius: 10px;
 }
