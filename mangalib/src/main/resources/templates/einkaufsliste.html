@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de_DE" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MangaLib Einkaufsliste</title>
+    <link
+      rel="stylesheet"
+      th:href="@{/css/einkaufsliste.css}"
+      href="../static/css/einkaufsliste.css"
+    />
+  </head>
+  <body>
+    <!-- Header für die Seite zur Navigation zwischen den Seiten -->
+    <header class="header">
+      <nav class="header_headerInner">
+        <div class="header_menuContainer">
+          <ul class="main-menu">
+            <li class="main-menu-homeButton"><a href="/home">Home</a></li>
+            <li><a href="/Statistik">Statistik</a></li>
+            <li class="main-menu-einkaufslisteButton">
+              <a href="/einkaufsliste">Einkaufsliste</a>
+            </li>
+          </ul>
+        </div>
+        <button id="add-button-header" type="button">
+          <!-- SVG Such-Icon -->
+          <img
+            th:src="@{/svg/add_icon.svg}"
+            alt="SVG"
+            style="height: 24px; width: 24px"
+          />
+        </button>
+      </nav>
+    </header>
+    <main>
+      <!-- Sidebar zum Navigieren -->
+      <div class="sidebar">
+        <div class="search-container">
+          <div class="search-heading">
+            <span>Navigation</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Button um direkt nach oben zu scrollen -->
+      <div class="scrollToTopButton">
+        <button id="scrollToTopButton" onclick="scrollToTop()">
+          <!-- SVG Up-Icon -->
+          <img th:src="@{/svg/up_icon.svg}" alt="SVG" />
+        </button>
+      </div>
+
+      <!-- Bereich um die einzelnen Monate anzeigen zu lassen -->
+      <div class="monats-container">
+        <div class="monats-header">
+          <!-- Button zum Hinzufügen neuer Reihen -->
+          <button
+            type="button"
+            id="add-button"
+            class="add-button"
+            title="Hinzufügen"
+          >
+            <!-- SVG Add Icon -->
+            <img
+              th:src="@{/svg/add_icon.svg}"
+              alt="SVG"
+              style="height: 100%; width: 100%"
+            />
+          </button>
+          <label id="monats-name" class="monats-name">Februar</label>
+          <label id="baende-gesamt" class="baende-gesamt">Bände: X</label>
+          <label id="preis-gesamt" class="preis-gesamt">Gesamtpreis: X</label>
+        </div>
+        <!-- Der Body des Monats Elements -->
+        <div class="monats-body">
+            <!-- Hier stehen die Überschriften: Icon, Verlag, Typ, Format, Titel, Bände, PreisProBand und Gesamtpreis -->
+            <div class="reihe-header"></div>
+            <!-- Hier stehen dann die Einzelbände oder Reihen -->
+            <div class="reihe-body"></div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
