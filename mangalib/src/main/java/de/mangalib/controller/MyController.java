@@ -344,8 +344,4 @@ public class MyController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/einkaufsliste")
-    public String einkaufsliste() {
-        return "einkaufsliste"; // Name der HTML-Datei ohne .html
-    }
 }

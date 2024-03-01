@@ -137,6 +137,7 @@ body {
   user-select: none; /* Verhindert das Auswählen des Textes */
 }
 
+
 .monats-name,
 .baende-gesamt,
 .preis-gesamt {
@@ -153,7 +154,246 @@ body {
   border: none; /* Kein Rand */
   padding: 0; /* Kein Innenabstand */
   cursor: pointer; /* Ändert den Mauszeiger */
-  width: 19px;
-  height: 19px;
+  width: 24px;
+  height: 24px;
   margin: auto;
+}
+
+.monats-container{
+  background-color: var(--bg-panel);
+  padding: 0;
+  margin-left: 320px;
+  margin-right: 20px;
+  margin-top: 88px;
+}
+
+.monats-body {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 15px;
+}
+
+.reihe-header{
+  display: grid;
+  grid-template-columns: 30px 1fr 1fr 1fr 2fr 1fr 1fr 1fr;
+  gap: 5px;
+  background-color: var(--bg-container);
+  border-top: 0.125rem solid var(--blue-normal);
+  color: var(--font-container);
+  padding: 10px;
+  user-select: none; /* Verhindert das Auswählen des Textes */
+  justify-content: center;
+  text-align: center;
+}
+
+.reihe{
+  display: grid;
+  grid-template-columns: 30px 1fr 1fr 1fr 2fr 1fr 1fr 1fr 30px;
+  gap: 5px;
+  background-color: var(--bg-page);
+  border-radius: 5px;
+  color: var(--font-container);
+  padding: 10px;
+  user-select: none; /* Verhindert das Auswählen des Textes */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.buy-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.delete-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Style für das Pop-up Fenster zum Hinzufügen neuer Reihen */
+.popup-container {
+  display: none; /* Versteckt das Pop-up standardmäßig */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Halbtransparenter Hintergrund */
+  z-index: 1000; /* Stellt sicher, dass das Pop-up über anderen Elementen liegt */
+  justify-content: center;
+  align-items: center;
+}
+
+.popup {
+  position: relative;
+  background-color: var(--bg-page);
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 600px;
+  box-sizing: border-box; /* Stellt sicher, dass padding und border in der width enthalten sind */
+}
+
+.loading-label {
+  position: absolute; /* oder eine andere Positionierung */
+  top: 10%; /* Zentriert das Label vertikal */
+  left: 50%; /* Zentriert das Label horizontal */
+  transform: translate(-50%, -50%); /* Korrigiert die Positionierung */
+  background-color: var(--blue-normal);
+  color: var(--font-dark);
+  z-index: 1010;
+  padding: 10px 15px;
+  font-size: 100%;
+  border-radius: 10px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap; /* Erlaubt das Umfließen von Elementen auf kleinen Bildschirmen */
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.input-group {
+  flex: 1 1 150px; /* Jedes Feld nimmt mindestens 150px ein, aber kann wachsen */
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group label {
+  margin-bottom: 5px;
+  color: var(--font-dark); /* Stil für Labels */
+}
+
+.id-label {
+  background-color: var(
+    --bg-container
+  ); /* Ersetzen Sie #IhreFarbe mit der gewünschten Farbe */
+  padding: 10px; /* Optional: Fügt etwas Innenabstand hinzu */
+  border-radius: 5px; /* Optional: Fügt abgerundete Ecken hinzu */
+  color: var(
+    --font-container
+  ); /* Optional: Ändert die Textfarbe, falls erforderlich */
+}
+
+.input-group input[type="text"],
+.input-group input[type="number"],
+.input-group select {
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 100%;
+  border: none;
+  background-color: var(--bg-container);
+  color: var(--font-dark);
+}
+
+/* Stil für Checkbox-Gruppen */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1; /* Flex-Item kann wachsen und schrumpfen */
+  min-width: 150px; /* Mindestbreite für jedes Feld */
+}
+
+.checkbox-group label {
+  text-align: center; /* Zentriert das Label horizontal */
+  color: var(--font-dark);
+  font-size: 0.875em; /* Anpassung der Schriftgröße */
+}
+
+.checkbox-group input[type="checkbox"] {
+  accent-color: var(--bg-container); /* Farbe des Häkchens */
+  width: 25px; /* Breite der Checkbox */
+  height: 25px; /* Höhe der Checkbox */
+  margin-top: 0.5em; /* Abstand von Label zur Checkbox */
+  border-radius: 5px; /* Abgerundete Ecken für Checkbox */
+  -webkit-appearance: none; /* Entfernt das Standard-Styling für Checkboxen */
+  -moz-appearance: none; /* Entfernt das Standard-Styling für Checkboxen in Firefox */
+  appearance: none; /* Entfernt das Standard-Styling für Checkboxen */
+  background-color: var(
+    --bg-container
+  ); /* Hintergrundfarbe für nicht ausgewählte Checkboxen */
+  border: 1px solid var(--font-dark); /* Rahmenfarbe */
+  display: flex; /* Ermöglicht die Zentrierung des Häkchens */
+  align-items: center; /* Zentriert das Häkchen vertikal */
+  justify-content: center; /* Zentriert das Häkchen horizontal */
+}
+
+/* Hintergrundfarbe für nicht ausgewählte Checkboxen anpassen */
+.checkbox-group input[type="checkbox"]:not(:checked) {
+  background-color: var(
+    --bg-unchecked-checkbox
+  ); /* Setzen Sie die Hintergrundfarbe für nicht ausgewählte Checkboxen */
+}
+
+/* Stil für das Häkchen innerhalb der Checkbox */
+.checkbox-group input[type="checkbox"]:checked::before {
+  content: "✓"; /* Häkchensymbol */
+  color: var(--font-page); /* Farbe des Häkchens */
+  font-size: 0.875em; /* Größe des Häkchens */
+}
+
+/* Anpassungen für Buttons */
+.save-button,
+.cancel-button,
+.mp-autofill-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  flex: 1 1 auto; /* Buttons nehmen den verfügbaren Platz ein, aber nicht weniger als ihren Inhalt */
+  font-size: 100%;
+}
+
+.save-button {
+  background-color: var(--blue-normal);
+  color: var(--font-light);
+}
+
+.mp-autofill-button {
+  background-color: var(--blue-dark);
+  color: var(--font-dark);
+}
+
+.cancel-button {
+  background-color: var(--font-dark);
+  color: var(--font-page);
+}
+
+/* Media Queries für verschiedene Bildschirmgrößen */
+@media (max-width: 768px) {
+  .input-group,
+  .checkbox-group {
+    flex-basis: 100%; /* Auf kleinen Bildschirmen nehmen die Elemente die volle Breite ein */
+  }
+
+  .save-button,
+  .cancel-button,
+  .mp-autofill-button {
+    flex-basis: calc(
+      50% - 10px
+    ); /* Zwei Buttons pro Zeile mit einem Abstand von 10px */
+  }
+
+  .cancel-button {
+    margin-right: 0; /* Entfernt den rechten Margin vom Cancel-Button auf kleinen Bildschirmen */
+  }
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    flex-direction: column; /* Stapelt alle Elemente vertikal auf sehr kleinen Bildschirmen */
+  }
+
+  .input-group.title,
+  .input-group.format {
+    flex-basis: 100%; /* Auf sehr kleinen Bildschirmen nehmen beide Elemente die volle Breite ein */
+  }
+
 }
