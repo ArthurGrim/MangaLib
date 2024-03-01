@@ -51,34 +51,328 @@
       </div>
 
       <!-- Bereich um die einzelnen Monate anzeigen zu lassen -->
-      <div class="monats-container">
-        <div class="monats-header">
-          <!-- Button zum Hinzufügen neuer Reihen -->
-          <button
-            type="button"
-            id="add-button"
-            class="add-button"
-            title="Hinzufügen"
-          >
-            <!-- SVG Add Icon -->
-            <img
-              th:src="@{/svg/add_icon.svg}"
-              alt="SVG"
-              style="height: 100%; width: 100%"
-            />
-          </button>
-          <label id="monats-name" class="monats-name">Februar</label>
-          <label id="baende-gesamt" class="baende-gesamt">Bände: X</label>
-          <label id="preis-gesamt" class="preis-gesamt">Gesamtpreis: X</label>
-        </div>
-        <!-- Der Body des Monats Elements -->
-        <div class="monats-body">
-            <!-- Hier stehen die Überschriften: Icon, Verlag, Typ, Format, Titel, Bände, PreisProBand und Gesamtpreis -->
-            <div class="reihe-header"></div>
+      <div th:each="items : ${itemsByMonth}">
+        <!-- Initialisieren der Summenvariablen für jeden Monat -->
+        <span th:with="gesamtBaende=0, gesamtPreis=0" th:remove="tag"></span>
+        <div class="monats-container">
+          <div class="monats-header">
+            <!-- Button zum Hinzufügen neuer Reihen -->
+            <button type="button" id="add-button" class="add-button" title="Hinzufügen">
+              <!-- SVG Add Icon -->
+              <img
+                th:src="@{/svg/add_icon.svg}"
+                alt="SVG"
+                style="height: 100%; width: 100%"
+              />
+            </button>
+            <label id="monats-name" class="monats-name" th:text="${items.key}"
+              >Februar</label
+            >
+            <label
+              id="baende-gesamt"
+              class="baende-gesamt"
+              th:text="'Bände: ' + ${totalVolumesByMonth[items.key]}"
+            ></label>
+            <label
+              id="preis-gesamt"
+              class="preis-gesamt"
+              th:text="'Gesamtpreis: ' + ${totalPriceByMonth[items.key]}"
+            ></label>
+          </div>
+
+          <!-- Der Body des Monats Elements -->
+          <div class="monats-body">
             <!-- Hier stehen dann die Einzelbände oder Reihen -->
-            <div class="reihe-body"></div>
+            <div class="reihe-body">
+              <div th:each="item : ${items.value}">
+                <div class="reihe">
+                  <button
+                    type="button"
+                    id="buy-button"
+                    class="buy-button"
+                    title="Hinzufügen"
+                  >
+                    <!-- SVG Add Icon -->
+                    <img
+                      th:src="@{/svg/cart_icon.svg}"
+                      alt="SVG"
+                      style="height: 100%; width: 100%"
+                    />
+                  </button>
+                  <div
+                    class="manga-reihe-verlag"
+                    th:if="${item.verlagId != null}"
+                    th:text="${item.verlagId.name}"
+                  >
+                    Verlag
+                  </div>
+                  <div
+                    class="manga-reihe-typ"
+                    th:if="${item.typId != null}"
+                    th:text="${item.typId.bezeichnung}"
+                  >
+                    Typ
+                  </div>
+                  <div
+                    class="manga-reihe-format"
+                    th:if="${item.formatId != null}"
+                    th:text="${item.formatId.bezeichnung}"
+                  >
+                    Format
+                  </div>
+                  <div class="manga-reihe-titel" th:text="${item.titel}">
+                    Titel
+                  </div>
+                  <div class="manga-reihe-baende" th:text="${item.anzahlBaende}">
+                    Bände
+                  </div>
+                  <div
+                    class="manga-reihe-preis"
+                    th:text="${#numbers.formatDecimal(item.preis, 2, 'COMMA', 2, 'POINT')} + ' €'"
+                  >
+                    Preis
+                  </div>
+                  <div
+                    class="manga-reihe-gesamtpreis"
+                    th:text="${#numbers.formatDecimal(item.gesamtpreis, 2, 'COMMA', 2, 'POINT')} + ' €'"
+                  >
+                    Gesamtpreis
+                  </div>
+                  <button
+                    type="button"
+                    id="delete-button"
+                    class="delete-button"
+                    title="Löschen"
+                    th:data-id="${item.id}"
+                  >
+                    <!-- SVG Add Icon -->
+                    <img
+                      th:src="@{/svg/delete_icon.svg}"
+                      alt="SVG"
+                      style="height: 24px; width: 24px"
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bereich für das PopUp zum Hinzufügen neuer Reihen -->
+      <div id="popupContainer" class="popup-container">
+        <div class="popup">
+          <form action="/addMangaReihe" method="post">
+            <div class="loading-label" style="display: none">Lädt...</div>
+            <!-- Erste Reihe -->
+            <div class="form-row form-row-1">
+              <div class="input-group">
+                <label for="manga_index">Manga Index</label>
+                <input type="text" id="manga_index" name="manga_index" />
+              </div>
+              <div class="input-group">
+                <label for="verlag">Verlag</label>
+                <select id="verlag" name="verlag">
+                  <option value=""></option>
+                  <!-- Die Optionen über den Controler abrufen -->
+                  <option
+                    th:each="verlag : ${alleVerlage}"
+                    th:value="${verlag.verlagId}"
+                    th:text="${verlag.name}"
+                  ></option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="typ">Typ</label>
+                <select id="typ" name="typ">
+                  <option value=""></option>
+                  <!-- Die Optionen über den Controler abrufen -->
+                  <option
+                    th:each="typ : ${alleTypen}"
+                    th:value="${typ.typId}"
+                    th:text="${typ.bezeichnung}"
+                  ></option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="format">Format</label>
+                <select id="format" name="format">
+                  <option value=""></option>
+                  <!-- Die Optionen über den Controler abrufen -->
+                  <option
+                    th:each="format : ${alleFormate}"
+                    th:value="${format.formatId}"
+                    th:text="${format.bezeichnung}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Zweite Reihe -->
+            <div class="form-row form-row-2">
+              <div class="input-group">
+                <label for="titel">Titel</label>
+                <input type="text" id="titel" name="titel" />
+              </div>
+            </div>
+
+            <!-- Dritte Reihe -->
+            <div class="form-row form-row-3">
+              <div class="input-group">
+                <label for="anzahl_baende">Anzahl Bände</label>
+                <input type="number" id="anzahl_baende" name="anzahl_baende" />
+                <!-- Buttons zum Erhöhen/Vermindern -->
+              </div>
+              <div class="input-group">
+                <label for="preis_pro_band">Preis pro Band in €</label>
+                <input type="text" id="preis_pro_band" name="preis_pro_band" />
+              </div>
+              <div class="input-group">
+                <label for="anilist_url">AniList URL</label>
+                <input type="text" id="anilist_url" name="anilist_url" />
+              </div>
+            </div>
+
+            <!-- Vierte Reihe -->
+            <div class="form-row form-row-4">
+              <!-- Drop Down für Tag -->
+              <div class="input-group">
+                <label for="tag">Tag</label>
+                <select
+                  name="tagFilter"
+                  class="tag-select"
+                >
+                  <option hidden="" value="">Tag</option>
+                  <option
+                    th:each="tag : ${#numbers.sequence(1, 31)}"
+                    th:value="${tag}"
+                    th:text="${tag}"
+                  ></option>
+                </select>
+              </div>
+
+              <!-- Drop Down für den Monat -->
+              <div class="input-group">
+                <label for="monat">Monat</label>
+                <select
+                  name="monatFilter"
+                  class="monat-select"
+                >
+                  <option hidden="" value="">Monat</option>
+                  <option value="1" th:selected="${monatFilter == 1}">
+                    Januar
+                  </option>
+                  <option value="2" th:selected="${monatFilter == 2}">
+                    Februar
+                  </option>
+                  <option value="3" th:selected="${monatFilter == 3}">
+                    März
+                  </option>
+                  <option value="4" th:selected="${monatFilter == 4}">
+                    April
+                  </option>
+                  <option value="5" th:selected="${monatFilter == 5}">
+                    Mai
+                  </option>
+                  <option value="6" th:selected="${monatFilter == 6}">
+                    Juni
+                  </option>
+                  <option value="7" th:selected="${monatFilter == 7}">
+                    Juli
+                  </option>
+                  <option value="8" th:selected="${monatFilter == 8}">
+                    August
+                  </option>
+                  <option value="9" th:selected="${monatFilter == 9}">
+                    September
+                  </option>
+                  <option value="10" th:selected="${monatFilter == 10}">
+                    Oktober
+                  </option>
+                  <option value="11" th:selected="${monatFilter == 11}">
+                    November
+                  </option>
+                  <option value="12" th:selected="${monatFilter == 12}">
+                    Dezember
+                  </option>
+                </select>
+              </div>
+              <!-- Drop Down für Jahr -->
+              <div class="input-group">
+                <label for="jahr">Jahr</label>
+                <select
+                  name="jahrFilter"
+                  class="jahr-select"
+                >
+                  <option hidden="" value="">Jahr</option>
+                  <option
+                    th:each="jahr : ${#numbers.sequence(T(java.time.Year).now().getValue(), T(java.time.Year).now().getValue() + 1)}"
+                    th:value="${jahr}"
+                    th:text="${jahr}"
+                  ></option>
+                </select>
+              </div>
+
+              <!-- Fünfte Reihe -->
+              <div class="form-row form-row-5">
+                <div class="checkbox-group">
+                  <label for="istvergriffen">Vergriffen</label>
+                  <input
+                    type="checkbox"
+                    id="istvergriffen"
+                    name="istvergriffen"
+                  />
+                </div>
+                <div class="checkbox-group">
+                  <label for="istebaypreis">eBay-Preis</label>
+                  <input
+                    type="checkbox"
+                    id="istebaypreis"
+                    name="istebaypreis"
+                  />
+                </div>
+                <div class="checkbox-group">
+                  <label for="istsammelband">Sammelband</label>
+                  <input
+                    type="checkbox"
+                    id="istsammelband"
+                    name="istsammelband"
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="gesamtpreis_aenderung">Änderung Preis in €</label>
+                  <input
+                    type="text"
+                    id="gesamtpreis_aenderung"
+                    name="gesamtpreis_aenderung"
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="sammelband_typ">Sammelband Typ</label>
+                  <select id="sammelband_typ" name="sammelband_typ">
+                    <!-- Die Optionen über den Controler abrufen -->
+                    <option
+                      th:each="sammelband : ${alleSammelbaende}"
+                      th:value="${sammelband.id}"
+                      th:text="${sammelband.typ}"
+                    ></option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Letzte Reihe -->
+            <div class="form-row form-row-6">
+              <button type="button" class="mp-autofill-button">
+                MP Autofill
+              </button>
+              <button type="button" class="save-button">Save</button>
+              <button type="button" class="cancel-button">Cancel</button>
+            </div>
+          </form>
         </div>
       </div>
     </main>
+    <script src="/js/einkaufsliste.js"></script>
   </body>
 </html>

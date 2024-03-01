@@ -32,7 +32,6 @@ CREATE TABLE sammelbaende (
 );
 
 -- Tabelle für die MangaReihen
-Use mangalib;
 CREATE TABLE mangareihe (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     manga_index INT,
@@ -81,5 +80,36 @@ CREATE TABLE baende (
     mp_url VARCHAR(255),
     ist_special BOOLEAN,
     FOREIGN KEY (manga_reihe_id) REFERENCES mangareihe(id)
+);
+
+Use mangalib;
+CREATE TABLE einkaufsliste (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    manga_index INT,
+    verlag_id BIGINT,
+    typ_id BIGINT,
+    format_id BIGINT,
+    titel VARCHAR (255),
+    anzahl_baende INT,
+    preis DECIMAL(10, 2),
+    gesamtpreis DECIMAL(10, 2),
+    aenderung_gesamtpreis DECIMAL(10 ,2),
+    erscheinungsdatum DATE,
+    gekauft BOOLEAN,
+    status_de VARCHAR(255),
+    anzahl_baende_de INT,
+    status_erstv VARCHAR(255),
+    herkunft VARCHAR(255),
+    start_jahr INT,
+    anzahl_baende_erstv INT,
+    sammelbaende_id BIGINT,
+    anilist_url VARCHAR(255),
+    cover_url VARCHAR(255),
+    ist_ebay_preis BOOLEAN DEFAULT FALSE,
+    ist_vergriffen BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (verlag_id) REFERENCES Verlage(verlag_id),
+    FOREIGN KEY (typ_id) REFERENCES Typen(typ_id),
+    FOREIGN KEY (format_id) REFERENCES Formate(format_id),
+    FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)
 );
 
