@@ -95,7 +95,7 @@ CREATE TABLE einkaufsliste (
     gesamtpreis DECIMAL(10, 2),
     aenderung_gesamtpreis DECIMAL(10 ,2),
     erscheinungsdatum DATE,
-    gekauft BOOLEAN,
+    gekauft BOOLEAN DEFAULT FALSE,
     status_de VARCHAR(255),
     anzahl_baende_de INT,
     status_erstv VARCHAR(255),

@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
   deleteButtons.forEach((button) => {
     button.addEventListener("click", function (event) {
       // Auslesen der data-id vom Bild-Element innerhalb des Buttons
-      const itemId = event.currentTarget.getAttribute('data-id');
+      const itemId = event.currentTarget.getAttribute("data-id");
       console.log("Deleting item with id:", itemId);
 
       fetch(`/items/${itemId}`, {
@@ -38,21 +38,28 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Event-Listener für den Add-Button
-  var addButton = document.getElementById("add-button");
-  if (addButton) {
-    addButton.addEventListener("click", function () {
-      const monthName = document.getElementById("monats-name").textContent;
-      const monthNumber = convertMonthNameToNumber(monthName);
-      // Setzen des Monats im Pop-up
-      document.querySelector(".monat-select").value = monthNumber;
-      // Popup anzeigen
-      var popup = document.getElementById("popupContainer");
-      if (popup) {
-        popup.style.display = "flex";
-      }
-    });
-  }
+  // Event-Listener für alle Add-Buttons
+var addButtons = document.querySelectorAll(".add-button");
+
+addButtons.forEach(function(button) {
+  button.addEventListener("click", function(event) {
+    // Zugriff auf den Container des jeweiligen Buttons
+    var container = event.target.closest(".monats-container");
+    
+    // Ermitteln des Monatsnamens
+    var monthName = container.querySelector(".monats-name").textContent;
+    var monthNumber = convertMonthNameToNumber(monthName);
+
+    // Setzen des Monats im Pop-up
+    document.querySelector(".monat-select").value = monthNumber;
+
+    // Popup anzeigen
+    var popup = document.getElementById("popupContainer");
+    if (popup) {
+      popup.style.display = "flex";
+    }
+  });
+});
 
   const cancelButton = document.querySelector(".cancel-button");
   // Event-Handler, um das Pop-up zu verbergen
@@ -222,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    if(!tag || !monat || !jahr){
+    if (!tag || !monat || !jahr) {
       alert("Bitte geben Sie ein gültiges Erscheinungsdatum ein.");
       return;
     }
@@ -352,4 +359,74 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Fehler beim Abrufen der Manga-Daten:", error);
       });
   });
+
+  const buyButtons = document.querySelectorAll(".buy-button");
+
+  buyButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      const itemId = this.getAttribute("data-id");
+      fetch(`/buyItemUpdate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ itemId: itemId }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Data", data);
+          if (data.message === "Reihe aktualisiert") {
+            console.log("Reihe wurde geupdated");
+            this.closest(".reihe").style.backgroundColor = "#50C878";
+            //window.location.reload();
+          } else if (data.message === "Bitte Status für neue Reihe auswählen") {
+            console.log("Keine existierende Reihe gefunden.");
+            // Anfrage an den Benutzer, um den Status für die neue Reihe auszuwählen
+            askUserForNewMangaReiheStatus(itemId);
+          } else {
+            console.error("Unexpected response from server");
+          }
+        })
+        .catch((error) => console.error("Error:", error));
+    });
+  });
+
+  function askUserForNewMangaReiheStatus(itemId) {
+    console.log("PopUp zur Auswahl des Status anzeigen.");
+    // Anzeigen des Popups
+    var statusPopup = document.querySelector(".ask-for-status-popup");
+
+    statusPopup.style.visibility = 'visible';
+
+    // Event-Handler für das Ändern des Status
+    document.getElementById("status").addEventListener("change", function () {
+      var selectedStatus = this.value;
+
+      // Überprüfen, ob ein Status ausgewählt wurde
+      if (selectedStatus) {
+        statusPopup.style.visibility = 'hidden';
+        // Senden der Daten an den Server
+        fetch("/buyItemCreate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ itemId: itemId, statusId: selectedStatus }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // Verarbeiten der Antwort
+            console.log(data);
+            // Schließen des Popups
+
+            this.closest(".reihe").style.backgroundColor = "#50C878";
+
+            window.location.reload();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+    });
+  }
 });

@@ -111,10 +111,36 @@ body {
   align-items: center; /* Vertikale Ausrichtung der Elemente */
   margin-bottom: 1em; /* Abstand nach unten */
   border-bottom: 0.0625rem solid var(--bg-page);
-  margin-left: 5px; /* Abstand nach links */
   color: var(--font-container); /* Hellgraue Textfarbe */
   padding: 0 0.5em 0.25em;
   user-select: none; /* Verhindert das Auswählen des Textes */
+}
+
+.filter-label {
+  display: inline-block;
+  background-color: var(--blue-normal);
+  color: var(--font-light);
+  padding: 6px 5px;
+  font-size: 10px;
+  font-weight: bold;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: -5px;
+  margin-left: 5px;
+  pointer-events: none;
+  font-family: noto-sans, Noto Sans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+}
+
+.nav-link {
+  background: var(--bg-page);
+  padding: 5px 10px;
+  text-align: center;
+  display: flex;
+  color: var(--font-light);
+  text-decoration: none;
+  font-family: noto-sans, Noto Sans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  margin-bottom: 10px;
 }
 
 /* Stile für den Breich in welchem die Manga Reihen angezeigt werden */
@@ -165,6 +191,7 @@ body {
   margin-left: 320px;
   margin-right: 20px;
   margin-top: 88px;
+  margin-bottom: 25px;
 }
 
 .monats-body {
@@ -199,6 +226,10 @@ body {
   justify-content: center;
   text-align: center;
   margin-top: 10px;
+}
+
+.reihe.gekauft {
+  background-color: #217B3F; /* Grün für gekaufte Artikel */
 }
 
 .buy-button {
@@ -396,4 +427,52 @@ body {
     flex-basis: 100%; /* Auf sehr kleinen Bildschirmen nehmen beide Elemente die volle Breite ein */
   }
 
+}
+
+.ask-for-status-popup {
+  display: flex; /* Flex-Container verwenden */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden; /* Versteckt das Popup, aber behält den Platz */
+}
+
+.ask-panel {
+  position: relative;
+  background-color: var(--bg-page);
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+/* Stile für den ScrollToTop Button */
+.scrollToTopButton {
+  display: none; /* Standardmäßig versteckt */
+  position: fixed;
+  bottom: 20px;
+  left: 205px;
+  cursor: pointer;
+}
+
+.scrollToTopButton button {
+  /* Stilangaben für den quadratischen Button */
+  width: 65px; /* Breite des Buttons */
+  height: 65px; /* Höhe des Buttons */
+  padding: 10px 10px;
+  background-color: var(--blue-normal);
+  border: none;
+  border-radius: 5px;
+}
+
+.scrollToTopButton button img {
+  width: 100%; /* Bild füllt den gesamten Button aus */
+  height: auto;
 }

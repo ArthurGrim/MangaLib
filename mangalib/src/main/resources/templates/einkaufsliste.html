@@ -39,6 +39,19 @@
           <div class="search-heading">
             <span>Navigation</span>
           </div>
+          <div class="navigation-body">
+            <label class="filter-label">
+              <!-- SVG Datum Icon -->
+              <img src="/svg/datum_icon.svg" alt="SVG" style="height: 1em; width: 1em">
+              Monat</label>
+            <div th:each="items : ${itemsByMonth}">
+              <a
+                th:href="'#' + ${items.key}"
+                th:text="${items.key}"
+                class="nav-link"
+              ></a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -54,10 +67,14 @@
       <div th:each="items : ${itemsByMonth}">
         <!-- Initialisieren der Summenvariablen für jeden Monat -->
         <span th:with="gesamtBaende=0, gesamtPreis=0" th:remove="tag"></span>
-        <div class="monats-container">
+        <div class="monats-container" th:id="${items.key}">
           <div class="monats-header">
             <!-- Button zum Hinzufügen neuer Reihen -->
-            <button type="button" id="add-button" class="add-button" title="Hinzufügen">
+            <button
+              type="button"
+              class="add-button"
+              title="Hinzufügen"
+            >
               <!-- SVG Add Icon -->
               <img
                 th:src="@{/svg/add_icon.svg}"
@@ -85,12 +102,16 @@
             <!-- Hier stehen dann die Einzelbände oder Reihen -->
             <div class="reihe-body">
               <div th:each="item : ${items.value}">
-                <div class="reihe">
+                <div
+                  class="reihe"
+                  th:classappend="${item.gekauft} ? 'gekauft' : ''"
+                >
                   <button
                     type="button"
                     id="buy-button"
                     class="buy-button"
                     title="Hinzufügen"
+                    th:data-id="${item.id}"
                   >
                     <!-- SVG Add Icon -->
                     <img
@@ -123,7 +144,10 @@
                   <div class="manga-reihe-titel" th:text="${item.titel}">
                     Titel
                   </div>
-                  <div class="manga-reihe-baende" th:text="${item.anzahlBaende}">
+                  <div
+                    class="manga-reihe-baende"
+                    th:text="${item.anzahlBaende}"
+                  >
                     Bände
                   </div>
                   <div
@@ -238,10 +262,7 @@
               <!-- Drop Down für Tag -->
               <div class="input-group">
                 <label for="tag">Tag</label>
-                <select
-                  name="tagFilter"
-                  class="tag-select"
-                >
+                <select name="tagFilter" class="tag-select">
                   <option hidden="" value="">Tag</option>
                   <option
                     th:each="tag : ${#numbers.sequence(1, 31)}"
@@ -254,10 +275,7 @@
               <!-- Drop Down für den Monat -->
               <div class="input-group">
                 <label for="monat">Monat</label>
-                <select
-                  name="monatFilter"
-                  class="monat-select"
-                >
+                <select name="monatFilter" class="monat-select">
                   <option hidden="" value="">Monat</option>
                   <option value="1" th:selected="${monatFilter == 1}">
                     Januar
@@ -300,10 +318,7 @@
               <!-- Drop Down für Jahr -->
               <div class="input-group">
                 <label for="jahr">Jahr</label>
-                <select
-                  name="jahrFilter"
-                  class="jahr-select"
-                >
+                <select name="jahrFilter" class="jahr-select">
                   <option hidden="" value="">Jahr</option>
                   <option
                     th:each="jahr : ${#numbers.sequence(T(java.time.Year).now().getValue(), T(java.time.Year).now().getValue() + 1)}"
@@ -372,7 +387,26 @@
           </form>
         </div>
       </div>
+
+      <!-- Den Nutzer nach dem Status einer neuen Reihe fragen -->
+      <div class="ask-for-status-popup">
+        <div class="ask-panel">
+          <div class="input-group">
+            <label for="status">Status der neuen Reihe</label>
+            <select id="status" name="status">
+              <option value=""></option>
+              <!-- Die Optionen über den Controler abrufen -->
+              <option
+                th:each="status : ${alleStatus}"
+                th:value="${status.statusId}"
+                th:text="${status.beschreibung}"
+              ></option>
+            </select>
+          </div>
+        </div>
+      </div>
     </main>
+    <script src="/js/scrollToTop.js"></script>
     <script src="/js/einkaufsliste.js"></script>
   </body>
 </html>

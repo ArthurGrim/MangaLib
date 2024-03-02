@@ -50,7 +50,7 @@ public class EinkaufslisteItem {
     private LocalDate erscheinungsdatum;
 
     @Column(name = "gekauft")
-    private Boolean gekauft;
+    private Boolean gekauft = false;
 
     @Column(name = "status_de")
     private String statusDe;

@@ -164,7 +164,7 @@ public class MangaReiheService {
             details.setSammelbaende(sammelband);
             System.out.println(details.getSammelbaende().getId());
         }
-        
+
         if (scrapedData.containsKey("Band 1 Bild Url")) {
             details.setCoverUrl(scrapedData.get("Band 1 Bild Url"));
         }
@@ -291,7 +291,8 @@ public class MangaReiheService {
             Long typId,
             Long formatId, String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen,
             Boolean istEbayPreis,
-            String anilistUrl, String coverUrl, Long sammelbandTypId, Double gesamtpreisAenderung, Map<String, String> scrapedData) {
+            String anilistUrl, String coverUrl, Long sammelbandTypId, Double gesamtpreisAenderung,
+            Map<String, String> scrapedData) {
 
         // Überprüfen, ob die MangaReihe existiert
         Optional<MangaReihe> mangaReiheOptional = findById(mangaReiheId);
@@ -855,6 +856,14 @@ public class MangaReiheService {
             throw new IllegalArgumentException("Der Titel darf nicht leer sein");
         }
         return mangaReiheRepository.findByTitelContainingIgnoreCase(titel);
+    }
+
+    // Methode in MangaReiheService
+    public List<MangaReihe> findByFullTitel(String titel) {
+        if (titel == null || titel.trim().isEmpty()) {
+            throw new IllegalArgumentException("Der Titel darf nicht leer sein");
+        }
+        return mangaReiheRepository.findByTitel(titel);
     }
 
     /**
