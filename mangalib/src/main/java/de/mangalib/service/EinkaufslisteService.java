@@ -6,6 +6,7 @@ import de.mangalib.repository.EinkaufslisteRepository;
 import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -59,10 +60,14 @@ public class EinkaufslisteService {
         if (date == null) {
             throw new IllegalArgumentException("Das Datum darf nicht null sein.");
         }
-
+    
         LocalDate start = date.withDayOfMonth(1);
         LocalDate end = date.withDayOfMonth(date.lengthOfMonth());
-        List<EinkaufslisteItem> items = einkaufslisteRepository.findByErscheinungsdatumBetween(start, end);
+        
+        // Hinzufügen der Sortierung nach Erscheinungsdatum
+        Sort sort = Sort.by("erscheinungsdatum").ascending();
+        
+        List<EinkaufslisteItem> items = einkaufslisteRepository.findByErscheinungsdatumBetween(start, end, sort);
         System.out.println("Startdatum: " + start + ", Enddatum: " + end + ", Anzahl der Items: " + items.size());
         return items;
     }

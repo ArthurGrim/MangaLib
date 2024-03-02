@@ -82,7 +82,6 @@ CREATE TABLE baende (
     FOREIGN KEY (manga_reihe_id) REFERENCES mangareihe(id)
 );
 
-Use mangalib;
 CREATE TABLE einkaufsliste (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     manga_index INT,
