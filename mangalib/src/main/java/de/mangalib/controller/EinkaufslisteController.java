@@ -73,8 +73,8 @@ public class EinkaufslisteController {
         DecimalFormat df = new DecimalFormat("#,##0.00 €", new DecimalFormatSymbols(Locale.GERMANY));
 
         // Beispiel: Daten für die nächsten 6 Monate abrufen
-        LocalDate currentDate = LocalDate.now();
-        for (int i = 0; i < 6; i++) {
+        LocalDate currentDate = LocalDate.now().minusMonths(1);
+        for (int i = 0; i < 7; i++) {
             LocalDate month = currentDate.plusMonths(i);
             List<EinkaufslisteItem> items = einkaufslisteService.getItemsForMonth(month);
 
