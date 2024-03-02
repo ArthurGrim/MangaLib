@@ -300,8 +300,10 @@ public class EinkaufslisteController {
                     istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, scrapedData);
 
             if (neueReihe != null) {
-                item.setGekauft(true);
-                return ResponseEntity.ok("Neue MangaReihe erfolgreich gespeichert");
+                einkaufslisteService.updateGekauft(item.getId(), true);
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Neue MangaReihe erfolgreich gespeichert");
+                return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Fehler beim Speichern der neuen MangaReihe");

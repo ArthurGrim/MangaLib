@@ -377,12 +377,12 @@ addButtons.forEach(function(button) {
           console.log("Data", data);
           if (data.message === "Reihe aktualisiert") {
             console.log("Reihe wurde geupdated");
-            this.closest(".reihe").style.backgroundColor = "#50C878";
-            //window.location.reload();
+            window.location.reload();
           } else if (data.message === "Bitte Status für neue Reihe auswählen") {
             console.log("Keine existierende Reihe gefunden.");
             // Anfrage an den Benutzer, um den Status für die neue Reihe auszuwählen
             askUserForNewMangaReiheStatus(itemId);
+            
           } else {
             console.error("Unexpected response from server");
           }
@@ -415,13 +415,10 @@ addButtons.forEach(function(button) {
         })
           .then((response) => response.json())
           .then((data) => {
-            // Verarbeiten der Antwort
-            console.log(data);
-            // Schließen des Popups
-
-            this.closest(".reihe").style.backgroundColor = "#50C878";
-
-            window.location.reload();
+            if (data.message === "Neue MangaReihe erfolgreich gespeichert") {
+              console.log(data);
+              window.location.reload();
+            }
           })
           .catch((error) => {
             console.error("Error:", error);
