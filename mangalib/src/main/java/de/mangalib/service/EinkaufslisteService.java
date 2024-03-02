@@ -204,4 +204,22 @@ public class EinkaufslisteService {
 
         return savedeinkaufslisteItem;
     }
+
+    @Transactional
+    public void updateGekauft(long id, boolean gekauft) {
+        // Validierung der ID
+        if (id <= 0) {
+            throw new IllegalArgumentException("Ungültige ID: " + id);
+        }
+
+        // Suche das Item mit der gegebenen ID
+        EinkaufslisteItem item = einkaufslisteRepository.findById(id).orElseThrow(() -> 
+            new IllegalArgumentException("Item mit der ID " + id + " nicht gefunden"));
+
+        // Aktualisiere den gekauft-Status
+        item.setGekauft(gekauft);
+
+        // Speichere das aktualisierte Item
+        einkaufslisteRepository.save(item);
+    }
 }

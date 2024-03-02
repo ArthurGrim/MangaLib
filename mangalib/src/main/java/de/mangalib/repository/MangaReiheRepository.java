@@ -28,4 +28,5 @@ public interface MangaReiheRepository extends JpaRepository<MangaReihe, Long> {
 
     @Query("SELECT MAX(m.id) FROM MangaReihe m")
     Long findMaxId();
+    List<MangaReihe> findByTitel(String titel);
 }
