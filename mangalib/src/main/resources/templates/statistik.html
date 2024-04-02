@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de_DE" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MangaLib Statistik</title>
+    <link
+      rel="stylesheet"
+      th:href="@{/css/statistik.css}"
+      href="../static/css/statistik.css"
+    />
+  </head>
+  <body>
+    <!-- Header für die Seite zur Navigation zwischen den Seiten -->
+    <header class="header">
+      <nav class="header_headerInner">
+        <div class="header_menuContainer">
+          <ul class="main-menu">
+            <li class="main-menu-homeButton"><a href="/home">Home</a></li>
+            <li class="main-menu-statistikButton">
+              <a href="/Statistik">Statistik</a>
+            </li>
+            <li class="main-menu-einkaufslisteButton">
+              <a href="/einkaufsliste">Einkaufsliste</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+    <main></main>
+  </body>
+</html>

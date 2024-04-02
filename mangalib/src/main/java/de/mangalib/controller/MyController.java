@@ -122,12 +122,12 @@ public class MyController {
             int jahr = (jahrFilter != null) ? jahrFilter : Year.now().getValue(); // Aktuelles Jahr, wenn kein Jahr
                                                                                   // angegeben
             alleMangaReihen = alleMangaReihen.stream()
-                    .filter(mangaReihe -> mangaReihe.getErstelltAm().toLocalDateTime().getYear() == jahr &&
-                            mangaReihe.getErstelltAm().toLocalDateTime().getMonthValue() == monatFilter)
+                    .filter(mangaReihe -> mangaReihe.getErstelltAm().getYear() == jahr &&
+                            mangaReihe.getErstelltAm().getMonthValue() == monatFilter)
                     .collect(Collectors.toList());
         } else if (jahrFilter != null) {
             alleMangaReihen = alleMangaReihen.stream()
-                    .filter(mangaReihe -> mangaReihe.getErstelltAm().toLocalDateTime().getYear() == jahrFilter)
+                    .filter(mangaReihe -> mangaReihe.getErstelltAm().getYear() == jahrFilter)
                     .collect(Collectors.toList());
         }
 

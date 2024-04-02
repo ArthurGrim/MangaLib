@@ -288,6 +288,7 @@ body {
   flex-wrap: wrap; /* Erlaubt das Umfließen von Elementen auf kleinen Bildschirmen */
   gap: 10px;
   margin-bottom: 10px;
+  width: 100%
 }
 
 .input-group {
