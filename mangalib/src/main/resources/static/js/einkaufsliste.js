@@ -5,6 +5,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   deleteButtons.forEach((button) => {
     button.addEventListener("click", function (event) {
+       // Bestätigungsdialog anzeigen
+       const confirmed = confirm("Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?");
+       if (!confirmed) {
+           // Wenn der Benutzer nicht bestätigt, Abbruch des Löschvorgangs
+           return;
+       }
       // Auslesen der data-id vom Bild-Element innerhalb des Buttons
       const itemId = event.currentTarget.getAttribute("data-id");
       console.log("Deleting item with id:", itemId);
