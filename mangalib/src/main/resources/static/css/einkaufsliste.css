@@ -454,6 +454,30 @@ body {
   box-sizing: border-box;
 }
 
+.button-input-group{
+  display: flex;
+  margin-top: 15px;
+}
+
+.ask-panel-cancel-button, .ask-panel-confirm-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  flex: 1 1 auto;
+  font-size: 100%;
+}
+
+.ask-panel-confirm-button{
+  background-color: var(--blue-dark);
+  color: var(--font-dark);
+}
+
+.ask-panel-cancel-button{
+  background-color: var(--font-dark);
+  color: var(--font-page);
+}
+
 /* Stile für den ScrollToTop Button */
 .scrollToTopButton {
   display: none; /* Standardmäßig versteckt */

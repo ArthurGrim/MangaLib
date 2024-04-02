@@ -5,12 +5,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   deleteButtons.forEach((button) => {
     button.addEventListener("click", function (event) {
-       // Bestätigungsdialog anzeigen
-       const confirmed = confirm("Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?");
-       if (!confirmed) {
-           // Wenn der Benutzer nicht bestätigt, Abbruch des Löschvorgangs
-           return;
-       }
+      // Bestätigungsdialog anzeigen
+      const confirmed = confirm(
+        "Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?"
+      );
+      if (!confirmed) {
+        // Wenn der Benutzer nicht bestätigt, Abbruch des Löschvorgangs
+        return;
+      }
       // Auslesen der data-id vom Bild-Element innerhalb des Buttons
       const itemId = event.currentTarget.getAttribute("data-id");
       console.log("Deleting item with id:", itemId);
@@ -45,27 +47,27 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Event-Listener für alle Add-Buttons
-var addButtons = document.querySelectorAll(".add-button");
+  var addButtons = document.querySelectorAll(".add-button");
 
-addButtons.forEach(function(button) {
-  button.addEventListener("click", function(event) {
-    // Zugriff auf den Container des jeweiligen Buttons
-    var container = event.target.closest(".monats-container");
-    
-    // Ermitteln des Monatsnamens
-    var monthName = container.querySelector(".monats-name").textContent;
-    var monthNumber = convertMonthNameToNumber(monthName);
+  addButtons.forEach(function (button) {
+    button.addEventListener("click", function (event) {
+      // Zugriff auf den Container des jeweiligen Buttons
+      var container = event.target.closest(".monats-container");
 
-    // Setzen des Monats im Pop-up
-    document.querySelector(".monat-select").value = monthNumber;
+      // Ermitteln des Monatsnamens
+      var monthName = container.querySelector(".monats-name").textContent;
+      var monthNumber = convertMonthNameToNumber(monthName);
 
-    // Popup anzeigen
-    var popup = document.getElementById("popupContainer");
-    if (popup) {
-      popup.style.display = "flex";
-    }
+      // Setzen des Monats im Pop-up
+      document.querySelector(".monat-select").value = monthNumber;
+
+      // Popup anzeigen
+      var popup = document.getElementById("popupContainer");
+      if (popup) {
+        popup.style.display = "flex";
+      }
+    });
   });
-});
 
   const cancelButton = document.querySelector(".cancel-button");
   // Event-Handler, um das Pop-up zu verbergen
@@ -368,6 +370,7 @@ addButtons.forEach(function(button) {
 
   const buyButtons = document.querySelectorAll(".buy-button");
 
+  // Aktionen beim Klicken des Kauf-Buttons
   buyButtons.forEach((button) => {
     button.addEventListener("click", function () {
       const itemId = this.getAttribute("data-id");
@@ -385,10 +388,30 @@ addButtons.forEach(function(button) {
             console.log("Reihe wurde geupdated");
             window.location.reload();
           } else if (data.message === "Bitte Status für neue Reihe auswählen") {
-            console.log("Keine existierende Reihe gefunden.");
-            // Anfrage an den Benutzer, um den Status für die neue Reihe auszuwählen
-            askUserForNewMangaReiheStatus(itemId);
-            
+            askUserForNewMangaReiheStatus(itemId)
+              .then((selectedStatus) => {
+                // Senden der Daten an den Server nach erfolgreicher Statusauswahl
+                return fetch("/buyItemCreate", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    itemId: itemId,
+                    statusId: selectedStatus,
+                  }),
+                });
+              })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.message === "Neue MangaReihe erfolgreich gespeichert") {
+                  console.log(data);
+                  window.location.reload();
+                }
+              })
+              .catch((error) => {
+                console.log("Error:", error);
+              });
           } else {
             console.error("Unexpected response from server");
           }
@@ -397,39 +420,42 @@ addButtons.forEach(function(button) {
     });
   });
 
+  //PopUp wenn es sich um eine neue Reihe handelt und der User den Status eingeben soll.
   function askUserForNewMangaReiheStatus(itemId) {
-    console.log("PopUp zur Auswahl des Status anzeigen.");
-    // Anzeigen des Popups
-    var statusPopup = document.querySelector(".ask-for-status-popup");
-
-    statusPopup.style.visibility = 'visible';
-
-    // Event-Handler für das Ändern des Status
-    document.getElementById("status").addEventListener("change", function () {
-      var selectedStatus = this.value;
-
-      // Überprüfen, ob ein Status ausgewählt wurde
-      if (selectedStatus) {
+    return new Promise((resolve, reject) => {
+      console.log("PopUp zur Auswahl des Status anzeigen.");
+      var statusPopup = document.querySelector(".ask-for-status-popup");
+      statusPopup.style.visibility = 'visible';
+  
+      var confirmButton = document.getElementById("confirmStatus");
+      var cancelButton = document.getElementById("cancelStatus");
+  
+      // Hilfsfunktion, um Event Listener zu entfernen
+      function cleanUp() {
+        confirmButton.removeEventListener("click", onConfirm);
+        cancelButton.removeEventListener("click", onCancel);
         statusPopup.style.visibility = 'hidden';
-        // Senden der Daten an den Server
-        fetch("/buyItemCreate", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ itemId: itemId, statusId: selectedStatus }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.message === "Neue MangaReihe erfolgreich gespeichert") {
-              console.log(data);
-              window.location.reload();
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
       }
+  
+      // Event Handler für den Confirm-Button
+      function onConfirm() {
+        var selectedStatus = document.getElementById("status").value;
+        if (selectedStatus) {
+          cleanUp();
+          resolve(selectedStatus);
+        } else {
+          alert("Bitte wählen Sie einen Status aus.");
+        }
+      }
+  
+      // Event Handler für den Cancel-Button
+      function onCancel() {
+        cleanUp();
+        reject(new Error("Statusauswahl abgebrochen"));
+      }
+  
+      confirmButton.addEventListener("click", onConfirm);
+      cancelButton.addEventListener("click", onCancel);
     });
   }
 });

@@ -9,7 +9,7 @@
       href="../static/css/einkaufsliste.css"
     />
   </head>
-  <link rel="icon" type="image/x-icon" href="/svg/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/svg/favicon.ico" />
   <body>
     <!-- Header für die Seite zur Navigation zwischen den Seiten -->
     <header class="header">
@@ -17,7 +17,9 @@
         <div class="header_menuContainer">
           <ul class="main-menu">
             <li class="main-menu-homeButton"><a href="/home">Home</a></li>
-            <li class="main-menu-statistikButton"><a href="/statistik">Statistik</a></li>
+            <li class="main-menu-statistikButton">
+              <a href="/statistik">Statistik</a>
+            </li>
             <li class="main-menu-einkaufslisteButton">
               <a href="/einkaufsliste">Einkaufsliste</a>
             </li>
@@ -43,8 +45,13 @@
           <div class="navigation-body">
             <label class="filter-label">
               <!-- SVG Datum Icon -->
-              <img src="/svg/datum_icon.svg" alt="SVG" style="height: 1em; width: 1em">
-              Monat</label>
+              <img
+                src="/svg/datum_icon.svg"
+                alt="SVG"
+                style="height: 1em; width: 1em"
+              />
+              Monat</label
+            >
             <div th:each="items : ${itemsByMonth}">
               <a
                 th:href="'#' + ${items.key}"
@@ -71,11 +78,7 @@
         <div class="monats-container" th:id="${items.key}">
           <div class="monats-header">
             <!-- Button zum Hinzufügen neuer Reihen -->
-            <button
-              type="button"
-              class="add-button"
-              title="Hinzufügen"
-            >
+            <button type="button" class="add-button" title="Hinzufügen">
               <!-- SVG Add Icon -->
               <img
                 th:src="@{/svg/add_icon.svg}"
@@ -403,6 +406,10 @@
                 th:text="${status.beschreibung}"
               ></option>
             </select>
+            <div class="button-input-group">
+            <button class="ask-panel-confirm-button" id="confirmStatus">Confirm</button>
+            <button class="ask-panel-cancel-button" id="cancelStatus">Cancel</button>
+          </div>
           </div>
         </div>
       </div>
