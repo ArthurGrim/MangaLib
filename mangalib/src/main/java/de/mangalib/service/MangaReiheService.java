@@ -330,6 +330,9 @@ public class MangaReiheService {
         BigDecimal gesamtpreisAenderungBigDecimal = gesamtpreisAenderung != null
                 ? BigDecimal.valueOf(gesamtpreisAenderung)
                 : BigDecimal.ZERO;
+        gesamtpreisAenderungBigDecimal = mangaReihe.getAenderungGesamtpreis() != null
+                ? mangaReihe.getAenderungGesamtpreis().add(gesamtpreisAenderungBigDecimal)
+                : gesamtpreisAenderungBigDecimal;
         BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(anzahlBaende);
 
         BigDecimal gesamtpreis = preisProBandBigDecimal.multiply(anzahlBaendeBigDecimal)
