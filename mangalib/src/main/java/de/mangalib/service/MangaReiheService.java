@@ -326,14 +326,21 @@ public class MangaReiheService {
         mangaReihe.setIstVergriffen(istVergriffen);
         System.out.println("IstVergriffen gesetzt auf: " + istVergriffen);
 
-        // Berechnen und Aktualisieren des Gesamtpreises
-        BigDecimal preisProBandBigDecimal = BigDecimal.valueOf(preisProBand);
+        // Überprüfen, ob die Anzahl der Bände erhöht wurde
+        boolean istAnzahlErhoeht = mangaReihe.getAnzahlBaende() != null && mangaReihe.getAnzahlBaende() < anzahlBaende;
+
+        // Berechnen und Aktualisieren des Gesamtpreises        
+        BigDecimal preisProBandBigDecimal = !istAnzahlErhoeht ? BigDecimal.valueOf(preisProBand) : BigDecimal.valueOf(mangaReihe.getPreisProBand());
         BigDecimal gesamtpreisAenderungBigDecimal = gesamtpreisAenderung != null
                 ? BigDecimal.valueOf(gesamtpreisAenderung)
                 : BigDecimal.ZERO;
-        gesamtpreisAenderungBigDecimal = mangaReihe.getAenderungGesamtpreis() != null
-                ? mangaReihe.getAenderungGesamtpreis().add(gesamtpreisAenderungBigDecimal)
-                : gesamtpreisAenderungBigDecimal;
+
+        // Logik zur Entscheidung, ob addieren oder ersetzen
+        if (istAnzahlErhoeht) {
+            gesamtpreisAenderungBigDecimal = mangaReihe.getAenderungGesamtpreis() != null
+                    ? mangaReihe.getAenderungGesamtpreis().add(gesamtpreisAenderungBigDecimal)
+                    : gesamtpreisAenderungBigDecimal;
+        }
         BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(anzahlBaende);
 
         BigDecimal gesamtpreis = preisProBandBigDecimal.multiply(anzahlBaendeBigDecimal)
