@@ -127,13 +127,34 @@
 
         <!-- Container für das Säulendiagramm -->
         <div class="container-baende-bar-chart">
-          <canvas id="bandKategorienStatistik"></canvas>
+          <section>
+            <div class="heading-score">
+              <h3>Reihen Anzahl</h3>
+            </div>
+            <div class="bar-chart-wrap">
+              <div
+                th:each="reihe, iterStat : ${reihenStatistik}"
+                class="bar-wrap"
+                style="width: 140px"
+              >
+                <div class="bar" th:style="'height:' + ${reihe.wert} + '%;'">
+                  <div class="value" th:text="${reihe.anzahl}"></div>
+                </div>
+              </div>
+            </div>
+            <div class="x-axis">
+              <div
+                th:each="reihe : ${reihenStatistik}"
+                class="bar-label"
+                style="width: 140px"
+                th:text="${reihe.kategorie}"
+              ></div>
+            </div>
+          </section>
         </div>
       </div>
     </main>
     <script src="/js/scrollToTop.js"></script>
-    <!-- Einbinden von Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Einbinden Ihrer JavaScript-Datei für das Diagramm -->
     <script src="/js/statistik.js"></script>
