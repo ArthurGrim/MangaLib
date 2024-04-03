@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de_DE" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MangaLib Statistik</title>
+    <link
+      rel="stylesheet"
+      th:href="@{/css/statistik/st_overview.css}"
+      href="../static/css/statistik/st_overview.css"
+    />
+    <link rel="icon" type="image/x-icon" href="/svg/favicon.ico">
+  </head>
+  <body>
+    <!-- Header für die Seite zur Navigation zwischen den Seiten -->
+    <header class="header">
+      <nav class="header_headerInner">
+        <div class="header_menuContainer">
+          <ul class="main-menu">
+            <li class="main-menu-homeButton"><a href="/home">Home</a></li>
+            <li class="main-menu-statistikButton">
+              <a href="/statistik/st_overview">Statistik</a>
+            </li>
+            <li class="main-menu-einkaufslisteButton">
+              <a href="/einkaufsliste">Einkaufsliste</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+    <main>
+
+      <!-- Sidebar für die Navigation der Statistiken -->
+      <div class="sidebar">
+        <div class="search-container">
+          <div class="search-heading">
+            <span>Navigation</span>
+          </div>
+          <div class="navigation-body">
+            <a class="navigation-overview" href="/statistik/st_overview">Overview</a>
+            <a class="navigation-status" href="/statistik/st_status">Status</a>
+            <a class="navigation-verlag" href="/statistik/st_verlag">Verlag</a>
+            <a class="navigation-typ" href="/statistik/st_typ">Typ</a>
+            <a class="navigation-format" href="/statistik/st_format">Format</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Button um direkt nach oben zu scrollen -->
+    <div class="scrollToTopButton">
+      <button id="scrollToTopButton" onclick="scrollToTop()">
+        <!-- SVG Up-Icon -->
+        <img th:src="@{/svg/up_icon.svg}" alt="SVG" />
+      </button>
+    </div>
+
+    <div class="statistik-container">
+      
+    </div>
+
+    </main>
+    <script src="/js/scrollToTop.js"></script>
+  </body>
+</html>

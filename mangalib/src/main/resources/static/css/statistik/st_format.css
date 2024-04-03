@@ -76,3 +76,78 @@
     text-decoration: none; /* Keine Unterstreichung */
     font-weight: bold; /* Fette Schrift */
   }
+
+  /* Stile für die Seitenleiste */
+.sidebar {
+  background-color: var(--bg-container); /* Dunkelgraue Hintergrundfarbe */
+  border-top: 0.125rem solid var(--blue-normal);
+  padding: 10px; /* Innenabstand */
+  margin-top: 110px; /* Abstand nach oben */
+  margin-left: 20px; /* Abstand nach links */
+  width: 230px; /* Breite der Seitenleiste */
+  position: absolute; /* Absolute Positionierung */
+  top: 0; /* Oben im Container */
+  left: 0; /* Links im Container */
+}
+
+/* Stile für den Suchcontainer */
+.search-container {
+  display: flex; /* Flexibles Box-Layout */
+  flex-direction: column; /* Vertikale Ausrichtung */
+}
+
+/* Stile für die Überschrift im Suchcontainer */
+.search-heading {
+  display: flex; /* Flexibles Box-Layout */
+  justify-content: space-between; /* Elemente gleichmäßig verteilen */
+  align-items: center; /* Vertikale Ausrichtung der Elemente */
+  margin-bottom: 1em; /* Abstand nach unten */
+  border-bottom: 0.0625rem solid var(--bg-page);
+  color: var(--font-container); /* Hellgraue Textfarbe */
+  padding: 0 0.5em 0.25em;
+  user-select: none; /* Verhindert das Auswählen des Textes */
+}
+
+.navigation-overview, .navigation-status, .navigation-verlag, .navigation-typ, .navigation-format {
+  border-radius: 3px;
+  background-color: var(--bg-page);
+  color: var(--font-light);
+  cursor: pointer;
+  display: block;
+  margin-bottom: 8px;
+  padding: 5px 10px;
+  text-decoration: none; /* Entfernt den Unterstrich des href*/
+}
+
+/* Stile für den ScrollToTop Button */
+.scrollToTopButton {
+  display: none; /* Standardmäßig versteckt */
+  position: fixed;
+  bottom: 20px;
+  left: 205px;
+  cursor: pointer;
+}
+
+.scrollToTopButton button {
+  /* Stilangaben für den quadratischen Button */
+  width: 65px; /* Breite des Buttons */
+  height: 65px; /* Höhe des Buttons */
+  padding: 10px 10px;
+  background-color: var(--blue-normal);
+  border: none;
+  border-radius: 5px;
+}
+
+.scrollToTopButton button img {
+  width: 100%; /* Bild füllt den gesamten Button aus */
+  height: auto;
+}
+
+/* Stile für den Hauptteil der Seite mit den Statistiken */
+.statistik-container{
+  display: flex;
+  flex-direction: column;
+  margin-left: 280px; /* Abstand zur Sidebar */
+  padding: 20px;
+  margin-top: 68px; /* Abstand nach oben */
+}
