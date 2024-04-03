@@ -9,15 +9,22 @@ import de.mangalib.entity.Verlag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
 public interface MangaReiheRepository extends JpaRepository<MangaReihe, Long> {
-     List<MangaReihe> findByStatus(Status status);
+    List<MangaReihe> findByStatus(Status status);
+
     List<MangaReihe> findByVerlag(Verlag verlag);
+
     List<MangaReihe> findByTyp(Typ typ);
+
     List<MangaReihe> findByFormat(Format format);
+
     List<MangaReihe> findByMangaIndex(Integer mangaIndex);
+
     List<MangaReihe> findByTitelContainingIgnoreCase(String titel);
 
     @Query("SELECT m FROM MangaReihe m WHERE YEAR(m.erstelltAm) = :jahr")
@@ -28,5 +35,19 @@ public interface MangaReiheRepository extends JpaRepository<MangaReihe, Long> {
 
     @Query("SELECT MAX(m.id) FROM MangaReihe m")
     Long findMaxId();
+
     List<MangaReihe> findByTitel(String titel);
+
+    @Query("SELECT SUM(m.anzahlBaende) FROM MangaReihe m WHERE m.status.id <> 4")
+    Integer findeGesamtAnzahlBaende();
+
+    @Query("SELECT SUM(mr.anzahlBaende * COALESCE(md.sammelbaende.multiplikator, 1)) " +
+            "FROM MangaReihe mr " +
+            "LEFT JOIN mr.mangaDetails md " +
+            "LEFT JOIN md.sammelbaende sb " +
+            "WHERE mr.status.id <> 4")
+    Integer findeGesamtAnzahlMitMultiplikator();
+
+    @Query("SELECT SUM(m.gesamtpreis) FROM MangaReihe m WHERE m.status.id <> 4")
+    BigDecimal findeGesamtSummeGesamtpreis();
 }
