@@ -32,8 +32,6 @@ public class StatistikController {
         model.addAttribute("gesamtSummeGesamtpreis", gesamtSummeGesamtpreis);
         model.addAttribute("durchschnittlicherPreisProBand", durchschnittlicherPreisProBand);
 
-        
-
         return "statistik/st_overview";
     }
 
@@ -66,17 +64,19 @@ public class StatistikController {
     }
 
     @GetMapping("/api/statistik/bandKategorien")
-@ResponseBody
-public Map<String, Integer> getBandKategorienStatistik() {
-    Map<String, Integer> statistik = new HashMap<>();
-    //Daten für das Balkendiagramm mit den Bänden
-    statistik.put("reihenMitEinemBand", mangaReiheService.getReihenMitEinemBand());
-    statistik.put("reihenMitZweiBisFuenfBaenden", mangaReiheService.getReihenMitZweiBisFuenfBaenden());
-    statistik.put("reihenMitSechsBisZehnBaenden", mangaReiheService.getReihenMitSechsBisZehnBaenden());
-    statistik.put("reihenMitElfBisZwanzigBaenden", mangaReiheService.getReihenMitElfBisZwanzigBaenden());
-    statistik.put("reihenMitEinundzwanzigBisFuenfzigBaenden", mangaReiheService.getReihenMitEinundzwanzigBisFuenfzigBaenden());
-    statistik.put("reihenMitEinundfuenfzigBisHundertBaenden", mangaReiheService.getReihenMitEinundfuenfzigBisHundertBaenden());
-    statistik.put("reihenMitMehrAlsHundertBaenden", mangaReiheService.getReihenMitMehrAlsHundertBaenden());
-    return statistik;
-}
+    @ResponseBody
+    public Map<String, Integer> getBandKategorienStatistik() {
+        Map<String, Integer> statistik = new HashMap<>();
+        // Daten für das Balkendiagramm mit den Bänden
+        statistik.put("reihenMitEinemBand", mangaReiheService.getReihenMitEinemBand());
+        statistik.put("reihenMitZweiBisFuenfBaenden", mangaReiheService.getReihenMitZweiBisFuenfBaenden());
+        statistik.put("reihenMitSechsBisZehnBaenden", mangaReiheService.getReihenMitSechsBisZehnBaenden());
+        statistik.put("reihenMitElfBisZwanzigBaenden", mangaReiheService.getReihenMitElfBisZwanzigBaenden());
+        statistik.put("reihenMitEinundzwanzigBisFuenfzigBaenden",
+                mangaReiheService.getReihenMitEinundzwanzigBisFuenfzigBaenden());
+        statistik.put("reihenMitEinundfuenfzigBisHundertBaenden",
+                mangaReiheService.getReihenMitEinundfuenfzigBisHundertBaenden());
+        statistik.put("reihenMitMehrAlsHundertBaenden", mangaReiheService.getReihenMitMehrAlsHundertBaenden());
+        return statistik;
+    }
 }
