@@ -50,4 +50,25 @@ public interface MangaReiheRepository extends JpaRepository<MangaReihe, Long> {
 
     @Query("SELECT SUM(m.gesamtpreis) FROM MangaReihe m WHERE m.status.id <> 4")
     BigDecimal findeGesamtSummeGesamtpreis();
+
+    @Query("SELECT COUNT(m) FROM MangaReihe m WHERE m.anzahlBaende = 1")
+    int countReihenMitEinemBand();
+
+    @Query("SELECT COUNT(m) FROM MangaReihe m WHERE m.anzahlBaende BETWEEN 2 AND 5")
+    int countReihenMitZweiBisFuenfBaenden();
+
+    @Query("SELECT COUNT(m) FROM MangaReihe m WHERE m.anzahlBaende BETWEEN 6 AND 10")
+    int countReihenMitSechsBisZehnBaenden();
+
+    @Query("SELECT COUNT(m) FROM MangaReihe m WHERE m.anzahlBaende BETWEEN 11 AND 20")
+    int countReihenMitElfBisZwanzigBaenden();
+
+    @Query("SELECT COUNT(m) FROM MangaReihe m WHERE m.anzahlBaende BETWEEN 21 AND 50")
+    int countReihenMitEinundzwanzigBisFuenfzigBaenden();
+
+    @Query("SELECT COUNT(m) FROM MangaReihe m WHERE m.anzahlBaende BETWEEN 51 AND 100")
+    int countReihenMitEinundfuenfzigBisHundertBaenden();
+
+    @Query("SELECT COUNT(m) FROM MangaReihe m WHERE m.anzahlBaende > 100")
+    int countReihenMitMehrAlsHundertBaenden();
 }

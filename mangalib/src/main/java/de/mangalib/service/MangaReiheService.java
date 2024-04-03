@@ -1012,4 +1012,83 @@ public class MangaReiheService {
         }
     }
 
+    /**
+     * Methode zum Abrufen der Anzahl der Manga-Reihen mit nur einem Band.
+     * 
+     * @return Die Anzahl der Manga-Reihen mit nur einem Band
+     */
+    public int getReihenMitEinemBand() {
+        // Aufrufen der Repository-Methode zur Zählung der Manga-Reihen mit nur einem
+        // Band und Rückgabe des Ergebnisses
+        return mangaReiheRepository.countReihenMitEinemBand();
+    }
+
+    /**
+     * Methode zum Abrufen der Anzahl der Manga-Reihen mit zwei bis fünf Bänden.
+     * 
+     * @return Die Anzahl der Manga-Reihen mit zwei bis fünf Bänden
+     */
+    public int getReihenMitZweiBisFuenfBaenden() {
+        // Aufrufen der Repository-Methode zur Zählung der Manga-Reihen mit zwei bis
+        // fünf Bänden und Rückgabe des Ergebnisses
+        return mangaReiheRepository.countReihenMitZweiBisFuenfBaenden();
+    }
+
+    /**
+     * Methode zum Abrufen der Anzahl der Manga-Reihen mit sechs bis zehn Bänden.
+     * 
+     * @return Die Anzahl der Manga-Reihen mit sechs bis zehn Bänden
+     */
+    public int getReihenMitSechsBisZehnBaenden() {
+        // Aufrufen der Repository-Methode zur Zählung der Manga-Reihen mit sechs bis
+        // zehn Bänden und Rückgabe des Ergebnisses
+        return mangaReiheRepository.countReihenMitSechsBisZehnBaenden();
+    }
+
+    /**
+     * Methode zum Abrufen der Anzahl der Manga-Reihen mit elf bis zwanzig Bänden.
+     * 
+     * @return Die Anzahl der Manga-Reihen mit elf bis zwanzig Bänden
+     */
+    public int getReihenMitElfBisZwanzigBaenden() {
+        // Aufrufen der Repository-Methode zur Zählung der Manga-Reihen mit elf bis
+        // zwanzig Bänden und Rückgabe des Ergebnisses
+        return mangaReiheRepository.countReihenMitElfBisZwanzigBaenden();
+    }
+
+    /**
+     * Methode zum Abrufen der Anzahl der Manga-Reihen mit einundzwanzig bis fünfzig
+     * Bänden.
+     * 
+     * @return Die Anzahl der Manga-Reihen mit einundzwanzig bis fünfzig Bänden
+     */
+    public int getReihenMitEinundzwanzigBisFuenfzigBaenden() {
+        // Aufrufen der Repository-Methode zur Zählung der Manga-Reihen mit
+        // einundzwanzig bis fünfzig Bänden und Rückgabe des Ergebnisses
+        return mangaReiheRepository.countReihenMitEinundzwanzigBisFuenfzigBaenden();
+    }
+
+    /**
+     * Methode zum Abrufen der Anzahl der Manga-Reihen mit einundfünfzig bis hundert
+     * Bänden.
+     * 
+     * @return Die Anzahl der Manga-Reihen mit einundfünfzig bis hundert Bänden
+     */
+    public int getReihenMitEinundfuenfzigBisHundertBaenden() {
+        // Aufrufen der Repository-Methode zur Zählung der Manga-Reihen mit
+        // einundfünfzig bis hundert Bänden und Rückgabe des Ergebnisses
+        return mangaReiheRepository.countReihenMitEinundfuenfzigBisHundertBaenden();
+    }
+
+    /**
+     * Methode zum Abrufen der Anzahl der Manga-Reihen mit mehr als hundert Bänden.
+     * 
+     * @return Die Anzahl der Manga-Reihen mit mehr als hundert Bänden
+     */
+    public int getReihenMitMehrAlsHundertBaenden() {
+        // Aufrufen der Repository-Methode zur Zählung der Manga-Reihen mit mehr als
+        // hundert Bänden und Rückgabe des Ergebnisses
+        return mangaReiheRepository.countReihenMitMehrAlsHundertBaenden();
+    }
+
 }
