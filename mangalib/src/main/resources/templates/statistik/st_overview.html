@@ -8,7 +8,7 @@
       th:href="@{/css/statistik/st_overview.css}"
       href="../static/css/statistik/st_overview.css"
     />
-    <link rel="icon" type="image/x-icon" href="/svg/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/svg/favicon.ico" />
   </head>
   <body>
     <!-- Header für die Seite zur Navigation zwischen den Seiten -->
@@ -28,7 +28,6 @@
       </nav>
     </header>
     <main>
-
       <!-- Sidebar für die Navigation der Statistiken -->
       <div class="sidebar">
         <div class="search-container">
@@ -36,7 +35,9 @@
             <span>Navigation</span>
           </div>
           <div class="navigation-body">
-            <a class="navigation-overview" href="/statistik/st_overview">Overview</a>
+            <a class="navigation-overview" href="/statistik/st_overview"
+              >Overview</a
+            >
             <a class="navigation-status" href="/statistik/st_status">Status</a>
             <a class="navigation-verlag" href="/statistik/st_verlag">Verlag</a>
             <a class="navigation-typ" href="/statistik/st_typ">Typ</a>
@@ -46,17 +47,84 @@
       </div>
 
       <!-- Button um direkt nach oben zu scrollen -->
-    <div class="scrollToTopButton">
-      <button id="scrollToTopButton" onclick="scrollToTop()">
-        <!-- SVG Up-Icon -->
-        <img th:src="@{/svg/up_icon.svg}" alt="SVG" />
-      </button>
-    </div>
+      <div class="scrollToTopButton">
+        <button id="scrollToTopButton" onclick="scrollToTop()">
+          <!-- SVG Up-Icon -->
+          <img th:src="@{/svg/up_icon.svg}" alt="SVG" />
+        </button>
+      </div>
 
-    <div class="statistik-container">
-      
-    </div>
-
+      <!-- Hier werden die Statistiken angezeigt -->
+      <div class="statistik-container">
+        <!-- Hier werden die Highlight wie Gesamtanzahl Bände angezeigt -->
+        <div class="statistik-highlights">
+          <div class="gesamtanzahl-baende">
+            <div class="circle-img">
+              <!-- SVG Book Icon -->
+              <img
+                th:src="@{/svg/book_icon.svg}"
+                alt="SVG"
+                style="height: 1.5em; width: 1.5em"
+              />
+            </div>
+            <div class="wrap">
+              <label class="werte" th:text="${gesamtAnzahlBaende}"></label>
+              <label class="werte-label">Gesamtanzahl Bände</label>
+            </div>
+          </div>
+          <div class="gesamtanzahl-baende-multiplikator">
+            <div class="circle-img">
+              <!-- SVG Book Icon -->
+              <img
+                th:src="@{/svg/book_icon.svg}"
+                alt="SVG"
+                style="height: 1.5em; width: 1.5em"
+              />
+            </div>
+            <div class="wrap">
+              <label
+                class="werte"
+                th:text="${gesamtAnzahlMitMultiplikator}"
+              ></label>
+              <label class="werte-label">Gesamtanzahl mit Multiplikator</label>
+            </div>
+          </div>
+          <div class="gesamtsumme-preis">
+            <div class="circle-img">
+              <!-- SVG Euro Icon -->
+              <img
+                th:src="@{/svg/euro_icon.svg}"
+                alt="SVG"
+                style="height: 1.5em; width: 1.5em"
+              />
+            </div>
+            <div class="wrap">
+              <label class="werte" th:text="${gesamtSummeGesamtpreis}  + ' €'"
+                >0</label
+              >
+              <label class="werte-label">Gesamtsumme Gesamtpreis</label>
+            </div>
+          </div>
+          <div class="durschnitt-preis-pro-band">
+            <div class="circle-img">
+              <!-- SVG Average Icon -->
+              <img
+                th:src="@{/svg/average_icon.svg}"
+                alt="SVG"
+                style="height: 1.5em; width: 1.5em"
+              />
+            </div>
+            <div class="wrap">
+              <label
+                class="werte"
+                th:text="${durchschnittlicherPreisProBand} + ' €'"
+                >0</label
+              >
+              <label class="werte-label">Durschnitt Preis pro Band</label>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
     <script src="/js/scrollToTop.js"></script>
   </body>

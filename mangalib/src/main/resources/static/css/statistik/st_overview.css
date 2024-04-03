@@ -1,83 +1,83 @@
 :root {
-    --blue-normal: #274272;
-    --blue-dark: #172032;
-    --bg-page: #212122;
-    --bg-container: #161516;
-    --bg-panel: #1b1a1b;
-    --font-page: #f8f8f8;
-    --font-container: #cacaca;
-    --font-dark: #828282;
-    --font-light: #f8f8f8;
-    --font-link: #72a2e5;
-    --font-danger: #d06020;
-  }
-  
-  /* Grundlegende Stile für den gesamten Body der Webseite */
-  body {
-    font-family: Arial, sans-serif; /* Schriftart */
-    margin: 0; /* Kein Außenabstand */
-    padding: 0; /* Kein Innenabstand */
-    background-color: var(--bg-page); /* Dunkelgraue Hintergrundfarbe */
-  }
-  
-  /* Stile für die Kopfzeile */
-  .header {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    background-color: var(--bg-container); /* Dunkelgraue Hintergrundfarbe */
-    color: var(--font-container); /* Weiße Textfarbe */
-    padding: 24.5px 0; /* Vertikaler Innenabstand */
-    z-index: 100;
-  }
-  
-  /* Innerer Container der Kopfzeile für Layout und Ausrichtung */
-  .header_headerInner {
-    display: flex; /* Flexibles Box-Layout */
-    justify-content: space-between; /* Elemente gleichmäßig verteilen */
-    align-items: center; /* Vertikale Ausrichtung der Elemente */
-    position: relative;
-  }
-  
-  /* Container für das Menü in der Kopfzeile */
-  .header_menuContainer {
-    display: flex; /* Flexibles Box-Layout */
-    justify-content: center; /* Zentrierte Ausrichtung */
-    flex-grow: 1; /* Nimmt verfügbaren Platz ein */
-    height: 100%;
-  }
-  
-  /* Stile für das Hauptmenü */
-  .main-menu {
-    list-style: none; /* Keine Listenpunkte */
-    padding: 0; /* Kein Innenabstand */
-    display: flex; /* Flexibles Box-Layout */
-    justify-content: center; /* Zentrierte Ausrichtung */
-    left: 50%;
-    transform: translateX(-53%);
-    position: absolute;
-    height: 100%;
-    margin-top: -10px;
-  }
-  
-  .main-menu .main-menu-statistikButton a {
-    color: var(--font-link); /* Setzt die Schriftfarbe auf #72a2e5 */
-  }
-  
-  /* Stile für einzelne Menüpunkte */
-  .main-menu li {
-    display: inline; /* Inline-Anzeige */
-    margin-right: 20px; /* Rechter Außenabstand */
-  }
-  
-  /* Stile für Links im Menü */
-  .main-menu a {
-    color: var(--font-container); /* Weiße Textfarbe */
-    text-decoration: none; /* Keine Unterstreichung */
-    font-weight: bold; /* Fette Schrift */
-  }
+  --blue-normal: #274272;
+  --blue-dark: #172032;
+  --bg-page: #212122;
+  --bg-container: #161516;
+  --bg-panel: #1b1a1b;
+  --font-page: #f8f8f8;
+  --font-container: #cacaca;
+  --font-dark: #828282;
+  --font-light: #f8f8f8;
+  --font-link: #72a2e5;
+  --font-danger: #d06020;
+}
 
-  /* Stile für die Seitenleiste */
+/* Grundlegende Stile für den gesamten Body der Webseite */
+body {
+  font-family: Arial, sans-serif; /* Schriftart */
+  margin: 0; /* Kein Außenabstand */
+  padding: 0; /* Kein Innenabstand */
+  background-color: var(--bg-page); /* Dunkelgraue Hintergrundfarbe */
+}
+
+/* Stile für die Kopfzeile */
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: var(--bg-container); /* Dunkelgraue Hintergrundfarbe */
+  color: var(--font-container); /* Weiße Textfarbe */
+  padding: 24.5px 0; /* Vertikaler Innenabstand */
+  z-index: 100;
+}
+
+/* Innerer Container der Kopfzeile für Layout und Ausrichtung */
+.header_headerInner {
+  display: flex; /* Flexibles Box-Layout */
+  justify-content: space-between; /* Elemente gleichmäßig verteilen */
+  align-items: center; /* Vertikale Ausrichtung der Elemente */
+  position: relative;
+}
+
+/* Container für das Menü in der Kopfzeile */
+.header_menuContainer {
+  display: flex; /* Flexibles Box-Layout */
+  justify-content: center; /* Zentrierte Ausrichtung */
+  flex-grow: 1; /* Nimmt verfügbaren Platz ein */
+  height: 100%;
+}
+
+/* Stile für das Hauptmenü */
+.main-menu {
+  list-style: none; /* Keine Listenpunkte */
+  padding: 0; /* Kein Innenabstand */
+  display: flex; /* Flexibles Box-Layout */
+  justify-content: center; /* Zentrierte Ausrichtung */
+  left: 50%;
+  transform: translateX(-53%);
+  position: absolute;
+  height: 100%;
+  margin-top: -10px;
+}
+
+.main-menu .main-menu-statistikButton a {
+  color: var(--font-link); /* Setzt die Schriftfarbe auf #72a2e5 */
+}
+
+/* Stile für einzelne Menüpunkte */
+.main-menu li {
+  display: inline; /* Inline-Anzeige */
+  margin-right: 20px; /* Rechter Außenabstand */
+}
+
+/* Stile für Links im Menü */
+.main-menu a {
+  color: var(--font-container); /* Weiße Textfarbe */
+  text-decoration: none; /* Keine Unterstreichung */
+  font-weight: bold; /* Fette Schrift */
+}
+
+/* Stile für die Seitenleiste */
 .sidebar {
   background-color: var(--bg-container); /* Dunkelgraue Hintergrundfarbe */
   border-top: 0.125rem solid var(--blue-normal);
@@ -108,7 +108,11 @@
   user-select: none; /* Verhindert das Auswählen des Textes */
 }
 
-.navigation-overview, .navigation-status, .navigation-verlag, .navigation-typ, .navigation-format {
+.navigation-overview,
+.navigation-status,
+.navigation-verlag,
+.navigation-typ,
+.navigation-format {
   border-radius: 3px;
   background-color: var(--bg-page);
   color: var(--font-light);
@@ -144,10 +148,56 @@
 }
 
 /* Stile für den Hauptteil der Seite mit den Statistiken */
-.statistik-container{
+.statistik-container {
   display: flex;
   flex-direction: column;
   margin-left: 280px; /* Abstand zur Sidebar */
   padding: 20px;
   margin-top: 68px; /* Abstand nach oben */
+}
+
+.statistik-highlights{
+  border-top: 0.125rem solid var(--blue-normal);
+  display: flex;
+  margin-top: 20px;
+  justify-content: space-between;
+  background-color: var(--bg-container);
+  padding: 25px 80px 25px 80px;
+}
+
+.gesamtanzahl-baende,
+.gesamtanzahl-baende-multiplikator,
+.gesamtsumme-preis,
+.durschnitt-preis-pro-band {
+  display: flex;
+  align-items: center;
+  min-width: 140px;
+}
+
+.circle-img {
+  background: var(--bg-panel);
+  height: 40px;
+  width: 40px;
+  align-items: center;
+  border-radius: 50%;
+  display: grid;
+  justify-content: center;
+  text-align: center;
+}
+
+.wrap {
+  padding-left: 16px;
+}
+
+.werte {
+  color: var(--blue-normal);
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.werte-label {
+  color: var(--font-container);
+  display: flex;
+  font-weight: 600;
 }

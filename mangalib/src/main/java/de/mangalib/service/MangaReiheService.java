@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -954,6 +955,61 @@ public class MangaReiheService {
             throw new IllegalArgumentException("Sortierrichtung darf nicht null sein");
         }
         return mangaReiheRepository.findAll(Sort.by(direction, sortAttribute));
+    }
+
+    // ------------------------------Statistiken--------------------------------
+    /**
+     * Methoden zum Berechnen der Gesamtanzahl aller Baende
+     * 
+     * @return Die Gesamtanzahl aller Baende
+     */
+    public Integer berechneGesamtAnzahlBaende() {
+        Integer anzahl = mangaReiheRepository.findeGesamtAnzahlBaende();
+        return anzahl != null ? anzahl : 0;
+    }
+
+    /**
+     * Methode zum Berechnen der Gesamtanzahl aller Baende unter Berücksichtigung
+     * des Sammelband Multiplikators
+     * 
+     * @return Die Gesamtanzahl aller Baende mit Sammelband Multiplikator
+     */
+    public Integer berechneGesamtAnzahlMitMultiplikator() {
+        Integer anzahlMitMultiplikator = mangaReiheRepository.findeGesamtAnzahlMitMultiplikator();
+        return anzahlMitMultiplikator != null ? anzahlMitMultiplikator : 0;
+    }
+
+    /**
+     * Methode zum Berechnen des Gesamtpreis aller Baende
+     * 
+     * @return Der Gesamtpreis aller Baende
+     */
+    public BigDecimal getGesamtSummeGesamtpreis() {
+        return mangaReiheRepository.findeGesamtSummeGesamtpreis();
+    }
+
+    /**
+     * Methode zum Berechnen des durchschnittlichen Preises pro Band.
+     * 
+     * @return Der durchschnittliche Preis pro Band
+     */
+    public BigDecimal berechneDurchschnittlichenPreisProBand() {
+        // Berechnen der Gesamtanzahl der Bände
+        Integer gesamtAnzahlBaende = berechneGesamtAnzahlBaende();
+
+        // Abrufen der Gesamtsumme der Gesamtpreise
+        BigDecimal gesamtSummeGesamtpreis = getGesamtSummeGesamtpreis();
+
+        // Überprüfen, ob die Gesamtanzahl der Bände nicht null ist und größer als 0 ist
+        if (gesamtAnzahlBaende != null && gesamtAnzahlBaende > 0) {
+            // Berechnen des durchschnittlichen Preises pro Band und Rückgabe des
+            // Ergebnisses
+            return gesamtSummeGesamtpreis.divide(BigDecimal.valueOf(gesamtAnzahlBaende), 2, RoundingMode.HALF_UP);
+        } else {
+            // Falls die Gesamtanzahl der Bände null oder nicht größer als 0 ist, wird 0
+            // zurückgegeben
+            return BigDecimal.ZERO;
+        }
     }
 
 }
