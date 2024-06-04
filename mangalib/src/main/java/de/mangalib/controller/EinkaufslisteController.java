@@ -224,6 +224,10 @@ public class EinkaufslisteController {
             MangaReihe reihe = reihen.get(0);
             mangaReiheService.updateMangaReiheAnzahlBaende(reihe.getId(),
                     (reihe.getAnzahlBaende() + item.getAnzahlBaende()));
+            BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(item.getAnzahlBaende());
+            mangaReiheService.updateMangaReiheGesamtpreis(reihe.getId(), (reihe.getGesamtpreis().add(item.getPreis()
+                    .multiply(anzahlBaendeBigDecimal)
+                    .add(item.getAenderungGesamtpreis() != null ? item.getAenderungGesamtpreis() : BigDecimal.ZERO))));
             einkaufslisteService.updateGekauft(item.getId(), true);
             return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
 
@@ -236,6 +240,11 @@ public class EinkaufslisteController {
             MangaReihe reihe = reihenMitGleichemTitel.get(0);
             mangaReiheService.updateMangaReiheAnzahlBaende(reihe.getId(),
                     (reihe.getAnzahlBaende() + item.getAnzahlBaende()));
+            BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(item.getAnzahlBaende());
+            mangaReiheService.updateMangaReiheGesamtpreis(reihe.getId(), (reihe.getGesamtpreis().add(item.getPreis()
+                    .multiply(anzahlBaendeBigDecimal)
+                    .add(item.getAenderungGesamtpreis() != null ? item.getAenderungGesamtpreis() : BigDecimal.ZERO))));
+            einkaufslisteService.updateGekauft(item.getId(), true);
             einkaufslisteService.updateGekauft(item.getId(), true);
             return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
 
@@ -279,6 +288,8 @@ public class EinkaufslisteController {
             Double gesamtpreisAenderung = item.getAenderungGesamtpreis().doubleValue(); // Annahme: gesamtpreisAenderung
                                                                                         // ist BigDecimal
 
+            System.out.println("Test 1");
+
             // ScrapedData von item verwenden, falls erforderlich
             Map<String, String> scrapedData = new HashMap<>();
             scrapedData.put("Deutsche Ausgabe Status", item.getStatusDe() != null ? item.getStatusDe() : null);
@@ -294,10 +305,14 @@ public class EinkaufslisteController {
             scrapedData.put("Erstveröffentlichung Bände",
                     item.getAnzahlBaendeErstv() != null ? String.valueOf(item.getAnzahlBaendeErstv()) : null);
 
+            System.out.println("Test 2");
+
             // Neue MangaReihe erstellen und speichern
             MangaReihe neueReihe = mangaReiheService.saveMangaReihe(
                     mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende, preisProBand,
                     istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, scrapedData);
+
+            System.out.println("Test 3 - Nach der saveMethode");
 
             if (neueReihe != null) {
                 einkaufslisteService.updateGekauft(item.getId(), true);

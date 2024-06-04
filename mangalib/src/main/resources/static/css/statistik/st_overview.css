@@ -232,7 +232,7 @@ body {
 }
 
 .bar {
-  background-color: red;
+  background-color: var(--blue-normal);
   border-radius: 4px 4px 0 0;
   min-width: 35px;
   text-align: center;
