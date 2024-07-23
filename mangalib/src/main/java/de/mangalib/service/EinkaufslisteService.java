@@ -1,6 +1,7 @@
 package de.mangalib.service;
 
 import de.mangalib.entity.EinkaufslisteItem;
+import de.mangalib.entity.EinkaufslisteItemDetails;
 import de.mangalib.entity.Sammelband;
 import de.mangalib.repository.EinkaufslisteRepository;
 import jakarta.transaction.Transactional;
@@ -28,6 +29,9 @@ public class EinkaufslisteService {
 
     @Autowired
     private SammelbandService sammelbaendeService;
+
+    @Autowired
+    private EinkaufslisteItemDetailsService einkaufslisteItemDetailsService;
 
     // Konstruktorbasierte Dependency Injection des FormatRepository
     public EinkaufslisteService(EinkaufslisteRepository einkaufslisteRepository) {
@@ -82,7 +86,6 @@ public class EinkaufslisteService {
         if (item == null) {
             throw new IllegalArgumentException("EinkaufslisteItem darf nicht null sein");
         }
-        // Weitere Validierungen nach Bedarf...
         return einkaufslisteRepository.save(item);
     }
 
@@ -158,39 +161,46 @@ public class EinkaufslisteService {
         einkaufslisteItem.setAenderungGesamtpreis(gesamtpreisAenderungBigDecimal);
         einkaufslisteItem.setErscheinungsdatum(erscheinungsdatum);
 
+        // Speichern in der Datenbank
+        EinkaufslisteItem savedeinkaufslisteItem = einkaufslisteRepository.save(einkaufslisteItem);
+
+        // Erstellen und Speichern der EinkaufslisteItemDetails
+        EinkaufslisteItemDetails einkaufslistenItemDetails = new EinkaufslisteItemDetails();
+        einkaufslistenItemDetails.setEinkaufslisteItem(savedeinkaufslisteItem);
+
         if (anilistUrl != null)
-            einkaufslisteItem.setAnilistUrl(anilistUrl);
+        einkaufslistenItemDetails.setAnilistUrl(anilistUrl);
         if (sammelbandTypId != null) {
             Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId).orElse(null);
-            einkaufslisteItem.setSammelbaendeId(sammelband);
-            System.out.println(einkaufslisteItem.getSammelbaendeId().getId());
+            einkaufslistenItemDetails.setSammelbaendeId(sammelband);
+            System.out.println(einkaufslistenItemDetails.getSammelbaendeId().getId());
         }
 
         if (scrapedData.containsKey("Band 1 Bild Url")) {
-            einkaufslisteItem.setCoverUrl(scrapedData.get("Band 1 Bild Url"));
+            einkaufslistenItemDetails.setCoverUrl(scrapedData.get("Band 1 Bild Url"));
         }
 
         if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
-            einkaufslisteItem.setStatusDe(String.valueOf(scrapedData.get("Deutsche Ausgabe Status")));
+            einkaufslistenItemDetails.setStatusDe(String.valueOf(scrapedData.get("Deutsche Ausgabe Status")));
         }
 
         if (scrapedData.containsKey("Deutsche Ausgabe Bände")) {
             try {
                 String baendeString = scrapedData.get("Deutsche Ausgabe Bände").replace("+", "").trim();
-                einkaufslisteItem.setAnzahlBaendeDe(Integer.parseInt(baendeString));
+                einkaufslistenItemDetails.setAnzahlBaendeDe(Integer.parseInt(baendeString));
             } catch (NumberFormatException e) {
                 // Behandlung des Fehlers oder Setzen eines Standardwerts
             }
         }
         if (scrapedData.containsKey("Erstveröffentlichung Status")) {
-            einkaufslisteItem.setStatusErstv(String.valueOf(scrapedData.get("Erstveröffentlichung Status")));
+            einkaufslistenItemDetails.setStatusErstv(String.valueOf(scrapedData.get("Erstveröffentlichung Status")));
         }
         if (scrapedData.containsKey("Erstveröffentlichung Herkunft")) {
-            einkaufslisteItem.setHerkunft(String.valueOf(scrapedData.get("Erstveröffentlichung Herkunft")));
+            einkaufslistenItemDetails.setHerkunft(String.valueOf(scrapedData.get("Erstveröffentlichung Herkunft")));
         }
         if (scrapedData.containsKey("Erstveröffentlichung Startjahr")) {
             try {
-                einkaufslisteItem.setStartJahr(Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr")));
+                einkaufslistenItemDetails.setStartJahr(Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr")));
             } catch (NumberFormatException e) {
                 // Behandlung des Fehlers oder Setzen eines Standardwerts
             }
@@ -198,14 +208,13 @@ public class EinkaufslisteService {
         if (scrapedData.containsKey("Erstveröffentlichung Bände")) {
             try {
                 String baendeString = scrapedData.get("Erstveröffentlichung Bände").replace("+", "").trim();
-                einkaufslisteItem.setAnzahlBaendeErstv(Integer.parseInt(baendeString));
+                einkaufslistenItemDetails.setAnzahlBaendeErstv(Integer.parseInt(baendeString));
             } catch (NumberFormatException e) {
                 // Behandlung des Fehlers oder Setzen eines Standardwerts
             }
         }
 
-        // Speichern in der Datenbank
-        EinkaufslisteItem savedeinkaufslisteItem = einkaufslisteRepository.save(einkaufslisteItem);
+        einkaufslisteItemDetailsService.saveEinkaufslisteItemDetails(einkaufslistenItemDetails);
 
         return savedeinkaufslisteItem;
     }

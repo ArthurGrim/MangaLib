@@ -94,21 +94,25 @@ CREATE TABLE einkaufsliste (
     gesamtpreis DECIMAL(10, 2),
     aenderung_gesamtpreis DECIMAL(10 ,2),
     erscheinungsdatum DATE,
+    ist_ebay_preis BOOLEAN,
+    ist_vergriffen BOOLEAN,
     gekauft BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (verlag_id) REFERENCES Verlage(verlag_id),
+    FOREIGN KEY (typ_id) REFERENCES Typen(typ_id),
+    FOREIGN KEY (format_id) REFERENCES Formate(format_id)
+);
+
+CREATE TABLE einkaufslistedetails (
+    id BIGINT NOT NULL PRIMARY KEY,
     status_de VARCHAR(255),
     anzahl_baende_de INT,
     status_erstv VARCHAR(255),
     herkunft VARCHAR(255),
     start_jahr INT,
     anzahl_baende_erstv INT,
-    sammelbaende_id BIGINT,
     anilist_url VARCHAR(255),
     cover_url VARCHAR(255),
-    ist_ebay_preis BOOLEAN DEFAULT FALSE,
-    ist_vergriffen BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (verlag_id) REFERENCES Verlage(verlag_id),
-    FOREIGN KEY (typ_id) REFERENCES Typen(typ_id),
-    FOREIGN KEY (format_id) REFERENCES Formate(format_id),
+    sammelbaende_id BIGINT,
+    FOREIGN KEY (id) REFERENCES einkaufsliste(id),
     FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)
 );
-
