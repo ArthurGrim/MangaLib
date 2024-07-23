@@ -229,6 +229,9 @@ public class EinkaufslisteController {
                     .multiply(anzahlBaendeBigDecimal)
                     .add(item.getAenderungGesamtpreis() != null ? item.getAenderungGesamtpreis() : BigDecimal.ZERO))));
             einkaufslisteService.updateGekauft(item.getId(), true);
+
+            //Hier fehlt noch das AenderungPreis geupdated wird!!!!!!
+
             return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
 
         }
@@ -245,7 +248,9 @@ public class EinkaufslisteController {
                     .multiply(anzahlBaendeBigDecimal)
                     .add(item.getAenderungGesamtpreis() != null ? item.getAenderungGesamtpreis() : BigDecimal.ZERO))));
             einkaufslisteService.updateGekauft(item.getId(), true);
-            einkaufslisteService.updateGekauft(item.getId(), true);
+
+            //Hier fehlt noch das AenderungPreis geupdated wird!!!!!!
+            
             return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
 
         }
