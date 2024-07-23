@@ -19,12 +19,14 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
 import de.mangalib.entity.EinkaufslisteItem;
+import de.mangalib.entity.EinkaufslisteItemDetails;
 import de.mangalib.entity.Format;
 import de.mangalib.entity.MangaReihe;
 import de.mangalib.entity.Sammelband;
 import de.mangalib.entity.Status;
 import de.mangalib.entity.Typ;
 import de.mangalib.entity.Verlag;
+import de.mangalib.service.EinkaufslisteItemDetailsService;
 import de.mangalib.service.EinkaufslisteService;
 import de.mangalib.service.FormatService;
 import de.mangalib.service.MangaReiheService;
@@ -56,6 +58,9 @@ public class EinkaufslisteController {
 
     @Autowired
     private StatusService statusService;
+
+    @Autowired
+    private EinkaufslisteItemDetailsService einkaufslisteItemDetailsService;
 
     @GetMapping("/einkaufsliste")
     public String showEinkaufsliste(Model model) {
@@ -230,7 +235,7 @@ public class EinkaufslisteController {
                     .add(item.getAenderungGesamtpreis() != null ? item.getAenderungGesamtpreis() : BigDecimal.ZERO))));
             einkaufslisteService.updateGekauft(item.getId(), true);
 
-            //Hier fehlt noch das AenderungPreis geupdated wird!!!!!!
+            // Hier fehlt noch das AenderungPreis geupdated wird!!!!!!
 
             return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
 
@@ -249,8 +254,8 @@ public class EinkaufslisteController {
                     .add(item.getAenderungGesamtpreis() != null ? item.getAenderungGesamtpreis() : BigDecimal.ZERO))));
             einkaufslisteService.updateGekauft(item.getId(), true);
 
-            //Hier fehlt noch das AenderungPreis geupdated wird!!!!!!
-            
+            // Hier fehlt noch das AenderungPreis geupdated wird!!!!!!
+
             return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
 
         }
@@ -278,6 +283,14 @@ public class EinkaufslisteController {
             }
             EinkaufslisteItem item = itemOptional.get();
 
+            // Details aus der Einkaufsliste holen
+            Optional<EinkaufslisteItemDetails> detailsOptional = einkaufslisteItemDetailsService
+                    .findItemDetailsById(itemId);
+            if (!detailsOptional.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keine Details mit dieser ID gefunden");
+            }
+            EinkaufslisteItemDetails details = detailsOptional.get();
+
             // Daten aus dem Einkaufslisten-Item extrahieren
             Integer mangaIndex = item.getMangaIndex(); // Annahme: mangaIndex ist Integer
             Long verlagId = item.getVerlagId().getVerlagId(); // Annahme: verlagId ist verfügbar
@@ -288,8 +301,8 @@ public class EinkaufslisteController {
             Double preisProBand = item.getPreis().doubleValue(); // Annahme: preisProBand ist BigDecimal
             Boolean istVergriffen = item.getIstVergriffen();
             Boolean istEbayPreis = item.getIstEbayPreis();
-            String anilistUrl = item.getAnilistUrl() != null ? item.getAnilistUrl() : null;
-            Long sammelbandTypId = (item.getSammelbaendeId() != null) ? item.getSammelbaendeId().getId() : null;
+            String anilistUrl = details.getAnilistUrl() != null ? details.getAnilistUrl() : null;
+            Long sammelbandTypId = (details.getSammelbaendeId() != null) ? details.getSammelbaendeId().getId() : null;
             Double gesamtpreisAenderung = item.getAenderungGesamtpreis().doubleValue(); // Annahme: gesamtpreisAenderung
                                                                                         // ist BigDecimal
 
@@ -297,18 +310,19 @@ public class EinkaufslisteController {
 
             // ScrapedData von item verwenden, falls erforderlich
             Map<String, String> scrapedData = new HashMap<>();
-            scrapedData.put("Deutsche Ausgabe Status", item.getStatusDe() != null ? item.getStatusDe() : null);
-            scrapedData.put("Band 1 Bild Url", item.getCoverUrl() != null ? item.getCoverUrl() : null);
+            scrapedData.put("Deutsche Ausgabe Status", details.getStatusDe() != null ? details.getStatusDe() : null);
+            scrapedData.put("Band 1 Bild Url", details.getCoverUrl() != null ? details.getCoverUrl() : null);
             scrapedData.put("Deutsche Ausgabe Bände",
-                    item.getAnzahlBaendeDe() != null ? String.valueOf(item.getAnzahlBaendeDe()) : null);
-            scrapedData.put("Deutsche Ausgabe Status", item.getStatusDe() != null ? item.getStatusDe() : null);
+                    details.getAnzahlBaendeDe() != null ? String.valueOf(details.getAnzahlBaendeDe()) : null);
+            scrapedData.put("Deutsche Ausgabe Status", details.getStatusDe() != null ? details.getStatusDe() : null);
             scrapedData.put("Erstveröffentlichung Status",
-                    item.getStatusErstv() != null ? item.getStatusErstv() : null);
-            scrapedData.put("Erstveröffentlichung Herkunft", item.getHerkunft() != null ? item.getHerkunft() : null);
+                    details.getStatusErstv() != null ? details.getStatusErstv() : null);
+            scrapedData.put("Erstveröffentlichung Herkunft",
+                    details.getHerkunft() != null ? details.getHerkunft() : null);
             scrapedData.put("Erstveröffentlichung Startjahr",
-                    item.getStartJahr() != null ? String.valueOf(item.getStartJahr()) : null);
+                    details.getStartJahr() != null ? String.valueOf(details.getStartJahr()) : null);
             scrapedData.put("Erstveröffentlichung Bände",
-                    item.getAnzahlBaendeErstv() != null ? String.valueOf(item.getAnzahlBaendeErstv()) : null);
+                    details.getAnzahlBaendeErstv() != null ? String.valueOf(details.getAnzahlBaendeErstv()) : null);
 
             System.out.println("Test 2");
 

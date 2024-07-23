@@ -3,6 +3,8 @@ package de.mangalib.entity;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,40 +51,17 @@ public class EinkaufslisteItem {
     @Column(name = "erscheinungsdatum")
     private LocalDate erscheinungsdatum;
 
-    @Column(name = "gekauft")
-    private Boolean gekauft = false;
-
-    @Column(name = "status_de")
-    private String statusDe;
-
-    @Column(name = "anzahl_baende_de")
-    private Integer anzahlBaendeDe;
-
-    @Column(name = "status_erstv")
-    private String statusErstv;
-
-    @Column(name = "herkunft")
-    private String herkunft;
-
-    @Column(name = "start_jahr")
-    private Integer startJahr;
-
-    @Column(name = "anzahl_baende_erstv")
-    private Integer anzahlBaendeErstv;
-
-    @ManyToOne
-    @JoinColumn(name = "sammelbaende_id", referencedColumnName = "id")
-    private Sammelband sammelbaendeId;
-
-    @Column(name = "anilist_url")
-    private String anilistUrl;
-
-    @Column(name = "cover_url")
-    private String coverUrl;
-
     @Column(name = "ist_ebay_preis")
     private Boolean istEbayPreis;
 
     @Column(name = "ist_vergriffen")
     private Boolean istVergriffen;
+
+    @Column(name = "gekauft")
+    private Boolean gekauft = false;
+
+    @JsonManagedReference
+    @OneToOne(mappedBy = "einkaufslisteItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private EinkaufslisteItemDetails einkaufslisteItemDetails;
+    
 }
