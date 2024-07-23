@@ -125,6 +125,12 @@
                     />
                   </button>
                   <div
+                    class="manga-reihe-datum"
+                    th:text="${#temporals.format(item.erscheinungsdatum, 'dd.MM')}"
+                  >
+                    Erscheinungsdatum
+                  </div>
+                  <div
                     class="manga-reihe-verlag"
                     th:if="${item.verlagId != null}"
                     th:text="${item.verlagId.name}"
@@ -407,9 +413,13 @@
               ></option>
             </select>
             <div class="button-input-group">
-            <button class="ask-panel-confirm-button" id="confirmStatus">Confirm</button>
-            <button class="ask-panel-cancel-button" id="cancelStatus">Cancel</button>
-          </div>
+              <button class="ask-panel-confirm-button" id="confirmStatus">
+                Confirm
+              </button>
+              <button class="ask-panel-cancel-button" id="cancelStatus">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -8,7 +8,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -134,11 +133,8 @@ public class MangaScraper {
 
     private static WebDriver setupWebDriver() {
         System.setProperty("webdriver.gecko.driver", "E:\\Programme\\Test\\geckodriver.exe");
-        FirefoxBinary firefoxBinary = new FirefoxBinary();
         FirefoxOptions options = new FirefoxOptions();
-        options.setBinary(firefoxBinary);
         options.addArguments("--headless");
-        options.setBinary(firefoxBinary);
         return new FirefoxDriver(options);
     }
 
