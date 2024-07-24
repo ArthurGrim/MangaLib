@@ -124,7 +124,7 @@ public class MangaReiheService {
     public MangaReihe saveMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
             String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
             String anilistUrl, Long sammelbandTypId, Double gesamtpreisAenderung, Map<String, String> scrapedData) {
-                System.out.println("SaveMangaReihe gestartet");
+        System.out.println("SaveMangaReihe gestartet");
         // Erstellen der MangaReihe
         MangaReihe mangaReihe = new MangaReihe();
         mangaReihe.setMangaIndex(mangaIndex);
@@ -173,8 +173,6 @@ public class MangaReiheService {
             System.out.println(details.getSammelbaende().getId());
         }
 
-        System.out.println("Test 3,1");
-
         if (scrapedData.containsKey("Band 1 Bild Url")) {
             details.setCoverUrl(scrapedData.get("Band 1 Bild Url"));
         }
@@ -182,8 +180,6 @@ public class MangaReiheService {
         if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
             details.setStatusDe(String.valueOf(scrapedData.get("Deutsche Ausgabe Status")));
         }
-
-        System.out.println("Test 3,2");
 
         if (scrapedData.containsKey("Deutsche Ausgabe Bände")) {
             try {
@@ -194,16 +190,12 @@ public class MangaReiheService {
             }
         }
 
-        System.out.println("Test 3,3");
-
         if (scrapedData.containsKey("Erstveröffentlichung Status")) {
             details.setStatusErstv(String.valueOf(scrapedData.get("Erstveröffentlichung Status")));
         }
-        System.out.println("Test 3,31");
         if (scrapedData.containsKey("Erstveröffentlichung Herkunft")) {
             details.setHerkunft(String.valueOf(scrapedData.get("Erstveröffentlichung Herkunft")));
         }
-        System.out.println("Test 3,32");
         if (scrapedData.containsKey("Erstveröffentlichung Startjahr")) {
             try {
                 details.setStartJahr(Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr")));
@@ -211,7 +203,6 @@ public class MangaReiheService {
                 // Behandlung des Fehlers oder Setzen eines Standardwerts
             }
         }
-        System.out.println("Test 3,33");
         if (scrapedData.containsKey("Erstveröffentlichung Bände")) {
             try {
                 System.out.println(scrapedData.get("Erstveröffentlichung Bände"));
@@ -221,8 +212,6 @@ public class MangaReiheService {
                 details.setAnzahlBaendeErstv(1);
             }
         }
-
-        System.out.println("Test 3,4");
 
         mangaDetailsRepository.save(details);
 
@@ -270,8 +259,6 @@ public class MangaReiheService {
             // Speichern jedes Bandes
             bandRepository.save(band);
         }
-
-        System.out.println("Test 3,5");
 
         return mangaReihe;
     }
@@ -348,7 +335,7 @@ public class MangaReiheService {
         mangaReihe.setIstVergriffen(istVergriffen);
         System.out.println("IstVergriffen gesetzt auf: " + istVergriffen);
 
-        // Berechnen und Aktualisieren des Gesamtpreises        
+        // Berechnen und Aktualisieren des Gesamtpreises
         BigDecimal preisProBandBigDecimal = BigDecimal.valueOf(preisProBand);
         BigDecimal gesamtpreisAenderungBigDecimal = gesamtpreisAenderung != null
                 ? BigDecimal.valueOf(gesamtpreisAenderung)
@@ -655,6 +642,25 @@ public class MangaReiheService {
         }
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
             mangaReihe.setGesamtpreis(neuerGesamtpreis);
+            return mangaReiheRepository.save(mangaReihe);
+        });
+    }
+
+    /**
+     * Aktualisiert die Änderung des Gesamtpreises einer MangaReihe.
+     *
+     * @param mangaReiheId         Die ID der MangaReihe, die aktualisiert werden
+     *                             soll.
+     * @param aenderungGesamtpreis Die Änderung des Gesamtpreises der MangaReihe.
+     * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
+     */
+    public Optional<MangaReihe> updateMangaReiheAenderungGesamtpreis(Long mangaReiheId,
+            BigDecimal aenderungGesamtpreis) {
+        if (mangaReiheId == null || aenderungGesamtpreis == null) {
+            throw new IllegalArgumentException("ID und Änderung des Gesamtpreises dürfen nicht null sein");
+        }
+        return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
+            mangaReihe.setAenderungGesamtpreis(aenderungGesamtpreis);
             return mangaReiheRepository.save(mangaReihe);
         });
     }

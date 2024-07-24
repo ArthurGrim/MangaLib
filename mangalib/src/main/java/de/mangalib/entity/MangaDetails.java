@@ -52,5 +52,7 @@ public class MangaDetails {
     @Column(name = "cover_url")
     private String coverUrl;
 
-    // Getter und Setter
+    @Column(name = "ist_gelesen")
+    private boolean istGelesen;
+
 }
