@@ -5,6 +5,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.LocalDate;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -40,7 +44,23 @@ public class Band {
     private URL mpUrl;
 
     @Column(name = "ist_special")
-    private Boolean istSpecial;   
+    private Boolean istSpecial; 
+    
+    @Column(name = "aenderung_preis", precision = 10, scale = 2)
+    private BigDecimal aenderungPreis;
+
+    @CreationTimestamp
+    @Temporal(TemporalType.DATE) // Nur das Datum ohne Uhrzeit
+    @Column(name = "erstellt_am")
+    private LocalDate erstelltAm;
+
+    @UpdateTimestamp
+    @Temporal(TemporalType.DATE) // Nur das Datum ohne Uhrzeit
+    @Column(name = "aktualisiert_am")
+    private LocalDate aktualisiertAm;
+
+    @Column(name = "ist_gelesen")
+    private boolean istGelesen;
 
     public Band() {
         try {

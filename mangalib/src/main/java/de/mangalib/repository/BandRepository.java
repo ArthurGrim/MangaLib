@@ -15,4 +15,10 @@ public interface BandRepository extends JpaRepository<Band, Long> {
 
     List<Band> findByMangaReiheId(Long mangaReiheId);
 
+    @Query("SELECT b FROM Band b WHERE YEAR(b.erstelltAm) = ?1")
+    List<Band> findByErstelltAmYear(int jahr);
+
+    @Query("SELECT b FROM Band b WHERE YEAR(b.erstelltAm) = ?1 AND MONTH(b.erstelltAm) = ?2")
+    List<Band> findByErstelltAmYearAndMonth(int jahr, int monat);
+
 }

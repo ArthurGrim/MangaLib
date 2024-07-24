@@ -44,8 +44,8 @@ CREATE TABLE mangareihe (
     preis_pro_band DOUBLE,
     gesamtpreis DECIMAL(10, 2),
     aenderung_gesamtpreis DECIMAL(10 ,2),
-    erstellt_am DATE DEFAULT CURRENT_DATE,
-    aktualisiert_am DATE DEFAULT CURRENT_DATE ON UPDATE CURRENT_DATE,
+    erstellt_am DATE DEFAULT (CURRENT_DATE),
+    aktualisiert_am DATE DEFAULT (CURRENT_DATE),
     ist_ebay_preis BOOLEAN DEFAULT FALSE,
     ist_vergriffen BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (status_id) REFERENCES status(status_id),
@@ -65,6 +65,7 @@ CREATE TABLE mangadetails (
     sammelbaende_id BIGINT,
     anilist_url VARCHAR(255),
     cover_url VARCHAR(255),
+    ist_gelesen BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (id),
     FOREIGN KEY (id) REFERENCES mangareihe(id),
     FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)
@@ -73,12 +74,15 @@ CREATE TABLE mangadetails (
 CREATE TABLE baende (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     manga_reihe_id BIGINT,
-    band_index INT,
     band_nr INT,
     preis DECIMAL(10, 2),
     bild_url VARCHAR(255) DEFAULT 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png?20200912122019',
     mp_url VARCHAR(255),
     ist_special BOOLEAN,
+    aenderung_preis DECIMAL(10 ,2),
+    erstellt_am DATE DEFAULT (CURRENT_DATE),
+    aktualisiert_am DATE DEFAULT (CURRENT_DATE),
+    ist_gelesen BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (manga_reihe_id) REFERENCES mangareihe(id)
 );
 

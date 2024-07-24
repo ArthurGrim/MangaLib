@@ -62,6 +62,21 @@ public class MangaDetailsService {
         return mangaDetailsRepository.findAll();
     }
 
-    // Weitere Methoden nach Bedarf...
+    /**
+     * Aktualisiert den Lesestatus eines Bands.
+     *
+     * @param bandId     Die ID des Bands, der aktualisiert werden soll.
+     * @param istGelesen Der Lesestatus des Bands.
+     * @return Der aktualisierte Band, falls gefunden, sonst Optional.empty().
+     */
+    public Optional<MangaDetails> updateMangaDetailsIstGelesen(Long id, Boolean istGelesen) {
+        if (id == null || istGelesen == null) {
+            throw new IllegalArgumentException("ID und Lesestatus dürfen nicht null sein");
+        }
+        return mangaDetailsRepository.findById(id).map(mangaDetails -> {
+            mangaDetails.setIstGelesen(istGelesen);
+            return mangaDetailsRepository.save(mangaDetails);
+        });
+    }
 }
 
