@@ -3,12 +3,17 @@ package de.mangalib.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import de.mangalib.entity.Band;
+import de.mangalib.entity.MangaReihe;
 import de.mangalib.repository.BandRepository;
 
-import java.util.List;
+import java.util.*;
 import java.util.Optional;
 import java.time.Year;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 @Service
 public class BandService {
@@ -164,4 +169,56 @@ public class BandService {
         // Aufruf der Methode findByErstelltAmYearAndMonth mit dem aktuellen Jahr und dem übergebenen Monat
         return findByErstelltAmYearAndMonth(currentYear, monat);
     }
+
+    /**
+ * Erstellt und speichert die Bände einer MangaReihe.
+ * 
+ * @param mangaReihe   Die MangaReihe, zu der die Bände gehören.
+ * @param anzahlBaende Die Anzahl der Bände.
+ * @param preisProBand Der Preis pro Band.
+ * @param scrapedData  Die gescrapten Daten.
+ */
+public void createAndSaveBaende(MangaReihe mangaReihe, int anzahlBaende, double preisProBand, Map<String, String> scrapedData) {
+    for (int i = 1; i <= anzahlBaende; i++) {
+        Band band = new Band();
+        band.setMangaReihe(mangaReihe);
+        band.setPreis(BigDecimal.valueOf(preisProBand));
+        band.setBandNr(i);
+
+        String bildUrlKey = "Band " + i + " Bild Url";
+        try {
+            String bildUrlString = scrapedData.get(bildUrlKey);
+            if (bildUrlString != null && !bildUrlString.isEmpty()) {
+                URI bildUri = new URI(bildUrlString);
+                URL bildUrl = bildUri.toURL();
+                band.setBildUrl(bildUrl);
+            }
+        } catch (URISyntaxException | MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        String mpUrlKey = "Band " + i + " href";
+        try {
+            String mpUrlString = scrapedData.get(mpUrlKey);
+            if (mpUrlString != null && !mpUrlString.isEmpty()) {
+                URI mpUri = new URI(mpUrlString);
+                URL mpUrl = mpUri.toURL();
+                band.setMpUrl(mpUrl);
+            }
+        } catch (URISyntaxException | MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        String preisKey = "Band " + i + " Preis";
+        if (scrapedData.containsKey(preisKey)) {
+            try {
+                band.setPreis(new BigDecimal(scrapedData.get(preisKey)));
+            } catch (NumberFormatException e) {
+                // Behandlung des Fehlers oder Setzen eines Standardwerts
+            }
+        }
+        bandRepository.save(band);
+    }
+}
+
 }
