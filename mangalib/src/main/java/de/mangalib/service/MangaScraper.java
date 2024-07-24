@@ -58,6 +58,17 @@ public class MangaScraper {
                         WebDriver driver = setupWebDriver();
                         driver.get(url);
                         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(4));
+
+                        // Warten bis das Cookie-Pop-up sichtbar ist und dann auf "Alle ablehnen"
+                        // klicken
+                        try {
+                            WebElement denyAllButton = wait
+                                    .until(ExpectedConditions.elementToBeClickable(By.id("consent-deny-all")));
+                            denyAllButton.click();
+                        } catch (Exception e) {
+                            System.out.println(
+                                    "Kein Cookie-Pop-up gefunden oder es gab ein Problem beim Klicken darauf.");
+                        }
                         wait.until(
                                 ExpectedConditions
                                         .visibilityOfElementLocated(By.cssSelector("div.manga-list_top__S1J_8")));
@@ -82,15 +93,14 @@ public class MangaScraper {
                                     String bildUrl = tileItem.findElement(By.className("img_img__jkdIh"))
                                             .getAttribute("src");
                                     mangaData.put("Band " + aktuellerBand + " Bild Url", bildUrl);
-
-                                    // Extrahieren des Preises des Bandes
-                                    String bandPreis = tileItem.findElement(By.className("manga-list_top__S1J_8"))
-                                            .getText();
-                                    if (bandPreis.contains("€")) {
-                                        bandPreis = bandPreis.substring(bandPreis.indexOf("€") + 1).trim();
-                                    }
-                                    mangaData.put("Band " + aktuellerBand + " Preis", bandPreis);
                                 }
+                                // Extrahieren des Preises des Bandes
+                                String bandPreis = tileItem.findElement(By.className("manga-list_top__S1J_8"))
+                                        .getText();
+                                if (bandPreis.contains("€")) {
+                                    bandPreis = bandPreis.substring(bandPreis.indexOf("€") + 1).trim();
+                                }
+                                mangaData.put("Band " + aktuellerBand + " Preis", bandPreis);
                             }
                         } else {
                             // Wenn keine manga-list_tileItemWrapper__qR2Dl Elemente vorhanden sind, handelt

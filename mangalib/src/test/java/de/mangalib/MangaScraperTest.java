@@ -16,7 +16,7 @@ public class MangaScraperTest {
         MangaScraper scraper = new MangaScraper();
 
         // Testen Sie den Scraper mit verschiedenen Indizes
-        testScraper(scraper, "960");
+        testScraper(scraper, "87");
     }
 
     private static void testScraper(MangaScraper scraper, String index) {
