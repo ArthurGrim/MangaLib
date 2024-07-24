@@ -2,11 +2,9 @@ package de.mangalib.service;
 
 import de.mangalib.repository.MangaReiheRepository;
 import de.mangalib.repository.StatusRepository;
-import de.mangalib.entity.Band;
 import de.mangalib.entity.Format;
 import de.mangalib.entity.MangaDetails;
 import de.mangalib.entity.MangaReihe;
-import de.mangalib.entity.Sammelband;
 import de.mangalib.entity.Status;
 import de.mangalib.entity.Typ;
 import de.mangalib.entity.Verlag;
@@ -23,10 +21,6 @@ import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.time.Year;
 import java.util.*;
 
@@ -40,7 +34,6 @@ public class MangaReiheService {
     private final VerlagRepository verlagRepository;
     private final TypRepository typRepository;
     private final FormatRepository formatRepository;
-    private final BandRepository bandRepository;
     private final MangaDetailsRepository mangaDetailsRepository;
 
     @Autowired
@@ -54,9 +47,6 @@ public class MangaReiheService {
 
     @Autowired
     private FormatService formatService;
-
-    @Autowired
-    private SammelbandService sammelbaendeService;
 
     @Autowired
     private MangaDetailsService mangaDetailsService;
@@ -73,7 +63,6 @@ public class MangaReiheService {
         this.verlagRepository = verlagRepository;
         this.typRepository = typRepository;
         this.formatRepository = formatRepository;
-        this.bandRepository = bandRepository;
         this.mangaDetailsRepository = mangaDetailsRepository;
     }
 
@@ -108,69 +97,71 @@ public class MangaReiheService {
     }
 
     @Transactional
-public MangaReihe saveMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
-        String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
-        String anilistUrl, Long sammelbandTypId, Double gesamtpreisAenderung, Map<String, String> scrapedData) {
-    System.out.println("SaveMangaReihe gestartet");
+    public MangaReihe saveMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
+            String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
+            String anilistUrl, Long sammelbandTypId, Double gesamtpreisAenderung, Map<String, String> scrapedData) {
+        System.out.println("SaveMangaReihe gestartet");
 
-    MangaReihe mangaReihe = createMangaReihe(mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, gesamtpreisAenderung);
-    
-    MangaReihe savedMangaReihe = mangaReiheRepository.save(mangaReihe);
+        MangaReihe mangaReihe = createMangaReihe(mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
+                preisProBand, istVergriffen, istEbayPreis, gesamtpreisAenderung);
 
-    System.out.println("MangaReihe Objekt erstellt");
+        MangaReihe savedMangaReihe = mangaReiheRepository.save(mangaReihe);
 
-    MangaDetails details = mangaDetailsService.createMangaDetails(savedMangaReihe, anilistUrl, sammelbandTypId, scrapedData);
-    mangaDetailsRepository.save(details);
+        System.out.println("MangaReihe Objekt erstellt");
 
-    bandService.createAndSaveBaende(savedMangaReihe, anzahlBaende, preisProBand, scrapedData);
+        MangaDetails details = mangaDetailsService.createMangaDetails(savedMangaReihe, anilistUrl, sammelbandTypId,
+                scrapedData);
+        mangaDetailsRepository.save(details);
 
-    return savedMangaReihe;
-}
+        bandService.createAndSaveBaende(savedMangaReihe, anzahlBaende, preisProBand, scrapedData);
 
-/**
- * Erstellt eine neue MangaReihe.
- * 
- * @param mangaIndex           Der Index der MangaReihe.
- * @param statusId             Die ID des Status.
- * @param verlagId             Die ID des Verlags.
- * @param typId                Die ID des Typs.
- * @param formatId             Die ID des Formats.
- * @param titel                Der Titel der MangaReihe.
- * @param anzahlBaende         Die Anzahl der Bände in der Reihe.
- * @param preisProBand         Der Preis pro Band.
- * @param istVergriffen        Gibt an, ob die Reihe vergriffen ist.
- * @param istEbayPreis         Gibt an, ob es sich um einen eBay-Preis handelt.
- * @param gesamtpreisAenderung Die Änderung des Gesamtpreises.
- * @return Die erstellte MangaReihe.
- */
-private MangaReihe createMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
-        String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
-        Double gesamtpreisAenderung) {
-    MangaReihe mangaReihe = new MangaReihe();
-    mangaReihe.setMangaIndex(mangaIndex);
-    mangaReihe.setStatus(statusService.getStatusById(statusId).orElse(null));
-    mangaReihe.setVerlag(verlagService.getVerlagById(verlagId).orElse(null));
-    mangaReihe.setTyp(typService.getTypById(typId).orElse(null));
-    mangaReihe.setFormat(formatService.getFormatById(formatId).orElse(null));
-    mangaReihe.setTitel(titel);
-    mangaReihe.setAnzahlBaende(anzahlBaende);
-    mangaReihe.setPreisProBand(preisProBand);
-    mangaReihe.setIstEbayPreis(istEbayPreis);
-    mangaReihe.setIstVergriffen(istVergriffen);
+        return savedMangaReihe;
+    }
 
-    BigDecimal preisProBandBigDecimal = BigDecimal.valueOf(preisProBand);
-    BigDecimal gesamtpreisAenderungBigDecimal = gesamtpreisAenderung != null
-            ? BigDecimal.valueOf(gesamtpreisAenderung)
-            : BigDecimal.ZERO;
-    BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(anzahlBaende);
+    /**
+     * Erstellt eine neue MangaReihe.
+     * 
+     * @param mangaIndex           Der Index der MangaReihe.
+     * @param statusId             Die ID des Status.
+     * @param verlagId             Die ID des Verlags.
+     * @param typId                Die ID des Typs.
+     * @param formatId             Die ID des Formats.
+     * @param titel                Der Titel der MangaReihe.
+     * @param anzahlBaende         Die Anzahl der Bände in der Reihe.
+     * @param preisProBand         Der Preis pro Band.
+     * @param istVergriffen        Gibt an, ob die Reihe vergriffen ist.
+     * @param istEbayPreis         Gibt an, ob es sich um einen eBay-Preis handelt.
+     * @param gesamtpreisAenderung Die Änderung des Gesamtpreises.
+     * @return Die erstellte MangaReihe.
+     */
+    private MangaReihe createMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
+            String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
+            Double gesamtpreisAenderung) {
+        MangaReihe mangaReihe = new MangaReihe();
+        mangaReihe.setMangaIndex(mangaIndex);
+        mangaReihe.setStatus(statusService.getStatusById(statusId).orElse(null));
+        mangaReihe.setVerlag(verlagService.getVerlagById(verlagId).orElse(null));
+        mangaReihe.setTyp(typService.getTypById(typId).orElse(null));
+        mangaReihe.setFormat(formatService.getFormatById(formatId).orElse(null));
+        mangaReihe.setTitel(titel);
+        mangaReihe.setAnzahlBaende(anzahlBaende);
+        mangaReihe.setPreisProBand(preisProBand);
+        mangaReihe.setIstEbayPreis(istEbayPreis);
+        mangaReihe.setIstVergriffen(istVergriffen);
 
-    BigDecimal gesamtpreis = preisProBandBigDecimal.multiply(anzahlBaendeBigDecimal)
-            .add(gesamtpreisAenderungBigDecimal);
-    mangaReihe.setGesamtpreis(gesamtpreis);
-    mangaReihe.setAenderungGesamtpreis(gesamtpreisAenderungBigDecimal);
+        BigDecimal preisProBandBigDecimal = BigDecimal.valueOf(preisProBand);
+        BigDecimal gesamtpreisAenderungBigDecimal = gesamtpreisAenderung != null
+                ? BigDecimal.valueOf(gesamtpreisAenderung)
+                : BigDecimal.ZERO;
+        BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(anzahlBaende);
 
-    return mangaReihe;
-}
+        BigDecimal gesamtpreis = preisProBandBigDecimal.multiply(anzahlBaendeBigDecimal)
+                .add(gesamtpreisAenderungBigDecimal);
+        mangaReihe.setGesamtpreis(gesamtpreis);
+        mangaReihe.setAenderungGesamtpreis(gesamtpreisAenderungBigDecimal);
+
+        return mangaReihe;
+    }
 
     public Long getNextId() {
         Long maxId = mangaReiheRepository.findMaxId();
@@ -198,6 +189,7 @@ private MangaReihe createMangaReihe(Integer mangaIndex, Long statusId, Long verl
      * @param istVergriffen        Gibt an, ob die Reihe vergriffen ist.
      * @param istEbayPreis         Gibt an, ob es sich um einen eBay-Preis handelt.
      * @param anilistUrl           Die URL zu AniList.
+     * @param coverUrl             Die URL zum Cover.
      * @param sammelbandTypId      Die ID des Sammelbandtyps.
      * @param gesamtpreisAenderung Die Änderung des Gesamtpreises.
      * @param scrapedData          Zusätzliche Daten, die durch Web-Scraping
@@ -207,13 +199,10 @@ private MangaReihe createMangaReihe(Integer mangaIndex, Long statusId, Long verl
      */
     @Transactional
     public Optional<MangaReihe> updateMangaReihe(Long mangaReiheId, Integer mangaIndex, Long statusId, Long verlagId,
-            Long typId,
-            Long formatId, String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen,
-            Boolean istEbayPreis,
-            String anilistUrl, String coverUrl, Long sammelbandTypId, Double gesamtpreisAenderung,
+            Long typId, Long formatId, String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen,
+            Boolean istEbayPreis, String anilistUrl, String coverUrl, Long sammelbandTypId, Double gesamtpreisAenderung,
             Map<String, String> scrapedData) {
 
-        // Überprüfen, ob die MangaReihe existiert
         Optional<MangaReihe> mangaReiheOptional = findById(mangaReiheId);
         if (!mangaReiheOptional.isPresent()) {
             System.out.println("Keine Reihe mit der ID gefunden");
@@ -221,174 +210,59 @@ private MangaReihe createMangaReihe(Integer mangaIndex, Long statusId, Long verl
         }
         MangaReihe mangaReihe = mangaReiheOptional.get();
 
-        System.out.println("Die ID der gefundenen Reihe ist: " + mangaReihe.getId());
-        // Aktualisieren der MangaReihe
-        mangaReihe.setMangaIndex(mangaIndex);
-        System.out.println("Index gesetzt auf: " + mangaIndex);
-        mangaReihe.setStatus(statusService.getStatusById(statusId).orElse(null));
-        System.out.println("Status gesetzt auf: " + statusId);
-        mangaReihe.setVerlag(verlagService.getVerlagById(verlagId).orElse(null));
-        System.out.println("Verlag gesetzt auf: " + verlagId);
-        mangaReihe.setTyp(typService.getTypById(typId).orElse(null));
-        System.out.println("Typ gesetzt auf: " + typId);
-        mangaReihe.setFormat(formatService.getFormatById(formatId).orElse(null));
-        System.out.println("Format gesetzt auf: " + formatId);
-        mangaReihe.setTitel(titel);
-        System.out.println("Titel gesetzt auf: " + titel);
-        mangaReihe.setAnzahlBaende(anzahlBaende);
-        System.out.println("Anzahl der Bände gesetzt auf: " + anzahlBaende);
-        mangaReihe.setPreisProBand(preisProBand);
-        System.out.println("Preis pro Band gesezt auf: " + preisProBand);
-        mangaReihe.setIstEbayPreis(istEbayPreis);
-        System.out.println("IstEbayPreis gesetzt auf: " + istEbayPreis);
-        mangaReihe.setIstVergriffen(istVergriffen);
-        System.out.println("IstVergriffen gesetzt auf: " + istVergriffen);
+        updateMangaReiheAttributes(mangaReihe, mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
+                preisProBand, istVergriffen, istEbayPreis, gesamtpreisAenderung);
 
-        // Berechnen und Aktualisieren des Gesamtpreises
+        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, sammelbandTypId,
+                scrapedData);
+        mangaDetailsRepository.save(details);
+
+        bandService.updateOrCreateBaende(mangaReihe, anzahlBaende, preisProBand, scrapedData);
+
+        return Optional.of(mangaReiheRepository.save(mangaReihe));
+    }
+
+    /**
+     * Aktualisiert die Attribute einer MangaReihe.
+     * 
+     * @param mangaReihe           Die zu aktualisierende MangaReihe.
+     * @param mangaIndex           Der Index der MangaReihe.
+     * @param statusId             Die ID des Status.
+     * @param verlagId             Die ID des Verlags.
+     * @param typId                Die ID des Typs.
+     * @param formatId             Die ID des Formats.
+     * @param titel                Der Titel der MangaReihe.
+     * @param anzahlBaende         Die Anzahl der Bände in der Reihe.
+     * @param preisProBand         Der Preis pro Band.
+     * @param istVergriffen        Gibt an, ob die Reihe vergriffen ist.
+     * @param istEbayPreis         Gibt an, ob es sich um einen eBay-Preis handelt.
+     * @param gesamtpreisAenderung Die Änderung des Gesamtpreises.
+     */
+    private void updateMangaReiheAttributes(MangaReihe mangaReihe, Integer mangaIndex, Long statusId, Long verlagId,
+            Long typId, Long formatId, String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen,
+            Boolean istEbayPreis, Double gesamtpreisAenderung) {
+
+        mangaReihe.setMangaIndex(mangaIndex);
+        mangaReihe.setStatus(statusService.getStatusById(statusId).orElse(null));
+        mangaReihe.setVerlag(verlagService.getVerlagById(verlagId).orElse(null));
+        mangaReihe.setTyp(typService.getTypById(typId).orElse(null));
+        mangaReihe.setFormat(formatService.getFormatById(formatId).orElse(null));
+        mangaReihe.setTitel(titel);
+        mangaReihe.setAnzahlBaende(anzahlBaende);
+        mangaReihe.setPreisProBand(preisProBand);
+        mangaReihe.setIstEbayPreis(istEbayPreis);
+        mangaReihe.setIstVergriffen(istVergriffen);
+
         BigDecimal preisProBandBigDecimal = BigDecimal.valueOf(preisProBand);
         BigDecimal gesamtpreisAenderungBigDecimal = gesamtpreisAenderung != null
                 ? BigDecimal.valueOf(gesamtpreisAenderung)
                 : BigDecimal.ZERO;
-
         BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(anzahlBaende);
 
         BigDecimal gesamtpreis = preisProBandBigDecimal.multiply(anzahlBaendeBigDecimal)
                 .add(gesamtpreisAenderungBigDecimal);
         mangaReihe.setGesamtpreis(gesamtpreis);
-        System.out.println("Gesamtpreis gesetzt auf: " + gesamtpreis);
         mangaReihe.setAenderungGesamtpreis(gesamtpreisAenderungBigDecimal);
-        System.out.println("Gesamtpreis Änderung gesetzt auf: " + gesamtpreisAenderung);
-
-        // Aktualisieren der MangaDetails
-        MangaDetails details = mangaReihe.getMangaDetails();
-        if (details == null) {
-            details = new MangaDetails();
-            details.setMangaReihe(mangaReihe);
-            System.out.println("Keine Details zu der Reihe gefunden");
-        }
-        if (anilistUrl != null) {
-            details.setAnilistUrl(anilistUrl);
-            System.out.println("Anilist-Url gesetzt auf: " + anilistUrl);
-        }
-
-        if (coverUrl != null) {
-            details.setCoverUrl(coverUrl);
-            System.out.println("Cover-Url gesetzt auf: " + coverUrl);
-        }
-
-        // Setzen des Sammelbandtyps, falls vorhanden
-        if (sammelbandTypId != null) {
-            Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Sammelband mit ID " + sammelbandTypId + " nicht gefunden"));
-            details.setSammelbaende(sammelband);
-        } else {
-            details.setSammelbaende(null);
-            System.out.println("Kein Sammelband");
-        }
-        // Weitere Details aktualisieren
-        if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
-            details.setStatusDe(scrapedData.get("Deutsche Ausgabe Status"));
-            System.out.println("StatusDe gesetzt auf: " + scrapedData.get("Deutsche Ausgabe Status"));
-        }
-        if (scrapedData.containsKey("Deutsche Ausgabe Bände")) {
-            try {
-                details.setAnzahlBaendeDe(Integer.parseInt(scrapedData.get("Deutsche Ausgabe Bände")));
-                System.out
-                        .println("BändeDE gesetzt auf: " + Integer.parseInt(scrapedData.get("Deutsche Ausgabe Bände")));
-            } catch (NumberFormatException e) {
-                // Fehlerbehandlung
-            }
-        }
-        if (scrapedData.containsKey("Erstveröffentlichung Status")) {
-            details.setStatusErstv(scrapedData.get("Erstveröffentlichung Status"));
-            System.out.println("StatusErstV gesetzt auf: " + scrapedData.get("Erstveröffentlichung Status"));
-        }
-        if (scrapedData.containsKey("Erstveröffentlichung Herkunft")) {
-            details.setHerkunft(scrapedData.get("Erstveröffentlichung Herkunft"));
-            System.out.println("Herkunft gesetzt auf: " + scrapedData.get("Erstveröffentlichung Herkunft"));
-        }
-        if (scrapedData.containsKey("Erstveröffentlichung Startjahr")) {
-            try {
-                details.setStartJahr(Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr")));
-                System.out.println("Startjahr gesetzt auf: "
-                        + Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr")));
-            } catch (NumberFormatException e) {
-                // Fehlerbehandlung
-            }
-        }
-        if (scrapedData.containsKey("Erstveröffentlichung Bände")) {
-            try {
-                details.setAnzahlBaendeErstv(Integer.parseInt(scrapedData.get("Erstveröffentlichung Bände")));
-                System.out.println(
-                        "BändeErstV gesetzt auf: " + Integer.parseInt(scrapedData.get("Erstveröffentlichung Bände")));
-            } catch (NumberFormatException e) {
-                // Fehlerbehandlung
-            }
-        }
-        mangaDetailsRepository.save(details);
-        System.out.println("Manga Details aktualisiert");
-
-        // Aktualisieren der existierenden Bände und Hinzufügen neuer Bände, falls nötig
-        List<Band> existierendeBaende = bandRepository.findByMangaReiheId(mangaReiheId);
-        int existierendeAnzahl = existierendeBaende.size();
-
-        for (int i = 1; i <= anzahlBaende; i++) {
-            Band band;
-            if (i <= existierendeAnzahl) {
-                // Aktualisieren eines existierenden Bandes
-                band = existierendeBaende.get(i - 1);
-            } else {
-                // Erstellen eines neuen Bandes
-                band = new Band();
-                band.setMangaReihe(mangaReihe);
-                band.setBandNr(i);
-                bandRepository.save(band);
-            }
-
-            // Setzen der Bild-URL und des MP-URL, falls vorhanden und Bandnummer <= 5
-            if (i <= 5) {
-                String bildUrlKey = "Band " + i + " Bild Url";
-                String mpUrlKey = "Band " + i + " href";
-                String preisKey = "Band " + i + " Preis";
-
-                try {
-                    if (scrapedData.containsKey(bildUrlKey)) {
-                        String bildUrlString = scrapedData.get(bildUrlKey);
-                        if (bildUrlString != null && !bildUrlString.isEmpty()) {
-                            URI bildUri = new URI(bildUrlString);
-                            URL bildUrl = bildUri.toURL();
-                            band.setBildUrl(bildUrl);
-                        }
-                    }
-
-                    if (scrapedData.containsKey(mpUrlKey)) {
-                        String mpUrlString = scrapedData.get(mpUrlKey);
-                        if (mpUrlString != null && !mpUrlString.isEmpty()) {
-                            URI mpUri = new URI(mpUrlString);
-                            URL mpUrl = mpUri.toURL();
-                            band.setMpUrl(mpUrl);
-                        }
-                    }
-
-                    if (scrapedData.containsKey(preisKey)) {
-                        try {
-                            band.setPreis(new BigDecimal(scrapedData.get(preisKey)));
-                        } catch (NumberFormatException e) {
-                            // Behandlung des Fehlers oder Setzen eines Standardwerts
-                        }
-                    }
-                } catch (URISyntaxException | MalformedURLException e) {
-                    e.printStackTrace();
-                    // Behandeln Sie den Fehler entsprechend
-                }
-            }
-
-            // Speichern des aktualisierten oder neuen Bandes
-            bandRepository.save(band);
-        }
-
-        return Optional.of(mangaReiheRepository.save(mangaReihe));
     }
 
     /**
