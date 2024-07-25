@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
@@ -28,18 +29,22 @@ public class MangaReihe {
     private Integer mangaIndex;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "status_id", referencedColumnName = "status_id")
     private Status status;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "verlag_id", referencedColumnName = "verlag_id")
     private Verlag verlag;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "typ_id", referencedColumnName = "typ_id")
     private Typ typ;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "format_id", referencedColumnName = "format_id")
     private Format format;
 

@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,11 +27,9 @@ public class Band {
     private Long id;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "manga_reihe_id", nullable = false)
     private MangaReihe mangaReihe;
-
-    @Column(name = "band_index")
-    private Integer bandIndex;
 
     @Column(name = "band_nr")
     private Integer bandNr;

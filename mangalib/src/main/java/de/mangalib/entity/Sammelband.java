@@ -2,6 +2,8 @@ package de.mangalib.entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,6 +27,7 @@ public class Sammelband {
     private String typ;
 
     @OneToMany(mappedBy = "sammelbaende", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<MangaDetails> mangaDetails;
 
 }
