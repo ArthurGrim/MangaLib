@@ -55,7 +55,7 @@ public class MangaReihe {
     private Integer anzahlBaende;
 
     @Column(name = "preis_pro_band")
-    private Double preisProBand;
+    private BigDecimal preisProBand;
 
     @Transient
     private String preisProBandString;

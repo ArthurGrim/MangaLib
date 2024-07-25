@@ -309,7 +309,7 @@ public class MyController {
         response.put("formatId", mangaReihe.getFormat() != null ? mangaReihe.getFormat().getFormatId() : null);
         response.put("titel", mangaReihe.getTitel());
         response.put("anzahlBaende", mangaReihe.getAnzahlBaende());
-        double preisProBand = mangaReihe.getPreisProBand();
+        BigDecimal preisProBand = mangaReihe.getPreisProBand();
         response.put("preisProBand", String.valueOf(preisProBand).replace(".", ","));
         response.put("istEbayPreis", mangaReihe.getIstEbayPreis());
         response.put("istVergriffen", mangaReihe.getIstVergriffen());
