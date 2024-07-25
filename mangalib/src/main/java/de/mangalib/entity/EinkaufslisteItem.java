@@ -3,6 +3,7 @@ package de.mangalib.entity;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
@@ -22,14 +23,17 @@ public class EinkaufslisteItem {
     private Integer mangaIndex;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "verlag_id", referencedColumnName = "verlag_id")
     private Verlag verlagId;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "typ_id", referencedColumnName = "typ_id")
     private Typ typId;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "format_id", referencedColumnName = "format_id")
     private Format formatId;
 

@@ -43,6 +43,7 @@ public class MangaDetails {
     private MangaReihe mangaReihe;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "sammelbaende_id", referencedColumnName = "id")
     private Sammelband sammelbaende;
 

@@ -2,6 +2,8 @@ package de.mangalib.entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,5 +23,6 @@ public class Typ {
     private String bezeichnung;
 
     @OneToMany(mappedBy = "typ", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<MangaReihe> mangaReihen;
 }
