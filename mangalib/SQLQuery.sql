@@ -41,7 +41,7 @@ CREATE TABLE mangareihe (
     format_id BIGINT,
     titel VARCHAR(255) NOT NULL,
     anzahl_baende INT,
-    preis_pro_band DOUBLE,
+    preis_pro_band DECIMAL(10, 2),
     gesamtpreis DECIMAL(10, 2),
     aenderung_gesamtpreis DECIMAL(10 ,2),
     erstellt_am DATE DEFAULT (CURRENT_DATE),

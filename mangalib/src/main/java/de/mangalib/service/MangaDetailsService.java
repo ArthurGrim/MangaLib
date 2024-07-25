@@ -162,46 +162,59 @@ public class MangaDetailsService {
             details = new MangaDetails();
             details.setMangaReihe(mangaReihe);
         }
-        if (anilistUrl != null) {
+        if (anilistUrl != null && !anilistUrl.equals(details.getAnilistUrl())) {
             details.setAnilistUrl(anilistUrl);
         }
-        if (coverUrl != null) {
+        if (coverUrl != null && !coverUrl.equals(details.getCoverUrl())) {
             details.setCoverUrl(coverUrl);
         }
-        if (sammelbandTypId != null) {
+        if (sammelbandTypId != null
+                && (details.getSammelbaende() == null || !details.getSammelbaende().getId().equals(sammelbandTypId))) {
             Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId)
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Sammelband mit ID " + sammelbandTypId + " nicht gefunden"));
             details.setSammelbaende(sammelband);
-        } else {
-            details.setSammelbaende(null);
         }
-        if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
+
+        // Weitere Details aktualisieren
+        if (scrapedData.containsKey("Deutsche Ausgabe Status")
+                && !scrapedData.get("Deutsche Ausgabe Status").equals(details.getStatusDe())) {
             details.setStatusDe(scrapedData.get("Deutsche Ausgabe Status"));
         }
         if (scrapedData.containsKey("Deutsche Ausgabe Bände")) {
             try {
-                details.setAnzahlBaendeDe(Integer.parseInt(scrapedData.get("Deutsche Ausgabe Bände")));
+                int anzahlBaendeDe = Integer.parseInt(scrapedData.get("Deutsche Ausgabe Bände"));
+                if (!Integer.valueOf(anzahlBaendeDe).equals(details.getAnzahlBaendeDe())) {
+                    details.setAnzahlBaendeDe(anzahlBaendeDe);
+                }
             } catch (NumberFormatException e) {
                 // Fehlerbehandlung
             }
         }
-        if (scrapedData.containsKey("Erstveröffentlichung Status")) {
+        if (scrapedData.containsKey("Erstveröffentlichung Status")
+                && !scrapedData.get("Erstveröffentlichung Status").equals(details.getStatusErstv())) {
             details.setStatusErstv(scrapedData.get("Erstveröffentlichung Status"));
         }
-        if (scrapedData.containsKey("Erstveröffentlichung Herkunft")) {
+        if (scrapedData.containsKey("Erstveröffentlichung Herkunft")
+                && !scrapedData.get("Erstveröffentlichung Herkunft").equals(details.getHerkunft())) {
             details.setHerkunft(scrapedData.get("Erstveröffentlichung Herkunft"));
         }
         if (scrapedData.containsKey("Erstveröffentlichung Startjahr")) {
             try {
-                details.setStartJahr(Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr")));
+                int startjahr = Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr"));
+                if (!Integer.valueOf(startjahr).equals(details.getStartJahr())) {
+                    details.setStartJahr(startjahr);
+                }
             } catch (NumberFormatException e) {
                 // Fehlerbehandlung
             }
         }
         if (scrapedData.containsKey("Erstveröffentlichung Bände")) {
             try {
-                details.setAnzahlBaendeErstv(Integer.parseInt(scrapedData.get("Erstveröffentlichung Bände")));
+                int anzahlBaendeErstv = Integer.parseInt(scrapedData.get("Erstveröffentlichung Bände"));
+                if (!Integer.valueOf(anzahlBaendeErstv).equals(details.getAnzahlBaendeErstv())) {
+                    details.setAnzahlBaendeErstv(anzahlBaendeErstv);
+                }
             } catch (NumberFormatException e) {
                 // Fehlerbehandlung
             }
