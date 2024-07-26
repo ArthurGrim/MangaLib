@@ -5,6 +5,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -16,6 +17,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class MangaScraper {
 
@@ -69,6 +71,16 @@ public class MangaScraper {
                             System.out.println(
                                     "Kein Cookie-Pop-up gefunden oder es gab ein Problem beim Klicken darauf.");
                         }
+
+                        // Scrollen Sie die Seite langsam bis nach ganz unten
+                        JavascriptExecutor js = (JavascriptExecutor) driver;
+                        long lastHeight = (long) js.executeScript("return document.body.scrollHeight");
+
+                        for(int i = 500; lastHeight-i >= 500; i += 500) {
+                            js.executeScript("window.scrollBy(0, 500);");
+                            TimeUnit.MILLISECONDS.sleep(50); // Kurze Pause zwischen den Scroll-Schritten   
+                        }
+
                         wait.until(
                                 ExpectedConditions
                                         .visibilityOfElementLocated(By.cssSelector("div.manga-list_top__S1J_8")));
@@ -88,12 +100,12 @@ public class MangaScraper {
                                 String href = tileItem.findElement(By.tagName("a")).getAttribute("href");
                                 mangaData.put("Band " + aktuellerBand + " href", href);
 
-                                if (aktuellerBand <= 5) {
+                                // if (aktuellerBand <= 5) {
                                     // Extrahieren der Bild-URL
                                     String bildUrl = tileItem.findElement(By.className("img_img__jkdIh"))
                                             .getAttribute("src");
                                     mangaData.put("Band " + aktuellerBand + " Bild Url", bildUrl);
-                                }
+                                // }
                                 // Extrahieren des Preises des Bandes
                                 String bandPreis = tileItem.findElement(By.className("manga-list_top__S1J_8"))
                                         .getText();

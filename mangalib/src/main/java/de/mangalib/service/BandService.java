@@ -387,4 +387,17 @@ public class BandService {
         }
     }
 
+    /**
+     * Gibt eien Liste an Baenden zu einer Mangareihe zurück
+     * 
+     * @param mangaReiheId ID der Mangareihe zu welcher die Baende gefunden werden sollen
+     * @return Liste der Baende zu einer Mangareihe
+     */    
+    public List<Band> findByMangaReiheId(Long mangaReiheId) {
+        if(mangaReiheId == null){
+            throw new IllegalArgumentException("Ungültige ID");
+        }
+        return bandRepository.findByMangaReiheId(mangaReiheId);
+    }
+
 }

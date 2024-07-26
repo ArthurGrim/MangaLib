@@ -273,7 +273,7 @@ body {
 
 .manga-reihen-header {
   display: grid;
-  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 30px 30px 30px;
+  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 30px 30px 30px 30px;
   gap: 5px;
   background-color: var(--bg-container);
   border-top: 0.125rem solid var(--blue-normal);
@@ -283,9 +283,9 @@ body {
 }
 
 /* Stil für das Panel, das jede MangaReihe darstellt */
-.manga-reihe-panel {
+.mangaReihe-container {
   display: grid;
-  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 30px 30px 30px;
+  grid-template-columns: 100px 1fr 1fr 1fr 1fr 3fr 1fr 1fr 1fr 30px 30px 30px 30px;
   gap: 5px; /* Abstand zwischen den Spalten */
   background-color: var(--bg-panel); /* Hintergrundfarbe des Panels */
   color: var(--font-container); /* Textfarbe */
@@ -296,8 +296,9 @@ body {
 }
 
 /* Stil für die einzelnen Elemente innerhalb des Panels */
-.manga-reihe-panel div,
-.manga-reihen-header div {
+.mangaReihe-container div,
+.manga-reihen-header div,
+.band-container {
   display: flex;
   flex-direction: column; /* Vertikale Anordnung der Elemente */
   align-items: center; /* Zentriert horizontal */
@@ -305,7 +306,20 @@ body {
   text-align: center; /* Zentriert den Text */
 }
 
-.cover-bild img {
+.band-container {
+  display: grid;
+  grid-template-columns: 100px 5fr 3fr 30px 30px 30px 30px;
+  gap: 5px; /* Abstand zwischen den Spalten */
+  background-color: var(--bg-panel); /* Hintergrundfarbe des Panels */
+  color: var(--font-container); /* Textfarbe */
+  padding: 10px; /* Innenabstand */
+  border-radius: 15px; /* Abgerundete Ecken */
+  margin-top: 10px; /* Abstand zum vorherigen Element */
+  margin-left: 75px;
+  align-items: center; /* Zentriert die Inhalte vertikal */
+}
+
+.cover-bild img, .band-container img {
   max-width: 100%; /* Maximale Breite auf 100% des umgebenden Elements setzen */
   max-height: 200px; /* Maximale Höhe festlegen */
   height: auto; /* Höhe automatisch anpassen, um das Seitenverhältnis zu erhalten */
@@ -313,6 +327,8 @@ body {
   display: block; /* Block-Element, um unerwünschte Ränder zu vermeiden */
   margin: 0 auto; /* Zentrieren des Bildes, falls es kleiner als der umgebende Bereich ist */
 }
+
+ 
 
 /* Stil für den Hinzufügen-Button */
 .add-button {
@@ -326,7 +342,8 @@ body {
 }
 
 .AL-link,
-.MP-link {
+.MP-link,
+.band-container button {
   background: transparent; /* Transparenter Hintergrund */
   border: none; /* Kein Rand */
   padding: 0; /* Kein Innenabstand */
@@ -339,7 +356,9 @@ body {
 /* Stil für den Bearbeiten-Button */
 .edit-button,
 .AL-button,
-.MP-button {
+.MP-button,
+.toggle-bands-button,
+.band-container button {
   background: transparent; /* Transparenter Hintergrund */
   border: none; /* Kein Rand */
   padding: 0; /* Kein Innenabstand */

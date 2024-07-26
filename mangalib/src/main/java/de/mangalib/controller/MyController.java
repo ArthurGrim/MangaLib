@@ -10,6 +10,8 @@ import de.mangalib.entity.MangaReihe;
 import de.mangalib.entity.Sammelband;
 import de.mangalib.service.StatusService;
 import de.mangalib.service.VerlagService;
+import lombok.Getter;
+import lombok.Setter;
 import de.mangalib.service.TypService;
 import de.mangalib.service.BandService;
 import de.mangalib.service.FormatService;
@@ -149,27 +151,27 @@ public class MyController {
         }
 
         // Sortierung anwenden
-    if (sortierung != null) {
-        switch (sortierung) {
-            case "titel":
-                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getTitel));
-                break;
-            case "aktualisiertAm":
-                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getAktualisiertAm).reversed());
-                break;
-            case "preisProBand":
-                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getPreisProBand).reversed());
-                break;
-            case "gesamtpreis":
-                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getGesamtpreis).reversed());
-                break;
-            default:
-                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getId));
-                break;
+        if (sortierung != null) {
+            switch (sortierung) {
+                case "titel":
+                    alleMangaReihen.sort(Comparator.comparing(MangaReihe::getTitel));
+                    break;
+                case "aktualisiertAm":
+                    alleMangaReihen.sort(Comparator.comparing(MangaReihe::getAktualisiertAm).reversed());
+                    break;
+                case "preisProBand":
+                    alleMangaReihen.sort(Comparator.comparing(MangaReihe::getPreisProBand).reversed());
+                    break;
+                case "gesamtpreis":
+                    alleMangaReihen.sort(Comparator.comparing(MangaReihe::getGesamtpreis).reversed());
+                    break;
+                default:
+                    alleMangaReihen.sort(Comparator.comparing(MangaReihe::getId));
+                    break;
+            }
+        } else {
+            alleMangaReihen.sort(Comparator.comparing(MangaReihe::getId));
         }
-    } else {
-        alleMangaReihen.sort(Comparator.comparing(MangaReihe::getId));
-    }
 
         DecimalFormat df = new DecimalFormat("0.00 €");
 
@@ -369,6 +371,42 @@ public class MyController {
         }
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/mangaReihe/{mangaReiheId}/bands")
+    @ResponseBody
+    public List<BandDto> getBandsForMangaReihe(@PathVariable Long mangaReiheId) {
+        List<Band> baende = bandService.findByMangaReiheId(mangaReiheId);
+        return baende.stream().map(band -> new BandDto(
+                band.getBildUrl() != null ? band.getBildUrl().toString() : "",
+                band.getBandNr(),
+                band.getPreis(),
+                band.isIstGelesen(),
+                band.getMpUrl() != null ? band.getMpUrl().toString() : "")).collect(Collectors.toList());
+    }
+
+    @Getter
+    @Setter
+    public static class BandDto {
+        private String bildUrl;
+        private int bandNr;
+        private BigDecimal preis;
+        private boolean istGelesen;
+        private String mpUrl;
+
+        // Constructor
+        public BandDto(String bildUrl, int bandNr, BigDecimal preis, boolean istGelesen, String mpUrl) {
+            this.bildUrl = bildUrl;
+            this.bandNr = bandNr;
+            this.preis = preis;
+            this.istGelesen = istGelesen;
+            this.mpUrl = mpUrl;
+        }
+
+        // Formatierten Preis zurückgeben
+        public String getFormattedPreis() {
+            return String.format("%.2f €", preis);
+        }
     }
 
 }
