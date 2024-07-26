@@ -74,6 +74,7 @@ public class MyController {
             @RequestParam(name = "formatFilter", required = false) Long formatId,
             @RequestParam(name = "jahrFilter", required = false) Integer jahrFilter,
             @RequestParam(name = "monatFilter", required = false) Integer monatFilter,
+            @RequestParam(name = "gelesenFilter", required = false) Boolean gelesenFilter,
             @RequestParam(name = "vergriffenFilter", required = false) String vergriffenFilter) {
 
         List<Status> alleStatus = statusService.findAllSortById();
@@ -141,9 +142,34 @@ public class MyController {
                     .collect(Collectors.toList());
         }
 
-        if ("titel".equals(sortierung)) {
-            alleMangaReihen.sort(Comparator.comparing(MangaReihe::getTitel));
+        if (gelesenFilter != null) {
+            alleMangaReihen = alleMangaReihen.stream()
+                    .filter(mangaReihe -> mangaReihe.getMangaDetails().isIstGelesen() == gelesenFilter)
+                    .collect(Collectors.toList());
         }
+
+        // Sortierung anwenden
+    if (sortierung != null) {
+        switch (sortierung) {
+            case "titel":
+                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getTitel));
+                break;
+            case "aktualisiertAm":
+                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getAktualisiertAm).reversed());
+                break;
+            case "preisProBand":
+                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getPreisProBand).reversed());
+                break;
+            case "gesamtpreis":
+                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getGesamtpreis).reversed());
+                break;
+            default:
+                alleMangaReihen.sort(Comparator.comparing(MangaReihe::getId));
+                break;
+        }
+    } else {
+        alleMangaReihen.sort(Comparator.comparing(MangaReihe::getId));
+    }
 
         DecimalFormat df = new DecimalFormat("0.00 €");
 
@@ -164,6 +190,7 @@ public class MyController {
         model.addAttribute("jahrFilter", jahrFilter);
         model.addAttribute("monatFilter", monatFilter);
         model.addAttribute("vergriffenFilter", vergriffenFilter);
+        model.addAttribute("gelesenFilter", gelesenFilter);
 
         model.addAttribute("alleStatus", alleStatus);
         model.addAttribute("alleVerlage", alleVerlage);

@@ -8,6 +8,7 @@ import de.mangalib.entity.Verlag;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -71,4 +72,7 @@ public interface MangaReiheRepository extends JpaRepository<MangaReihe, Long> {
 
     @Query("SELECT COUNT(m) FROM MangaReihe m WHERE m.anzahlBaende > 100")
     int countReihenMitMehrAlsHundertBaenden();
+
+    @Query("SELECT mr FROM MangaReihe mr JOIN mr.mangaDetails md WHERE md.istGelesen = :istGelesen")
+    List<MangaReihe> findByIstGelesen(@Param("istGelesen") Boolean istGelesen);
 }
