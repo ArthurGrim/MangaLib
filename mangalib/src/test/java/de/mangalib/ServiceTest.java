@@ -4,6 +4,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
+import java.math.BigDecimal;
 
 import org.junit.jupiter.api.Test;
 
@@ -26,12 +27,12 @@ public class ServiceTest {
         Long formatId = 1L;
         String titel = "Test Titel";
         Integer anzahlBaende = 10;
-        Double preisProBand = 5.99;
+        BigDecimal preisProBand = new BigDecimal("5.99");
         Boolean istVergriffen = false;
         Boolean istEbayPreis = false;
         String anilistUrl = "https://testurl.com";
         Long sammelbandTypId = null; // Angenommen, dies ist optional
-        Double gesamtpreisAenderung = null; // Optional
+        BigDecimal gesamtpreisAenderung = null; // Optional
         Map <String, String> erweitereDetails = null;
     
         // Methode aufrufen

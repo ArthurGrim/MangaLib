@@ -185,8 +185,8 @@ public class BandService {
      * @param scrapedData          Zusätzliche Daten, die durch Web-Scraping
      *                             erhalten wurden.
      */
-    public void createAndSaveBaende(MangaReihe mangaReihe, Integer anzahlBaende, Double preisProBand,
-            Double gesamtpreisAenderung, Map<String, String> scrapedData) {
+    public void createAndSaveBaende(MangaReihe mangaReihe, Integer anzahlBaende, BigDecimal preisProBand,
+            BigDecimal gesamtpreisAenderung, Map<String, String> scrapedData) {
         for (int i = 1; i <= anzahlBaende; i++) {
             Band band = new Band();
             band.setMangaReihe(mangaReihe);
@@ -222,19 +222,18 @@ public class BandService {
                     try {
                         band.setPreis(new BigDecimal(scrapedData.get(preisKey)));
                     } catch (NumberFormatException e) {
-                        band.setPreis(BigDecimal.valueOf(preisProBand));
+                        band.setPreis(preisProBand);
                     }
                 } else {
-                    band.setPreis(BigDecimal.valueOf(preisProBand));
+                    band.setPreis(preisProBand);
                 }
 
-                //Setzt AenderungGesamtpreis, wenn vorhanden
-                if (gesamtpreisAenderung > 0) {
-                    BigDecimal aenderungPreis = (gesamtpreisAenderung != null
-                            ? BigDecimal.valueOf(gesamtpreisAenderung)
-                            : BigDecimal.ZERO)
-                            .divide(BigDecimal.valueOf(anzahlBaende), 2, RoundingMode.HALF_UP);
+                // Setzt AenderungGesamtpreis, wenn vorhanden
+                if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal aenderungPreis = gesamtpreisAenderung.divide(BigDecimal.valueOf(anzahlBaende), 2,
+                            RoundingMode.HALF_UP);
                     band.setAenderungPreis(aenderungPreis);
+                    System.out.println("Änderung Preis: " + aenderungPreis + " für Band: " + i);
                 } else {
                     band.setAenderungPreis(new BigDecimal(0));
                 }
@@ -245,8 +244,22 @@ public class BandService {
                 e.printStackTrace();
             }
 
+            System.out.println("Es wird ein neuer Band für eine neue Reihe erzeugt!");
             bandRepository.save(band);
+            System.out.println("Band gespeichert: " + band.getBandNr() + ", ID: " + band.getId());
         }
+    }
+
+    public BigDecimal calculateAenderungGesamtpreis(MangaReihe mangaReihe) {
+        List<Band> baende = bandRepository.findByMangaReiheId(mangaReihe.getId());
+        BigDecimal aenderungGesamtpreis = BigDecimal.ZERO;
+        for (Band band : baende) {
+            BigDecimal aenderungPreis = band.getAenderungPreis();
+            if (aenderungPreis != null) {
+                aenderungGesamtpreis = aenderungGesamtpreis.add(aenderungPreis);
+            }
+        }
+        return aenderungGesamtpreis;
     }
 
     /**
@@ -260,38 +273,51 @@ public class BandService {
         List<Band> baende = bandRepository.findByMangaReiheId(mangaReihe.getId());
         BigDecimal gesamtpreis = BigDecimal.ZERO;
         for (Band band : baende) {
-            gesamtpreis = gesamtpreis.add(band.getPreis().add(band.getAenderungPreis()));
+            gesamtpreis = gesamtpreis.add(band.getPreis());
         }
+        gesamtpreis.add(mangaReihe.getAenderungGesamtpreis());
         return gesamtpreis;
     }
 
     /**
      * Aktualisiert oder erstellt die Bände einer MangaReihe.
      * 
-     * @param mangaReihe   Die MangaReihe, zu der die Bände gehören.
-     * @param anzahlBaende Die Anzahl der Bände in der Reihe.
-     * @param preisProBand Der Preis pro Band.
-     * @param scrapedData  Zusätzliche Daten, die durch Web-Scraping erhalten
-     *                     wurden.
+     * @param mangaReihe           Die MangaReihe, zu der die Bände gehören.
+     * @param anzahlBaende         Die Anzahl der Bände in der Reihe.
+     * @param preisProBand         Der Preis pro Band.
+     * @param gesamtpreisAenderung Die Änderung des Gesamtpreises.
+     * @param scrapedData          Zusätzliche Daten, die durch Web-Scraping
+     *                             erhalten wurden.
+     * @param anzahlBaendeChanged  Gibt an, ob sich die Anzahl der Bände geändert
+     *                             hat.
      */
-    public void updateOrCreateBaende(MangaReihe mangaReihe, Integer anzahlBaende, Double preisProBand, Double gesamtpreisAenderung,
-            Map<String, String> scrapedData) {
+    public void updateOrCreateBaende(MangaReihe mangaReihe, Integer anzahlBaende, BigDecimal preisProBand,
+            BigDecimal gesamtpreisAenderung,
+            Map<String, String> scrapedData, boolean anzahlBaendeChanged) {
         List<Band> existierendeBaende = bandRepository.findByMangaReiheId(mangaReihe.getId());
         int existierendeAnzahl = existierendeBaende.size();
+        System.out.println("Anzahl existierender Bände: " + existierendeAnzahl);
+        System.out.println("Anzahl Bände: " + anzahlBaende);
 
         for (int i = 1; i <= anzahlBaende; i++) {
             Band band;
             if (i <= existierendeAnzahl) {
                 // Aktualisieren eines existierenden Bandes
                 band = existierendeBaende.get(i - 1);
+                System.out.println("Aktualisiere existierenden Band: " + band.getBandNr());
+                // Aktualisieren des Preises, wenn die Anzahl der Bände sich nicht geändert hat
+                if (!anzahlBaendeChanged) {
+                    band.setPreis(preisProBand);
+                    band.setAenderungPreis(gesamtpreisAenderung.divide(new BigDecimal(anzahlBaende)));
+                }
             } else {
                 // Erstellen eines neuen Bandes
                 band = new Band();
                 band.setMangaReihe(mangaReihe);
                 band.setBandNr(i);
+                System.out.println("Es wurde ein neuer Band erstellt mit der Nr.:" + i);
+                band.setPreis(preisProBand);
             }
-
-            band.setPreis(BigDecimal.valueOf(preisProBand));
 
             String bildUrlKey = "Band " + i + " Bild Url";
             String mpUrlKey = "Band " + i + " href";
@@ -299,7 +325,8 @@ public class BandService {
 
             try {
                 // Fuege den Link zum Bild bei den ersten 5 Baenden ein
-                if ((scrapedData.containsKey(bildUrlKey) && i <= 5)  && !scrapedData.get(bildUrlKey).equals(band.getBildUrl().toString())) {
+                if ((scrapedData.containsKey(bildUrlKey) && i <= 5)
+                        && !scrapedData.get(bildUrlKey).equals(band.getBildUrl().toString())) {
                     String bildUrlString = scrapedData.get(bildUrlKey);
                     if (bildUrlString != null && !bildUrlString.isEmpty()) {
                         URI bildUri = new URI(bildUrlString);
@@ -309,7 +336,8 @@ public class BandService {
                 }
 
                 // Fuege den Link zur entsprechenden MangaPassion Seite ein
-                if (scrapedData.containsKey(mpUrlKey) && !scrapedData.get(mpUrlKey).equals(band.getMpUrl().toString())) {
+                if (scrapedData.containsKey(mpUrlKey)
+                        && !scrapedData.get(mpUrlKey).equals(band.getMpUrl().toString())) {
                     String mpUrlString = scrapedData.get(mpUrlKey);
                     if (mpUrlString != null && !mpUrlString.isEmpty()) {
                         URI mpUri = new URI(mpUrlString);
@@ -318,26 +346,34 @@ public class BandService {
                     }
                 }
 
-                // Fuege den Preis ein, wenn vorhanden
-                if (scrapedData.containsKey(preisKey)) {
-                    try {
-                        band.setPreis(new BigDecimal(scrapedData.get(preisKey)));
-                    } catch (NumberFormatException e) {
-                        band.setPreis(BigDecimal.valueOf(preisProBand));
+                if (i > existierendeAnzahl) {
+                    // Fuege den Preis ein, wenn vorhanden
+                    if (scrapedData.containsKey(preisKey)) {
+                        try {
+                            band.setPreis(new BigDecimal(scrapedData.get(preisKey)));
+                        } catch (NumberFormatException e) {
+                            band.setPreis(preisProBand);
+                            System.out.println("Fehler beim Setzen des Preises für Band " + i);
+                            e.printStackTrace();
+                        }
+                    } else {
+                        band.setPreis(preisProBand);
+                        System.out.println("Setze Standardpreis: " + preisProBand);
                     }
-                } else {
-                    band.setPreis(BigDecimal.valueOf(preisProBand));
                 }
 
-                //Setzt AenderungGesamtpreis, wenn vorhanden
-                if (gesamtpreisAenderung > 0) {
-                    BigDecimal aenderungPreis = (gesamtpreisAenderung != null
-                            ? BigDecimal.valueOf(gesamtpreisAenderung)
-                            : BigDecimal.ZERO)
-                            .divide(BigDecimal.valueOf(anzahlBaende), 2, RoundingMode.HALF_UP);
-                    band.setAenderungPreis(aenderungPreis);
-                } else {
-                    band.setAenderungPreis(new BigDecimal(0));
+                if (i > existierendeAnzahl) {
+                    // Setzt AenderungGesamtpreis, wenn vorhanden
+                    System.out.println("GesamtpreisAenderung: " + gesamtpreisAenderung + " größer als 0: "
+                            + (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0));
+                    if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
+                        BigDecimal aenderungPreis = gesamtpreisAenderung
+                                .divide(BigDecimal.valueOf(anzahlBaende - existierendeAnzahl), 2, RoundingMode.HALF_UP);
+                        band.setAenderungPreis(aenderungPreis);
+                        System.out.println("Änderung Preis: " + aenderungPreis + " für Band: " + i);
+                    } else {
+                        band.setAenderungPreis(new BigDecimal(0));
+                    }
                 }
 
             } catch (MalformedURLException e) {
@@ -347,6 +383,7 @@ public class BandService {
             }
 
             bandRepository.save(band);
+            System.out.println("Band gespeichert: " + band.getBandNr() + ", ID: " + band.getId());
         }
     }
 

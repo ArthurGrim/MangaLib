@@ -214,7 +214,7 @@ public class MyController {
             Long formatId = Long.valueOf((String) requestData.get("formatId"));
             String titel = (String) requestData.get("titel");
             Integer anzahlBaende = (Integer) requestData.get("anzahlBaende");
-            Double preisProBand = Double.valueOf((String) requestData.get("preisProBand"));
+            BigDecimal preisProBand = new BigDecimal((String) requestData.get("preisProBand"));
             Boolean istVergriffen = (Boolean) requestData.get("istVergriffen");
             Boolean istEbayPreis = (Boolean) requestData.get("istEbayPreis");
             String anilistUrl = (String) requestData.get("anilistUrl");
@@ -222,7 +222,7 @@ public class MyController {
             Long sammelbandTypId = requestData.get("sammelbandTypId") != null
                     ? Long.valueOf((String) requestData.get("sammelbandTypId"))
                     : null;
-            Double gesamtpreisAenderung = Double.valueOf((String) requestData.get("gesamtpreisAenderung"));
+            BigDecimal gesamtpreisAenderung = new BigDecimal((String) requestData.get("gesamtpreisAenderung"));
             @SuppressWarnings("unchecked")
             Map<String, String> scrapedData = (Map<String, String>) requestData.get("scrapedData");
             Boolean istEdit = Boolean.valueOf(scrapedData.get("istEdit"));
@@ -291,7 +291,7 @@ public class MyController {
 
     @GetMapping("/getMangaReiheData/{id}")
     public ResponseEntity<Map<String, Object>> getMangaReiheData(@PathVariable Long id) {
-        System.out.println("Edit ID: " + id);
+        System.out.println("------------------------------Edit ID: " + id);
         Optional<MangaReihe> mangaReiheOpt = mangaReiheService.findById(id);
 
         if (!mangaReiheOpt.isPresent()) {
