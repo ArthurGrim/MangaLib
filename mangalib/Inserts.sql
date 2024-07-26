@@ -48,8 +48,10 @@ INSERT INTO formate (bezeichnung) VALUES ('Hardcover');
 INSERT INTO formate (bezeichnung) VALUES ('Digital');
 
 -- Inserts für Sammelbaende
+INSERT INTO sammelbaende (typ, multiplikator) VALUES ('1in1', 1);
 INSERT INTO sammelbaende (typ, multiplikator) VALUES ('2in1', 2);
 INSERT INTO sammelbaende (typ, multiplikator) VALUES ('3in1', 3);
 INSERT INTO sammelbaende (typ, multiplikator) VALUES ('4in1', 4);
 INSERT INTO sammelbaende (typ, multiplikator) VALUES ('5in1', 5);
+
 

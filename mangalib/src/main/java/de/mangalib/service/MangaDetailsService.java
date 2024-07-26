@@ -104,6 +104,10 @@ public class MangaDetailsService {
             details.setSammelbaende(sammelband);
             System.out.println(details.getSammelbaende().getId());
         }
+        else {
+            Sammelband defaultSammelband = sammelbaendeService.findById(5L).orElse(null);
+            details.setSammelbaende(defaultSammelband);
+        }
         if (scrapedData.containsKey("Band 1 Bild Url")) {
             details.setCoverUrl(scrapedData.get("Band 1 Bild Url"));
         }
@@ -174,7 +178,7 @@ public class MangaDetailsService {
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Sammelband mit ID " + sammelbandTypId + " nicht gefunden"));
             details.setSammelbaende(sammelband);
-        }
+        } 
 
         // Weitere Details aktualisieren
         if (scrapedData.containsKey("Deutsche Ausgabe Status")

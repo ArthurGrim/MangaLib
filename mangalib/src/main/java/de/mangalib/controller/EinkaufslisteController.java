@@ -227,15 +227,15 @@ public class EinkaufslisteController {
         if (!reihen.isEmpty()) {
             // Update der vorhandenen Reihe
             MangaReihe reihe = reihen.get(0);
-            mangaReiheService.updateMangaReiheAnzahlBaende(reihe.getId(),
-                    (reihe.getAnzahlBaende() + item.getAnzahlBaende()));
-            BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(item.getAnzahlBaende());
-            mangaReiheService.updateMangaReiheGesamtpreis(reihe.getId(), (reihe.getGesamtpreis().add(item.getPreis()
-                    .multiply(anzahlBaendeBigDecimal)
-                    .add(item.getAenderungGesamtpreis() != null ? item.getAenderungGesamtpreis() : BigDecimal.ZERO))));
-            einkaufslisteService.updateGekauft(item.getId(), true);
 
-            // Hier fehlt noch das AenderungPreis geupdated wird!!!!!!
+            mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
+                    reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
+                    reihe.getTitel(), reihe.getAnzahlBaende() + item.getAnzahlBaende(), item.getPreis(),
+                    reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
+                    reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
+                    item.getAenderungGesamtpreis(), itemId);
+
+            einkaufslisteService.updateGekauft(item.getId(), true);
 
             return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
 
@@ -246,15 +246,15 @@ public class EinkaufslisteController {
         if (!reihenMitGleichemTitel.isEmpty()) {
             // Update der gefundenen Reihe
             MangaReihe reihe = reihenMitGleichemTitel.get(0);
-            mangaReiheService.updateMangaReiheAnzahlBaende(reihe.getId(),
-                    (reihe.getAnzahlBaende() + item.getAnzahlBaende()));
-            BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(item.getAnzahlBaende());
-            mangaReiheService.updateMangaReiheGesamtpreis(reihe.getId(), (reihe.getGesamtpreis().add(item.getPreis()
-                    .multiply(anzahlBaendeBigDecimal)
-                    .add(item.getAenderungGesamtpreis() != null ? item.getAenderungGesamtpreis() : BigDecimal.ZERO))));
-            einkaufslisteService.updateGekauft(item.getId(), true);
 
-            // Hier fehlt noch das AenderungPreis geupdated wird!!!!!!
+            mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
+                    reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
+                    reihe.getTitel(), reihe.getAnzahlBaende() + item.getAnzahlBaende(), item.getPreis(),
+                    reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
+                    reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
+                    item.getAenderungGesamtpreis(), itemId);
+
+            einkaufslisteService.updateGekauft(item.getId(), true);
 
             return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
 
@@ -298,13 +298,13 @@ public class EinkaufslisteController {
             Long formatId = item.getFormatId().getFormatId(); // Annahme: formatId ist verfügbar
             String titel = item.getTitel();
             Integer anzahlBaende = item.getAnzahlBaende();
-            Double preisProBand = item.getPreis().doubleValue(); // Annahme: preisProBand ist BigDecimal
+            BigDecimal preisProBand = item.getPreis();
             Boolean istVergriffen = item.getIstVergriffen();
             Boolean istEbayPreis = item.getIstEbayPreis();
             String anilistUrl = details.getAnilistUrl() != null ? details.getAnilistUrl() : null;
             Long sammelbandTypId = (details.getSammelbaendeId() != null) ? details.getSammelbaendeId().getId() : null;
-            Double gesamtpreisAenderung = item.getAenderungGesamtpreis().doubleValue(); // Annahme: gesamtpreisAenderung
-                                                                                        // ist BigDecimal
+            BigDecimal gesamtpreisAenderung = item.getAenderungGesamtpreis(); // Annahme: gesamtpreisAenderung
+                                                                              // ist BigDecimal
 
             System.out.println("Test 1");
 

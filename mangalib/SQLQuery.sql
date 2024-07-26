@@ -62,7 +62,7 @@ CREATE TABLE mangadetails (
     herkunft VARCHAR(255),
     start_jahr INT,
     anzahl_baende_erstv INT,
-    sammelbaende_id BIGINT,
+    sammelbaende_id BIGINT DEFAULT 5,
     anilist_url VARCHAR(255),
     cover_url VARCHAR(255),
     ist_gelesen BOOLEAN DEFAULT FALSE,
