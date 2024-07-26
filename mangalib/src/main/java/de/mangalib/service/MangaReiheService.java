@@ -686,6 +686,20 @@ public class MangaReiheService {
         return findByErstelltAmYearAndMonth(currentYear, monat);
     }
 
+    /**
+     * Filtert MangaReihe nach dem bestimmten Wert von istGelesen
+     * 
+     * @param istGelesen Der gesuchte Wert von istGelesen
+     * @return Eine Liste von MangaReihe, die den gesuchten Wert von istGelesen
+     *         erfüllen
+     */
+    public List<MangaReihe> findByIstGelesen(Boolean istGelesen) {
+        if (istGelesen == null) {
+            throw new IllegalArgumentException("istGelesen ist ungültig");
+        }
+        return mangaReiheRepository.findByIstGelesen(istGelesen);
+    }
+
     // ------------------------------Suchen--------------------------------
 
     /**

@@ -8,7 +8,7 @@
       th:href="@{/css/home.css}"
       href="../static/css/home.css"
     />
-    <link rel="icon" type="image/x-icon" href="/svg/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/svg/favicon.ico" />
   </head>
   <body>
     <!-- Header für die Seite zur Navigation zwischen den Seiten -->
@@ -140,32 +140,20 @@
               </div>
             </div>
             <!-- Drop Down für Sortierung -->
-            <div class="filter-section">
-              <label class="filter-label" for="sort"
-                ><!-- Sortierung Datum Icon -->
-                <img
-                  th:src="@{/svg/sortierung_icon.svg}"
-                  alt="SVG"
-                  style="height: 1em; width: 1em"
-                />
-                Sortierung</label
-              >
-              <select
-                name="sortierung"
-                onchange="this.form.submit()"
-                class="filter-select"
-              >
-                <option
-                  value="id"
-                  th:selected="${sortierung == null || sortierung == 'id'}"
-                >
-                  ID
-                </option>
-                <option value="titel" th:selected="${sortierung == 'titel'}">
-                  Titel
-                </option>
-              </select>
-            </div>
+<div class="filter-section">
+  <label class="filter-label" for="sort">
+      <!-- Sortierung Datum Icon -->
+      <img th:src="@{/svg/sortierung_icon.svg}" alt="SVG" style="height: 1em; width: 1em" />
+      Sortierung
+  </label>
+  <select name="sortierung" onchange="this.form.submit()" class="filter-select">
+      <option value="id" th:selected="${sortierung == null || sortierung == 'id'}">ID</option>
+      <option value="titel" th:selected="${sortierung == 'titel'}">Titel</option>
+      <option value="aktualisiertAm" th:selected="${sortierung == 'aktualisiertAm'}">Aktualisiert Am</option>
+      <option value="preisProBand" th:selected="${sortierung == 'preisProBand'}">Preis pro Band</option>
+      <option value="gesamtpreis" th:selected="${sortierung == 'gesamtpreis'}">Gesamtpreis</option>
+  </select>
+</div>
             <!-- Drop Down für Status -->
             <div class="filter-section">
               <label class="filter-label" for="publisher">
@@ -311,6 +299,33 @@
                 </option>
               </select>
             </div>
+            <!-- Drop Down für Gelesen -->
+            <div class="filter-section">
+              <label class="filter-label" for="gelesenFilter">
+                <!-- SVG Gelesen Icon -->
+                <img
+                  th:src="@{/svg/read_icon.svg}"
+                  alt="SVG"
+                  style="height: 1em; width: 1em"
+                />
+                Gelesen
+              </label>
+              <select
+                name="gelesenFilter"
+                onchange="this.form.submit()"
+                class="filter-select"
+              >
+                <option value="" th:selected="${gelesenFilter == null}">
+                  Alle
+                </option>
+                <option value="true" th:selected="${gelesenFilter == true}">
+                  Ja
+                </option>
+                <option value="false" th:selected="${gelesenFilter == false}">
+                  Nein
+                </option>
+              </select>
+            </div>
           </div>
         </form>
       </div>
@@ -343,7 +358,7 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-        <!-- PNG Manga Passion Logo -->
+          <!-- PNG Manga Passion Logo -->
           <img
             th:src="@{/svg/MangaPassion_logo.png}"
             alt="SVG"
@@ -358,7 +373,7 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-        <!-- PNG AniList Logo -->
+          <!-- PNG AniList Logo -->
           <img
             th:src="@{/svg/AniList_logo.png}"
             alt="AniList Logo"
