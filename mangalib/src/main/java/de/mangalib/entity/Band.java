@@ -37,6 +37,9 @@ public class Band {
     @Column(name = "preis")
     private BigDecimal preis;
 
+    @Transient
+    private String preisString;
+
     @Column(name = "bild_url")
     private URL bildUrl;
 

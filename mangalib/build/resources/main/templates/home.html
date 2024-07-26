@@ -140,20 +140,50 @@
               </div>
             </div>
             <!-- Drop Down für Sortierung -->
-<div class="filter-section">
-  <label class="filter-label" for="sort">
-      <!-- Sortierung Datum Icon -->
-      <img th:src="@{/svg/sortierung_icon.svg}" alt="SVG" style="height: 1em; width: 1em" />
-      Sortierung
-  </label>
-  <select name="sortierung" onchange="this.form.submit()" class="filter-select">
-      <option value="id" th:selected="${sortierung == null || sortierung == 'id'}">ID</option>
-      <option value="titel" th:selected="${sortierung == 'titel'}">Titel</option>
-      <option value="aktualisiertAm" th:selected="${sortierung == 'aktualisiertAm'}">Aktualisiert Am</option>
-      <option value="preisProBand" th:selected="${sortierung == 'preisProBand'}">Preis pro Band</option>
-      <option value="gesamtpreis" th:selected="${sortierung == 'gesamtpreis'}">Gesamtpreis</option>
-  </select>
-</div>
+            <div class="filter-section">
+              <label class="filter-label" for="sort">
+                <!-- Sortierung Datum Icon -->
+                <img
+                  th:src="@{/svg/sortierung_icon.svg}"
+                  alt="SVG"
+                  style="height: 1em; width: 1em"
+                />
+                Sortierung
+              </label>
+              <select
+                name="sortierung"
+                onchange="this.form.submit()"
+                class="filter-select"
+              >
+                <option
+                  value="id"
+                  th:selected="${sortierung == null || sortierung == 'id'}"
+                >
+                  ID
+                </option>
+                <option value="titel" th:selected="${sortierung == 'titel'}">
+                  Titel
+                </option>
+                <option
+                  value="aktualisiertAm"
+                  th:selected="${sortierung == 'aktualisiertAm'}"
+                >
+                  Aktualisiert Am
+                </option>
+                <option
+                  value="preisProBand"
+                  th:selected="${sortierung == 'preisProBand'}"
+                >
+                  Preis pro Band
+                </option>
+                <option
+                  value="gesamtpreis"
+                  th:selected="${sortierung == 'gesamtpreis'}"
+                >
+                  Gesamtpreis
+                </option>
+              </select>
+            </div>
             <!-- Drop Down für Status -->
             <div class="filter-section">
               <label class="filter-label" for="publisher">
@@ -398,110 +428,141 @@
       </div>
       <!-- Hier kommen die einzelnen MangaReihen -->
       <div th:each="mangaReihe : ${alleMangaReihen}" class="manga-reihe-panel">
-        <div class="cover-bild">
-          <th:block th:with="coverUrl=${coverUrlsMap[mangaReihe.id]}">
-            <!-- Prüfen, ob coverUrl nicht null ist -->
-            <img th:if="${coverUrl != null}" th:src="${coverUrl}" />
-            <!-- Optional: Etwas anzeigen, wenn coverUrl null ist -->
-            <div th:if="${coverUrl == null}">
-              <img
-                th:src="@{/svg/filler_img2.png}"
-                alt="Filler Image"
-                style="width: 75%; height: auto"
-              />
-            </div>
-          </th:block>
-        </div>
-        <div class="status">
-          <p
-            th:text="${mangaReihe.status?.beschreibung ?: 'Status nicht verfügbar'}"
+        <div class="mangaReihe-container">
+          <div class="cover-bild">
+            <th:block th:with="coverUrl=${coverUrlsMap[mangaReihe.id]}">
+              <!-- Prüfen, ob coverUrl nicht null ist -->
+              <img th:if="${coverUrl != null}" th:src="${coverUrl}" />
+              <!-- Optional: Etwas anzeigen, wenn coverUrl null ist -->
+              <div th:if="${coverUrl == null}">
+                <img
+                  th:src="@{/svg/filler_img2.png}"
+                  alt="Filler Image"
+                  style="width: 75%; height: auto"
+                />
+              </div>
+            </th:block>
+          </div>
+          <div class="status">
+            <p
+              th:text="${mangaReihe.status?.beschreibung ?: 'Status nicht verfügbar'}"
+            >
+              Status
+            </p>
+          </div>
+          <div class="verlag">
+            <p th:text="${mangaReihe.verlag?.name ?: 'Verlag nicht verfügbar'}">
+              Verlag
+            </p>
+          </div>
+          <div class="typ">
+            <p
+              th:text="${mangaReihe.typ?.bezeichnung ?: 'Typ nicht verfügbar'}"
+            >
+              Typ
+            </p>
+          </div>
+          <div class="format">
+            <p
+              th:text="${mangaReihe.format?.bezeichnung ?: 'Format nicht verfügbar'}"
+            >
+              Format
+            </p>
+          </div>
+          <div class="titel">
+            <p th:text="${mangaReihe.titel ?: 'Titel nicht verfügbar'}">
+              Titel
+            </p>
+          </div>
+          <div class="baende">
+            <p th:text="${mangaReihe.anzahlBaende ?: 'Bände nicht verfügbar'}">
+              Bände
+            </p>
+          </div>
+          <div class="preis">
+            <p
+              th:text="${mangaReihe.preisProBandString ?: 'Preis nicht verfügbar'}"
+            >
+              Preis
+            </p>
+          </div>
+          <div class="gesamtpreis">
+            <p
+              th:text="${mangaReihe.gesamtpreisString ?: 'Gesamtpreis nicht verfügbar'}"
+            >
+              Gesamtpreis
+            </p>
+          </div>
+          <!-- Button welcher einen auf Manga Passion weiterleitet -->
+          <button
+            type="button"
+            class="MP-button"
+            title="Manga Passion"
+            th:data-id="${mangaReihe.id}"
           >
-            Status
-          </p>
-        </div>
-        <div class="verlag">
-          <p th:text="${mangaReihe.verlag?.name ?: 'Verlag nicht verfügbar'}">
-            Verlag
-          </p>
-        </div>
-        <div class="typ">
-          <p th:text="${mangaReihe.typ?.bezeichnung ?: 'Typ nicht verfügbar'}">
-            Typ
-          </p>
-        </div>
-        <div class="format">
-          <p
-            th:text="${mangaReihe.format?.bezeichnung ?: 'Format nicht verfügbar'}"
-          >
-            Format
-          </p>
-        </div>
-        <div class="titel">
-          <p th:text="${mangaReihe.titel ?: 'Titel nicht verfügbar'}">Titel</p>
-        </div>
-        <div class="baende">
-          <p th:text="${mangaReihe.anzahlBaende ?: 'Bände nicht verfügbar'}">
-            Bände
-          </p>
-        </div>
-        <div class="preis">
-          <p
-            th:text="${mangaReihe.preisProBandString ?: 'Preis nicht verfügbar'}"
-          >
-            Preis
-          </p>
-        </div>
-        <div class="gesamtpreis">
-          <p
-            th:text="${mangaReihe.gesamtpreisString ?: 'Gesamtpreis nicht verfügbar'}"
-          >
-            Gesamtpreis
-          </p>
-        </div>
-        <!-- Button welcher einen auf Manga Passion weiterleitet -->
-        <button
-          type="button"
-          class="MP-button"
-          title="Manga Passion"
-          th:data-id="${mangaReihe.id}"
-        >
-          <!-- SVG Manga Passion Icon -->
-          <img
-            th:src="@{/svg/MangaPassion_logo.png}"
-            alt="SVG"
-            style="height: 19px; width: 19px"
-          />
-        </button>
+            <!-- SVG Manga Passion Icon -->
+            <img
+              th:src="@{/svg/MangaPassion_logo.png}"
+              alt="SVG"
+              style="height: 19px; width: 19px"
+            />
+          </button>
 
-        <!-- Button welcher einen auf AniList weiterleitet -->
-        <button
-          type="button"
-          class="AL-button"
-          title="AniList"
-          th:data-id="${mangaReihe.id}"
-        >
-          <!-- SVG AniList Icon -->
-          <img
-            th:src="@{/svg/AniList_logo.png}"
-            alt="SVG"
-            style="height: 19px; width: 19px"
-          />
-        </button>
+          <!-- Button welcher einen auf AniList weiterleitet -->
+          <button
+            type="button"
+            class="AL-button"
+            title="AniList"
+            th:data-id="${mangaReihe.id}"
+          >
+            <!-- SVG AniList Icon -->
+            <img
+              th:src="@{/svg/AniList_logo.png}"
+              alt="SVG"
+              style="height: 19px; width: 19px"
+            />
+          </button>
 
-        <!-- Button um die Reihe zu bearbeiten -->
-        <button
-          type="button"
-          class="edit-button"
-          title="Edit"
-          th:data-id="${mangaReihe.id}"
+          <!-- Button um die Reihe zu bearbeiten -->
+          <button
+            type="button"
+            class="edit-button"
+            title="Edit"
+            th:data-id="${mangaReihe.id}"
+          >
+            <!-- SVG Edit Icon -->
+            <img
+              th:src="@{/svg/edit_icon.svg}"
+              alt="SVG"
+              style="height: 17px; width: 17px"
+            />
+          </button>
+
+          <!-- Button zum Aufklappen der Bände -->
+          <button
+            type="button"
+            class="toggle-bands-button"
+            title="Aufklappen"
+            th:data-id="${mangaReihe.id}"
+            th:onclick="'toggleBands(' + ${mangaReihe.id} + ')'"
+          >
+            <!-- SVG Aufklappen Icon -->
+            <img
+              th:src="@{/svg/down_icon.svg}"
+              alt="SVG"
+              style="height: 17px; width: 17px"
+            />
+          </button>
+        </div>
+
+        <!-- Container für die Bände, der standardmäßig ausgeblendet ist -->
+        <div
+          th:id="'bands-' + ${mangaReihe.id}"
+          class="bands-container"
+          style="display: none"
         >
-          <!-- SVG Edit Icon -->
-          <img
-            th:src="@{/svg/edit_icon.svg}"
-            alt="SVG"
-            style="height: 17px; width: 17px"
-          />
-        </button>
+          <!-- Hier werden die Bände dynamisch eingefügt -->
+        </div>
       </div>
     </div>
 
@@ -826,6 +887,7 @@
     </div>
 
     <script src="/js/scrollToTop.js"></script>
+    <script th:src="@{/js/home.js}"></script>
     <script src="/js/popup_add_reihe.js"></script>
     <script src="/js/popup_edit_reihe.js"></script>
   </body>
