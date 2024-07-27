@@ -75,6 +75,7 @@ CREATE TABLE baende (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     manga_reihe_id BIGINT,
     band_nr INT,
+    band_index INT,
     preis DECIMAL(10, 2),
     bild_url VARCHAR(255) DEFAULT 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png?20200912122019',
     mp_url VARCHAR(255),

@@ -544,7 +544,8 @@
             class="toggle-bands-button"
             title="Aufklappen"
             th:data-id="${mangaReihe.id}"
-            th:onclick="'toggleBands(' + ${mangaReihe.id} + ')'"
+            th:data-title="${mangaReihe.titel}"
+            onclick="toggleBands(this.getAttribute('data-id'), this.getAttribute('data-title'))"
           >
             <!-- SVG Aufklappen Icon -->
             <img
@@ -886,9 +887,84 @@
       </div>
     </div>
 
+    <!-- Bereich für das PopUp zum Bearbeiten von Bänden -->
+<div id="editBaendePopupContainer" class="popup-container">
+  <div class="popup-edit-band">
+      <div class="popup-header">
+          <div class="cover-bild-edit">
+              <img id="editBandCoverImage" src="" alt="Cover Bild" />
+          </div>
+          <label id="editBandTitleLabel" class="title-label">Titel</label>
+          <button type="button" class="save-button-edit" onclick="saveBand()">Save</button>
+      </div>
+      <div class="popup-body">
+          <form id="editBandForm" action="/editBand" method="post">
+              <!-- Erste Reihe -->
+              <div class="form-row form-row-1">
+                  <div class="input-group">
+                      <label for="manga_reihe_id">Manga Reihe ID</label>
+                      <input type="text" id="manga_reihe_id" name="manga_reihe_id" readonly />
+                  </div>
+                  <div class="input-group">
+                      <label for="band_nr">Band Nr</label>
+                      <input type="text" id="band_nr" name="band_nr" readonly />
+                  </div>
+                  <div class="input-group">
+                      <label for="band_index">Band Index</label>
+                      <input type="text" id="band_index" name="band_index" />
+                  </div>
+              </div>
+
+              <!-- Zweite Reihe -->
+              <div class="form-row form-row-2">
+                  <div class="input-group">
+                      <label for="preis">Preis</label>
+                      <input type="text" id="preis" name="preis" />
+                  </div>
+                  <div class="input-group">
+                      <label for="aenderung_preis">Änderung Preis</label>
+                      <input type="text" id="aenderung_preis" name="aenderung_preis" />
+                  </div>
+              </div>
+
+              <!-- Dritte Reihe -->
+              <div class="form-row form-row-3">
+                  <div class="input-group">
+                      <label for="bild_url">Bild URL</label>
+                      <input type="text" id="bild_url" name="bild_url" />
+                  </div>
+                  <div class="input-group">
+                      <label for="mp_url">MP URL</label>
+                      <input type="text" id="mp_url" name="mp_url" />
+                  </div>
+              </div>
+
+              <!-- Vierte Reihe -->
+              <div class="form-row form-row-4">
+                  <div class="checkbox-group">
+                      <label for="ist_gelesen">Ist Gelesen</label>
+                      <input type="checkbox" id="ist_gelesen" name="ist_gelesen" />
+                  </div>
+                  <div class="checkbox-group">
+                      <label for="ist_spezial">Ist Spezial</label>
+                      <input type="checkbox" id="ist_spezial" name="ist_spezial" />
+                  </div>
+              </div>
+
+              <!-- Letzte Reihe -->
+              <div class="form-row form-row-5">
+                  <button type="button" class="mp-autofill-button" onclick="autofillBandData()">MP Autofill</button>
+                  <button type="button" class="cancel-button" onclick="closeEditBandPopup()">Cancel</button>
+              </div>
+          </form>
+      </div>
+  </div>
+</div>
+
     <script src="/js/scrollToTop.js"></script>
     <script th:src="@{/js/home.js}"></script>
     <script src="/js/popup_add_reihe.js"></script>
     <script src="/js/popup_edit_reihe.js"></script>
+    <script src="/js/popup_edit_band.js"></script>
   </body>
 </html>

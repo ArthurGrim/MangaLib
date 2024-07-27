@@ -34,6 +34,9 @@ public class Band {
     @Column(name = "band_nr")
     private Integer bandNr;
 
+    @Column(name = "band_index")
+    private Integer bandIndex;
+
     @Column(name = "preis")
     private BigDecimal preis;
 
