@@ -47,18 +47,16 @@ function saveBand() {
     const istSpezialElement = document.getElementById("ist_spezial");
 
     const bandData = {
-        id: bandIdElement.value ? parseInt(bandIdElement.value, 10) : null,
-        bandNr: bandNrElement.value ? parseInt(bandNrElement.value, 10) : null,
-        bandIndex: bandIndexElement.value ? parseInt(bandIndexElement.value, 10) : null,
-        preis: preisElement.value ? parseFloat(preisElement.value.replace(",", ".")) : null,
-        aenderungPreis: aenderungPreisElement.value ? parseFloat(aenderungPreisElement.value.replace(",", ".")) : null,
+        id: bandIdElement.value,
+        bandNr: bandNrElement.value,
+        bandIndex: bandIndexElement.value,
+        preis: preisElement.value,
+        aenderungPreis: aenderungPreisElement.value,
         bildUrl: bildUrlElement.value,
         mpUrl: mpUrlElement.value,
         istGelesen: istGelesenElement.checked,
-        istSpezial: istSpezialElement.checked
+        istSpecial: istSpezialElement.checked
     };
-
-    console.log('bandData:', bandData);
 
     fetch('/editBand', {
         method: 'POST',
@@ -72,15 +70,24 @@ function saveBand() {
         if (!response.ok) {
             throw new Error('Network response was not ok ' + response.statusText);
         }
+        if (response.status === 204) {
+            return null; // No content to parse
+        }
         return response.json();
     })
     .then(data => {
-        console.log('Success:', data);
+        if (data) {
+            console.log('Success:', data);
+        }
+        // Schließen des Popups oder andere Erfolgsbehandlung
+        document.querySelector("#editBaendePopupContainer").style.display = "none";
+        // Optional: Seite aktualisieren oder UI-Komponenten aktualisieren
     })
     .catch(error => {
         console.error('Error updating band:', error);
     });
 }
+
 
 
 

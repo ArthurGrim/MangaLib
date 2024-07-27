@@ -19,7 +19,6 @@ import de.mangalib.service.SammelbandService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,6 +31,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.time.Year;
 import java.util.ArrayList;
@@ -429,12 +430,73 @@ public class MainController {
         }
     }
 
-    @PostMapping(value = "/editBand", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateBand(@RequestBody Band bandData) {
-        System.out.println("Empfangene Daten: " + bandData);
-        bandService.updateBand(bandData);
-        return ResponseEntity.ok().build();
+    @PostMapping(value = "/editBand", consumes = "application/json", produces = "application/json")
+public ResponseEntity<Void> updateBand(@RequestBody Map<String, Object> bandData) {
+    try {
+        // Wandeln der Map in ein Band Objekt um
+        Band band = new Band();
+        band.setId(Long.parseLong((String) bandData.get("id")));
+        band.setBandNr(Integer.parseInt((String) bandData.get("bandNr")));
+
+        // Überprüfen und setzen von bandIndex, wenn vorhanden
+        String bandIndexString = (String) bandData.get("bandIndex");
+        if (bandIndexString != null && !bandIndexString.isEmpty()) {
+            band.setBandIndex(Integer.parseInt(bandIndexString));
+        } else {
+            band.setBandIndex(null);
+        }
+
+        // Überprüfen und setzen von preis, wenn vorhanden
+        String preisString = (String) bandData.get("preis");
+        if (preisString != null && !preisString.isEmpty()) {
+            band.setPreis(new BigDecimal(preisString));
+        } else {
+            band.setPreis(null);
+        }
+
+        // Überprüfen und setzen von aenderungPreis, wenn vorhanden
+        String aenderungPreisString = (String) bandData.get("aenderungPreis");
+        if (aenderungPreisString != null && !aenderungPreisString.isEmpty()) {
+            band.setAenderungPreis(new BigDecimal(aenderungPreisString));
+        } else {
+            band.setAenderungPreis(null);
+        }
+
+        // Überprüfen und setzen von bildUrl und mpUrl, wenn vorhanden
+        try {
+            String bildUrlString = (String) bandData.get("bildUrl");
+            if (bildUrlString != null && !bildUrlString.isEmpty()) {
+                URI bildUri = new URI(bildUrlString);
+                URL bildUrl = bildUri.toURL();
+                band.setBildUrl(bildUrl);
+            }
+
+            String mpUrlString = (String) bandData.get("mpUrl");
+            if (mpUrlString != null && !mpUrlString.isEmpty()) {
+                URI mpUri = new URI(mpUrlString);
+                URL mpUrl = mpUri.toURL();
+                band.setMpUrl(mpUrl);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        band.setIstGelesen((Boolean) bandData.get("istGelesen"));
+        band.setIstSpecial((Boolean) bandData.get("istSpecial"));
+
+        // Loggen der umgewandelten Band-Daten
+        System.out.println("Umgewandelte Band-Daten: " + band);
+
+        // Update des Bands
+        bandService.updateBand(band);
+
+        return ResponseEntity.noContent().build();
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
+}
+
 
     @GetMapping("/autofillBandData/{bandIndex}")
     public ResponseEntity<Map<String, String>> autofillBandData(@PathVariable String bandIndex) {
