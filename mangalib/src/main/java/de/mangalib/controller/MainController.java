@@ -10,8 +10,6 @@ import de.mangalib.entity.MangaReihe;
 import de.mangalib.entity.Sammelband;
 import de.mangalib.service.StatusService;
 import de.mangalib.service.VerlagService;
-import lombok.Getter;
-import lombok.Setter;
 import de.mangalib.service.TypService;
 import de.mangalib.service.BandService;
 import de.mangalib.service.FormatService;
@@ -21,6 +19,7 @@ import de.mangalib.service.SammelbandService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -35,6 +34,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.Year;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +43,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
-public class MyController {
+public class MainController {
 
     @Autowired
     private StatusService statusService;
@@ -375,38 +375,71 @@ public class MyController {
 
     @GetMapping("/mangaReihe/{mangaReiheId}/bands")
     @ResponseBody
-    public List<BandDto> getBandsForMangaReihe(@PathVariable Long mangaReiheId) {
-        List<Band> baende = bandService.findByMangaReiheId(mangaReiheId);
-        return baende.stream().map(band -> new BandDto(
-                band.getBildUrl() != null ? band.getBildUrl().toString() : "",
-                band.getBandNr(),
-                band.getPreis(),
-                band.isIstGelesen(),
-                band.getMpUrl() != null ? band.getMpUrl().toString() : "")).collect(Collectors.toList());
+    public List<Map<String, Object>> getBandsByMangaReiheId(@PathVariable Long mangaReiheId) {
+        MangaReihe mangaReihe = mangaReiheService.findById(mangaReiheId)
+                .orElseThrow(() -> new RuntimeException("MangaReihe not found"));
+        List<Band> bands = bandService.findByMangaReiheId(mangaReiheId);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Band band : bands) {
+            Map<String, Object> bandData = new HashMap<>();
+            bandData.put("id", band.getId());
+            bandData.put("bildUrl", band.getBildUrl() != null ? band.getBildUrl().toString() : "");
+            bandData.put("bandNr", band.getBandNr());
+            bandData.put("preis", band.getPreis());
+            bandData.put("aenderungPreis", band.getAenderungPreis());
+            bandData.put("istGelesen", band.isIstGelesen());
+            bandData.put("istSpecial", band.getIstSpecial() != null ? band.getIstSpecial() : false);
+            bandData.put("mpUrl", band.getMpUrl() != null ? band.getMpUrl().toString() : "");
+            bandData.put("formattedPreis", String.format("%.2f €", band.getPreis()));
+            bandData.put("bandIndex", band.getBandIndex() != null ? band.getBandIndex() : "");
+            bandData.put("titel", mangaReihe.getTitel());
+            result.add(bandData);
+        }
+        return result;
     }
 
-    @Getter
-    @Setter
-    public static class BandDto {
-        private String bildUrl;
-        private int bandNr;
-        private BigDecimal preis;
-        private boolean istGelesen;
-        private String mpUrl;
+    @GetMapping("/getBand/{bandId}")
+    public ResponseEntity<Map<String, Object>> getBand(@PathVariable Long bandId) {
+        Optional<Band> bandOptional = bandService.findById(bandId);
+        if (bandOptional.isPresent()) {
+            Band band = bandOptional.get();
+            Map<String, Object> bandData = new HashMap<>();
+            bandData.put("id", band.getId());
+            bandData.put("bildUrl", band.getBildUrl() != null ? band.getBildUrl().toString() : "");
+            bandData.put("bandNr", band.getBandNr());
+            bandData.put("preis", band.getPreis());
+            bandData.put("aenderungPreis", band.getAenderungPreis());
+            bandData.put("istGelesen", band.isIstGelesen());
+            bandData.put("istSpecial", band.getIstSpecial() != null ? band.getIstSpecial() : false);
+            bandData.put("mpUrl", band.getMpUrl() != null ? band.getMpUrl().toString() : "");
+            bandData.put("bandIndex", band.getBandIndex() != null ? band.getBandIndex() : "");
 
-        // Constructor
-        public BandDto(String bildUrl, int bandNr, BigDecimal preis, boolean istGelesen, String mpUrl) {
-            this.bildUrl = bildUrl;
-            this.bandNr = bandNr;
-            this.preis = preis;
-            this.istGelesen = istGelesen;
-            this.mpUrl = mpUrl;
-        }
+            // Titel der Manga-Reihe abrufen
+            MangaReihe mangaReihe = band.getMangaReihe();
+            if (mangaReihe != null) {
+                bandData.put("titel", mangaReihe.getTitel());
+            } else {
+                bandData.put("titel", "Unbekannt");
+            }
 
-        // Formatierten Preis zurückgeben
-        public String getFormattedPreis() {
-            return String.format("%.2f €", preis);
+            return ResponseEntity.ok(bandData);
+        } else {
+            return ResponseEntity.notFound().build();
         }
+    }
+
+    @PostMapping(value = "/editBand", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateBand(@RequestBody Band bandData) {
+        System.out.println("Empfangene Daten: " + bandData);
+        bandService.updateBand(bandData);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/autofillBandData/{bandIndex}")
+    public ResponseEntity<Map<String, String>> autofillBandData(@PathVariable String bandIndex) {
+        Map<String, String> autofillData = bandService.autofillBandData(bandIndex);
+        return ResponseEntity.ok(autofillData);
     }
 
 }

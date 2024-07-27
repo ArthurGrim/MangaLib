@@ -15,11 +15,20 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Service
 public class BandService {
 
     @Autowired
     private BandRepository bandRepository;
+
+    private final BandScraper bandScraper;
+
+    public BandService(BandScraper bandScraper) {
+        this.bandScraper = bandScraper;
+    }
 
     /**
      * Findet einen Band anhand der ID.
@@ -211,6 +220,14 @@ public class BandService {
                 if (scrapedData.containsKey(mpUrlKey)) {
                     String mpUrlString = scrapedData.get(mpUrlKey);
                     if (mpUrlString != null && !mpUrlString.isEmpty()) {
+                        // Extrahiere den Index aus dem Link
+                        Pattern pattern = Pattern.compile("volumes/(\\d+)");
+                        Matcher matcher = pattern.matcher(mpUrlString);
+                        if (matcher.find()) {
+                            int bandIndex = Integer.parseInt(matcher.group(1));
+                            band.setBandIndex(bandIndex);
+                        }
+
                         URI mpUri = new URI(mpUrlString);
                         URL mpUrl = mpUri.toURL();
                         band.setMpUrl(mpUrl);
@@ -340,6 +357,14 @@ public class BandService {
                         && !scrapedData.get(mpUrlKey).equals(band.getMpUrl().toString())) {
                     String mpUrlString = scrapedData.get(mpUrlKey);
                     if (mpUrlString != null && !mpUrlString.isEmpty()) {
+                        // Extrahiere den Index aus dem Link
+                        Pattern pattern = Pattern.compile("volumes/(\\d+)");
+                        Matcher matcher = pattern.matcher(mpUrlString);
+                        if (matcher.find()) {
+                            int bandIndex = Integer.parseInt(matcher.group(1));
+                            band.setBandIndex(bandIndex);
+                        }
+
                         URI mpUri = new URI(mpUrlString);
                         URL mpUrl = mpUri.toURL();
                         band.setMpUrl(mpUrl);
@@ -390,14 +415,73 @@ public class BandService {
     /**
      * Gibt eien Liste an Baenden zu einer Mangareihe zurück
      * 
-     * @param mangaReiheId ID der Mangareihe zu welcher die Baende gefunden werden sollen
+     * @param mangaReiheId ID der Mangareihe zu welcher die Baende gefunden werden
+     *                     sollen
      * @return Liste der Baende zu einer Mangareihe
-     */    
+     */
     public List<Band> findByMangaReiheId(Long mangaReiheId) {
-        if(mangaReiheId == null){
+        if (mangaReiheId == null) {
             throw new IllegalArgumentException("Ungültige ID");
         }
         return bandRepository.findByMangaReiheId(mangaReiheId);
+    }
+
+    // Wenn die Attribute des Bands über das editBandPopUp geupdatet wird
+    public void updateBand(Band bandData) {
+        Optional<Band> optionalBand = bandRepository.findById(bandData.getId());
+        if (optionalBand.isPresent()) {
+            Band band = optionalBand.get();
+
+            if (bandData.getBandNr() != null && !bandData.getBandNr().equals(band.getBandNr())) {
+                band.setBandNr(bandData.getBandNr());
+            }
+            if (bandData.getBandIndex() != null && !bandData.getBandIndex().equals(band.getBandIndex())) {
+                band.setBandIndex(bandData.getBandIndex());
+            }
+            if (bandData.getPreis() != null && !bandData.getPreis().equals(band.getPreis())) {
+                band.setPreis(bandData.getPreis());
+            }
+            if (bandData.getAenderungPreis() != null
+                    && !bandData.getAenderungPreis().equals(band.getAenderungPreis())) {
+                band.setAenderungPreis(bandData.getAenderungPreis());
+            }
+            if (bandData.getBildUrl() != null && !bandData.getBildUrl().equals(band.getBildUrl())) {
+                band.setBildUrl(bandData.getBildUrl());
+            }
+            if (bandData.getMpUrl() != null && !bandData.getMpUrl().equals(band.getMpUrl())) {
+                band.setMpUrl(bandData.getMpUrl());
+            }
+            if (bandData.isIstGelesen() != band.isIstGelesen()) {
+                band.setIstGelesen(bandData.isIstGelesen());
+            }
+            if (bandData.getIstSpecial() != band.getIstSpecial()) {
+                band.setIstSpecial(bandData.getIstSpecial());
+            }
+
+            bandRepository.save(band);
+        }
+    }
+
+    // Wenn der MP Autofill Button gedrückt wird
+    public Map<String, String> autofillBandData(String bandIndex) {
+        Map<String, String> scrapedData = bandScraper.scrapeBandData(bandIndex);
+        Map<String, String> relevantData = new HashMap<>();
+
+        if (scrapedData.containsKey("BildUrl")) {
+            relevantData.put("BildUrl", scrapedData.get("BildUrl"));
+        }
+        if (scrapedData.containsKey("Preis")) {
+            String preis = scrapedData.get("Preis");
+            if (preis.contains("€")) {
+                preis = preis.replace("€", "").trim();
+            }
+            relevantData.put("Preis", preis);
+        }
+        if (!scrapedData.isEmpty()) {
+            relevantData.put("mpUrl", "https://www.manga-passion.de/volumes/" + bandIndex);
+        }
+
+        return relevantData;
     }
 
 }

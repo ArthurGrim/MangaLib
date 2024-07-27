@@ -253,6 +253,10 @@ public class MangaReiheService {
         BigDecimal aenderungGesamtPreis = bandService.calculateAenderungGesamtpreis(mangaReihe);
         mangaReihe.setAenderungGesamtpreis(aenderungGesamtPreis);
 
+        if(aenderungGesamtPreis.compareTo(BigDecimal.ZERO) != 0){
+            mangaReihe.setIstEbayPreis(true);
+        }
+
         // Aktualisierung des Gesamtpreises der MangaReihe basierend auf den Bänden
         BigDecimal gesamtpreis = bandService.calculateGesamtpreis(mangaReihe);
         mangaReihe.setGesamtpreis(gesamtpreis);

@@ -308,7 +308,7 @@ body {
 
 .band-container {
   display: grid;
-  grid-template-columns: 100px 5fr 2.7fr 30px 30px 30px 30px;
+  grid-template-columns: 100px 5fr 2.4fr 30px 30px 30px 30px;
   gap: 5px; /* Abstand zwischen den Spalten */
   background-color: var(--bg-panel); /* Hintergrundfarbe des Panels */
   color: var(--font-container); /* Textfarbe */
@@ -693,3 +693,159 @@ body {
 .istGelesen-checkbox span {
   margin-left: 8px;
 }
+
+/* Container für das Popup-Fenster */
+.popup-edit-band-container {
+  display: none; /* Das Popup ist standardmäßig ausgeblendet */
+  position: fixed; /* Positioniert das Popup relativ zum Viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Halbtransparentes schwarzes Overlay */
+  justify-content: center; /* Zentriert das Popup horizontal */
+  align-items: center; /* Zentriert das Popup vertikal */
+  z-index: 1000; /* Stellt sicher, dass das Popup über anderen Inhalten liegt */
+}
+
+/* Das Popup selbst */
+.popup-edit-band {
+  background-color: white; /* Hintergrundfarbe des Popups */
+  padding: 20px;
+  border-radius: 8px; /* Abgerundete Ecken */
+  width: 90%; /* Breite des Popups */
+  max-width: 600px; /* Maximale Breite des Popups */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Schatteneffekt */
+  display: flex;
+  flex-direction: column; /* Anordnung der Kinder-Elemente in einer Spalte */
+}
+
+/* Header des Popups */
+.popup-edit-band .popup-header-band {
+  display: flex;
+  justify-content: space-between; /* Verteilt den Platz zwischen den Elementen */
+  align-items: center; /* Zentriert die Elemente vertikal */
+  margin-bottom: 20px;
+}
+
+/* Bild im Header des Popups */
+.popup-edit-band .cover-bild-edit-band img {
+  width: 60px;
+  height: auto;
+  border-radius: 4px; /* Abgerundete Ecken */
+}
+
+/* Titel im Header des Popups */
+.popup-edit-band .title-label-band {
+  font-size: 18px;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+/* Speichern-Button im Header des Popups */
+.popup-edit-band .save-button-band {
+  background-color: #4caf50; /* Grüne Hintergrundfarbe */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Körper des Popups */
+.popup-edit-band .popup-body-band {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Reihen im Körper des Popups */
+.popup-edit-band .form-row-band {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Eingabegruppen im Körper des Popups */
+.popup-edit-band .input-group-band {
+  flex-basis: 48%; /* Breite von 48% des Eltern-Containers */
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-edit-band .input-group-band label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+/* Eingabefelder im Körper des Popups */
+.popup-edit-band .input-group-band input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Gruppen für Checkboxen im Körper des Popups */
+.popup-edit-band .checkbox-group-band {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Speichern, Abbrechen und Autofill Buttons */
+.popup-edit-band .form-actions-band {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Abbrechen-Button */
+.popup-edit-band .cancel-button-band {
+  background-color: #f44336; /* Rote Hintergrundfarbe */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Autofill-Button */
+.popup-edit-band .mp-autofill-button-band {
+  background-color: #2196f3; /* Blaue Hintergrundfarbe */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Media Queries für kleinere Bildschirme */
+@media (max-width: 768px) {
+  .popup-edit-band .input-group-band,
+  .popup-edit-band .checkbox-group-band {
+    flex-basis: 100%; /* Breite von 100% des Eltern-Containers */
+  }
+
+  .popup-edit-band .save-button-band,
+  .popup-edit-band .cancel-button-band,
+  .popup-edit-band .mp-autofill-button-band {
+    flex-basis: calc(50% - 10px); /* Breite von 50% minus 10px Abstand */
+  }
+}
+
+@media (max-width: 480px) {
+  .popup-edit-band .form-row-band {
+    flex-direction: column; /* Anordnung der Kinder-Elemente in einer Spalte */
+  }
+
+  .popup-edit-band .input-group-band.title,
+  .popup-edit-band .input-group-band.format {
+    flex-basis: 100%; /* Breite von 100% des Eltern-Containers */
+  }
+
+  .popup-edit-band .form-row-3-band {
+    grid-template-columns: 1fr; /* Eine Spalte im Grid */
+  }
+}
+
