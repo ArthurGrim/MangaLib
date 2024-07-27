@@ -308,7 +308,7 @@ body {
 
 .band-container {
   display: grid;
-  grid-template-columns: 100px 5fr 3fr 30px 30px 30px 30px;
+  grid-template-columns: 100px 5fr 2.7fr 30px 30px 30px 30px;
   gap: 5px; /* Abstand zwischen den Spalten */
   background-color: var(--bg-panel); /* Hintergrundfarbe des Panels */
   color: var(--font-container); /* Textfarbe */
@@ -651,4 +651,45 @@ body {
   padding: 10px 15px;
   font-size: 100%;
   border-radius: 10px;
+}
+
+.istGelesen-checkbox {
+  display: flex;
+  align-items: center;
+  margin: auto;
+}
+
+.istGelesen-checkbox input[type="checkbox"] {
+  display: none; /* Verstecke das standardmäßige Checkbox-Element */
+}
+
+.istGelesen-checkbox label {
+  width: 17px;
+  height: 17px;
+  border: 2px solid var(--blue-normal);
+  border-radius: 4px;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+}
+
+.istGelesen-checkbox label::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background-color: var(--blue-normal);
+  border-radius: 2px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.2s ease-in-out;
+}
+
+.istGelesen-checkbox input[type="checkbox"]:checked + label::before {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.istGelesen-checkbox span {
+  margin-left: 8px;
 }
