@@ -80,7 +80,7 @@ CREATE TABLE baende (
     bild_url VARCHAR(255) DEFAULT 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png?20200912122019',
     mp_url VARCHAR(255),
     ist_special BOOLEAN,
-    aenderung_preis DECIMAL(10 ,2),
+    aenderung_preis DECIMAL(10 ,2) DEFAULT 0.00,
     erstellt_am DATE DEFAULT (CURRENT_DATE),
     aktualisiert_am DATE DEFAULT (CURRENT_DATE),
     ist_gelesen BOOLEAN DEFAULT FALSE,
