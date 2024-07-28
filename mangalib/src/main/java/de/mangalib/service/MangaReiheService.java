@@ -2,6 +2,7 @@ package de.mangalib.service;
 
 import de.mangalib.repository.MangaReiheRepository;
 import de.mangalib.repository.StatusRepository;
+import de.mangalib.entity.Band;
 import de.mangalib.entity.Format;
 import de.mangalib.entity.MangaDetails;
 import de.mangalib.entity.MangaReihe;
@@ -35,6 +36,7 @@ public class MangaReiheService {
     private final TypRepository typRepository;
     private final FormatRepository formatRepository;
     private final MangaDetailsRepository mangaDetailsRepository;
+    private final BandRepository bandRepository;
 
     @Autowired
     private StatusService statusService;
@@ -64,6 +66,7 @@ public class MangaReiheService {
         this.typRepository = typRepository;
         this.formatRepository = formatRepository;
         this.mangaDetailsRepository = mangaDetailsRepository;
+        this.bandRepository = bandRepository;
     }
 
     // Eine Methode, um alle MangaReihe-Objekte aus der Datenbank abzurufen
@@ -119,7 +122,7 @@ public class MangaReiheService {
     @Transactional
     public MangaReihe saveMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
             String titel, Integer anzahlBaende, BigDecimal preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
-            String anilistUrl, Long sammelbandTypId, BigDecimal gesamtpreisAenderung, Map<String, String> scrapedData) {
+            String anilistUrl, Long sammelbandTypId, BigDecimal gesamtpreisAenderung, Boolean istGelesen, Map<String, String> scrapedData) {
         System.out.println("SaveMangaReihe gestartet");
 
         MangaReihe mangaReihe = createMangaReihe(mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
@@ -130,7 +133,7 @@ public class MangaReiheService {
         System.out.println("MangaReihe Objekt erstellt");
 
         System.out.println("Setze Details");
-        MangaDetails details = mangaDetailsService.createMangaDetails(savedMangaReihe, anilistUrl, sammelbandTypId,
+        MangaDetails details = mangaDetailsService.createMangaDetails(savedMangaReihe, anilistUrl,  sammelbandTypId, istGelesen,
                 scrapedData);
         mangaDetailsRepository.save(details);
         System.out.println("Details gesetzt");
@@ -148,6 +151,8 @@ public class MangaReiheService {
         savedMangaReihe.setPreisProBand(
                 gesamtpreis.divide(BigDecimal.valueOf(savedMangaReihe.getAnzahlBaende()), 2, RoundingMode.HALF_UP));
         mangaReiheRepository.save(savedMangaReihe);
+
+        updateBaendeIstGelesenStatus(details);
 
         return savedMangaReihe;
     }
@@ -227,7 +232,7 @@ public class MangaReiheService {
     public Optional<MangaReihe> updateMangaReihe(Long mangaReiheId, Integer mangaIndex, Long statusId, Long verlagId,
             Long typId, Long formatId, String titel, Integer anzahlBaende, BigDecimal preisProBand,
             Boolean istVergriffen, Boolean istEbayPreis, String anilistUrl, String coverUrl, Long sammelbandTypId,
-            BigDecimal gesamtpreisAenderung, Map<String, String> scrapedData) {
+            BigDecimal gesamtpreisAenderung, Boolean istGelesen, Map<String, String> scrapedData) {
         System.out.println("----------------------updateMangaReihe gestartet----------------------");
 
         Optional<MangaReihe> mangaReiheOptional = findById(mangaReiheId);
@@ -243,7 +248,7 @@ public class MangaReiheService {
                 preisProBand, istVergriffen, istEbayPreis,
                 gesamtpreisAenderung != null ? gesamtpreisAenderung : BigDecimal.ZERO);
 
-        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, sammelbandTypId,
+        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, istGelesen, sammelbandTypId, 
                 scrapedData);
         mangaDetailsRepository.save(details);
 
@@ -266,6 +271,9 @@ public class MangaReiheService {
             mangaReihe.setPreisProBand(
                     gesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2, RoundingMode.HALF_UP));
         }
+
+        // Überprüfen und aktualisieren des istGelesen-Status der Bände
+        updateBaendeIstGelesenStatus(details);
 
         return Optional.of(mangaReiheRepository.save(mangaReihe));
     }
@@ -319,9 +327,12 @@ public class MangaReiheService {
         if (!mangaReihe.getIstEbayPreis().equals(istEbayPreis)) {
             mangaReihe.setIstEbayPreis(istEbayPreis);
         }
+        if (preisProBand.compareTo(BigDecimal.ZERO) != 0) {
         mangaReihe.setPreisProBand(preisProBand);
-
+        }
+        if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
         mangaReihe.setAenderungGesamtpreis(gesamtpreisAenderung);
+        }
     }
 
     /**
@@ -541,6 +552,31 @@ public class MangaReiheService {
             return mangaReiheRepository.save(mangaReihe);
         });
     }
+
+    /**
+ * Überprüft und aktualisiert den istGelesen-Status aller Bände basierend auf dem istGelesen-Status der MangaDetails.
+ * 
+ * @param mangaDetails Die MangaDetails, deren istGelesen-Status überprüft und aktualisiert werden soll.
+ */
+private void updateBaendeIstGelesenStatus(MangaDetails mangaDetails) {
+    List<Band> baende = bandRepository.findByMangaReiheId(mangaDetails.getMangaReihe().getId());
+
+    if (mangaDetails.isIstGelesen()) {
+        baende.forEach(band -> {
+            if (!band.isIstGelesen()) {
+                band.setIstGelesen(true);
+                bandRepository.save(band);
+            }
+        });
+    } else {
+        baende.forEach(band -> {
+            if (band.isIstGelesen()) {
+                band.setIstGelesen(false);
+                bandRepository.save(band);
+            }
+        });
+    }
+}
 
     // ------------------------------Filtern--------------------------------
 

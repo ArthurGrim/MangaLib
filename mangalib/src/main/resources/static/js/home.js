@@ -1,4 +1,5 @@
 function toggleBands(mangaReiheId) {
+    console.log(`Toggling bands for ID ${mangaReiheId}`);
   const bandsContainer = document.getElementById('bands-' + mangaReiheId);
   if (bandsContainer) {
       if (bandsContainer.style.display === 'none') {
@@ -11,14 +12,11 @@ function toggleBands(mangaReiheId) {
                         <div class="band-container">
                             <img src="${band.bildUrl}" alt="Band Bild" />
                             <p>${band.titel}, Band: ${band.bandNr}</p>
-                            <p>${parseFloat(band.preis).toFixed(2)} €</p>
+                            <p>${band.totalPreis}</p>
                             <button class="MP-link" onclick="window.open('${band.mpUrl}', '_blank')">
                                 <img src="/svg/MangaPassion_logo.png" alt="MP" style="height: 17px; width: 17px"/>
                             </button>
-                            <div class="istGelesen-checkbox">
-                                <input type="checkbox" id="checkbox-${mangaReiheId}-${band.id}" ${band.istGelesen ? 'checked' : ''}/>
-                                <label for="checkbox-${mangaReiheId}-${band.id}"></label>
-                            </div>
+                            <div class="istGelesen-label ${band.istGelesen ? 'checked' : ''}"></div>
                             <button class="edit-band-button" data-id="${band.id}">
                                 <img src="/svg/edit_icon.svg" alt="Edit" style="height: 17px; width: 17px"/>
                             </button>

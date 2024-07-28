@@ -92,7 +92,7 @@ public class MangaDetailsService {
      * @param scrapedData     Die gescrapten Daten.
      * @return Die erstellte MangaDetails.
      */
-    public MangaDetails createMangaDetails(MangaReihe savedMangaReihe, String anilistUrl, Long sammelbandTypId,
+    public MangaDetails createMangaDetails(MangaReihe savedMangaReihe, String anilistUrl, Long sammelbandTypId, Boolean istGelesen,
             Map<String, String> scrapedData) {
         MangaDetails details = new MangaDetails();
         details.setMangaReihe(savedMangaReihe);
@@ -103,6 +103,9 @@ public class MangaDetailsService {
             Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId).orElse(null);
             details.setSammelbaende(sammelband);
             System.out.println(details.getSammelbaende().getId());
+        }
+        if(istGelesen != null){
+            details.setIstGelesen(istGelesen);
         }
         else {
             Sammelband defaultSammelband = sammelbaendeService.findById(5L).orElse(null);
@@ -158,7 +161,7 @@ public class MangaDetailsService {
      *                        wurden.
      * @return Die aktualisierten MangaDetails.
      */
-    public MangaDetails updateMangaDetails(MangaReihe mangaReihe, String anilistUrl, String coverUrl,
+    public MangaDetails updateMangaDetails(MangaReihe mangaReihe, String anilistUrl, String coverUrl, boolean istGelesen,
             Long sammelbandTypId,
             Map<String, String> scrapedData) {
         MangaDetails details = mangaReihe.getMangaDetails();
@@ -171,6 +174,9 @@ public class MangaDetailsService {
         }
         if (coverUrl != null && !coverUrl.equals(details.getCoverUrl())) {
             details.setCoverUrl(coverUrl);
+        }
+        if(details.isIstGelesen() != istGelesen){
+            details.setIstGelesen(istGelesen);
         }
         if (sammelbandTypId != null
                 && (details.getSammelbaende() == null || !details.getSammelbaende().getId().equals(sammelbandTypId))) {

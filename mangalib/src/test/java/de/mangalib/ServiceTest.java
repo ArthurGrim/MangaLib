@@ -28,6 +28,7 @@ public class ServiceTest {
         String titel = "Test Titel";
         Integer anzahlBaende = 10;
         BigDecimal preisProBand = new BigDecimal("5.99");
+        Boolean istGelesen = false;
         Boolean istVergriffen = false;
         Boolean istEbayPreis = false;
         String anilistUrl = "https://testurl.com";
@@ -37,7 +38,7 @@ public class ServiceTest {
     
         // Methode aufrufen
         MangaReihe gespeicherteMangaReihe = mangaReiheService.saveMangaReihe(mangaIndex, statusId, verlagId, typId, formatId, titel,
-                anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, erweitereDetails);
+                anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, istGelesen, erweitereDetails);
     
         System.out.println("Gespeicherte MangaReihe: " + gespeicherteMangaReihe);
         // Ergebnisse überprüfen

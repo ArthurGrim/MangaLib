@@ -244,7 +244,8 @@ public class MainController {
             Long formatId = Long.valueOf((String) requestData.get("formatId"));
             String titel = (String) requestData.get("titel");
             Integer anzahlBaende = (Integer) requestData.get("anzahlBaende");
-            BigDecimal preisProBand = new BigDecimal((String) requestData.get("preisProBand"));
+            BigDecimal preisProBand = requestData.containsKey("preisProBand") ? new BigDecimal((String) requestData.get("preisProBand")) : BigDecimal.ZERO;
+            Boolean istGelesen = (Boolean) requestData.get("istGelesen");
             Boolean istVergriffen = (Boolean) requestData.get("istVergriffen");
             Boolean istEbayPreis = (Boolean) requestData.get("istEbayPreis");
             String anilistUrl = (String) requestData.get("anilistUrl");
@@ -252,7 +253,7 @@ public class MainController {
             Long sammelbandTypId = requestData.get("sammelbandTypId") != null
                     ? Long.valueOf((String) requestData.get("sammelbandTypId"))
                     : null;
-            BigDecimal gesamtpreisAenderung = new BigDecimal((String) requestData.get("gesamtpreisAenderung"));
+            BigDecimal gesamtpreisAenderung = requestData.containsKey("gesamtpreisAenderung") ? new BigDecimal((String) requestData.get("gesamtpreisAenderung")) : BigDecimal.ZERO;
             @SuppressWarnings("unchecked")
             Map<String, String> scrapedData = (Map<String, String>) requestData.get("scrapedData");
             Boolean istEdit = Boolean.valueOf(scrapedData.get("istEdit"));
@@ -265,14 +266,14 @@ public class MainController {
                 System.out.println("Eine neue Reihe wird hinzugefügt");
                 savedMangaReihe = mangaReiheService.saveMangaReihe(mangaIndex, statusId, verlagId, typId,
                         formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
-                        sammelbandTypId, gesamtpreisAenderung, scrapedData);
+                        sammelbandTypId, gesamtpreisAenderung, istGelesen, scrapedData);
             } else {
                 System.out.println("Die Reihe wird aktualisiert");
                 savedMangaReihe = mangaReiheService
                         .updateMangaReihe(mangaReiheId, mangaIndex, statusId, verlagId, typId,
                                 formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
                                 coverUrl,
-                                sammelbandTypId, gesamtpreisAenderung, scrapedData)
+                                sammelbandTypId, gesamtpreisAenderung, istGelesen, scrapedData)
                         .orElse(null);
             }
             return ResponseEntity.ok(savedMangaReihe);
@@ -341,6 +342,7 @@ public class MainController {
         response.put("anzahlBaende", mangaReihe.getAnzahlBaende());
         BigDecimal preisProBand = mangaReihe.getPreisProBand();
         response.put("preisProBand", String.valueOf(preisProBand).replace(".", ","));
+        response.put("istGelesen", mangaReihe.getMangaDetails().isIstGelesen());
         response.put("istEbayPreis", mangaReihe.getIstEbayPreis());
         response.put("istVergriffen", mangaReihe.getIstVergriffen());
         BigDecimal gesamtpreisAenderung = mangaReihe.getAenderungGesamtpreis() != null
@@ -354,7 +356,7 @@ public class MainController {
             MangaDetails details = mangaReihe.getMangaDetails();
             response.put("anilistUrl", details.getAnilistUrl() != null ? details.getAnilistUrl() : null);
             // Überprüfen Sie zuerst, ob details.getSammelbaende() nicht null ist
-            if (details.getSammelbaende() != null) {
+            if (details.getSammelbaende().getId() != 1) {
                 response.put("istSammelband", true);
                 response.put("sammelbandTypId", details.getSammelbaende().getId());
                 response.put("sammelbandTyp", details.getSammelbaende().getTyp());
@@ -395,6 +397,10 @@ public class MainController {
             bandData.put("formattedPreis", String.format("%.2f €", band.getPreis()));
             bandData.put("bandIndex", band.getBandIndex() != null ? band.getBandIndex() : "");
             bandData.put("titel", mangaReihe.getTitel());
+
+            // Calculate and format the total price
+        BigDecimal totalPrice = band.getPreis().add(band.getAenderungPreis());
+        bandData.put("totalPreis", String.format("%.2f €", totalPrice));
             result.add(bandData);
         }
         return result;
@@ -431,72 +437,71 @@ public class MainController {
     }
 
     @PostMapping(value = "/editBand", consumes = "application/json", produces = "application/json")
-public ResponseEntity<Void> updateBand(@RequestBody Map<String, Object> bandData) {
-    try {
-        // Wandeln der Map in ein Band Objekt um
-        Band band = new Band();
-        band.setId(Long.parseLong((String) bandData.get("id")));
-        band.setBandNr(Integer.parseInt((String) bandData.get("bandNr")));
-
-        // Überprüfen und setzen von bandIndex, wenn vorhanden
-        String bandIndexString = (String) bandData.get("bandIndex");
-        if (bandIndexString != null && !bandIndexString.isEmpty()) {
-            band.setBandIndex(Integer.parseInt(bandIndexString));
-        } else {
-            band.setBandIndex(null);
-        }
-
-        // Überprüfen und setzen von preis, wenn vorhanden
-        String preisString = (String) bandData.get("preis");
-        if (preisString != null && !preisString.isEmpty()) {
-            band.setPreis(new BigDecimal(preisString));
-        } else {
-            band.setPreis(null);
-        }
-
-        // Überprüfen und setzen von aenderungPreis, wenn vorhanden
-        String aenderungPreisString = (String) bandData.get("aenderungPreis");
-        if (aenderungPreisString != null && !aenderungPreisString.isEmpty()) {
-            band.setAenderungPreis(new BigDecimal(aenderungPreisString));
-        } else {
-            band.setAenderungPreis(null);
-        }
-
-        // Überprüfen und setzen von bildUrl und mpUrl, wenn vorhanden
+    public ResponseEntity<Void> updateBand(@RequestBody Map<String, Object> bandData) {
         try {
-            String bildUrlString = (String) bandData.get("bildUrl");
-            if (bildUrlString != null && !bildUrlString.isEmpty()) {
-                URI bildUri = new URI(bildUrlString);
-                URL bildUrl = bildUri.toURL();
-                band.setBildUrl(bildUrl);
+            // Wandeln der Map in ein Band Objekt um
+            Band band = new Band();
+            band.setId(Long.parseLong((String) bandData.get("id")));
+            band.setBandNr(Integer.parseInt((String) bandData.get("bandNr")));
+
+            // Überprüfen und setzen von bandIndex, wenn vorhanden
+            String bandIndexString = (String) bandData.get("bandIndex");
+            if (bandIndexString != null && !bandIndexString.isEmpty()) {
+                band.setBandIndex(Integer.parseInt(bandIndexString));
+            } else {
+                band.setBandIndex(null);
             }
 
-            String mpUrlString = (String) bandData.get("mpUrl");
-            if (mpUrlString != null && !mpUrlString.isEmpty()) {
-                URI mpUri = new URI(mpUrlString);
-                URL mpUrl = mpUri.toURL();
-                band.setMpUrl(mpUrl);
+            // Überprüfen und setzen von preis, wenn vorhanden
+            String preisString = (String) bandData.get("preis");
+            if (preisString != null && !preisString.isEmpty()) {
+                band.setPreis(new BigDecimal(preisString));
+            } else {
+                band.setPreis(null);
             }
+
+            // Überprüfen und setzen von aenderungPreis, wenn vorhanden
+            String aenderungPreisString = (String) bandData.get("aenderungPreis");
+            if (aenderungPreisString != null && !aenderungPreisString.isEmpty()) {
+                band.setAenderungPreis(new BigDecimal(aenderungPreisString));
+            } else {
+                band.setAenderungPreis(null);
+            }
+
+            // Überprüfen und setzen von bildUrl und mpUrl, wenn vorhanden
+            try {
+                String bildUrlString = (String) bandData.get("bildUrl");
+                if (bildUrlString != null && !bildUrlString.isEmpty()) {
+                    URI bildUri = new URI(bildUrlString);
+                    URL bildUrl = bildUri.toURL();
+                    band.setBildUrl(bildUrl);
+                }
+
+                String mpUrlString = (String) bandData.get("mpUrl");
+                if (mpUrlString != null && !mpUrlString.isEmpty()) {
+                    URI mpUri = new URI(mpUrlString);
+                    URL mpUrl = mpUri.toURL();
+                    band.setMpUrl(mpUrl);
+                }
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+            band.setIstGelesen((Boolean) bandData.get("istGelesen"));
+            band.setIstSpecial((Boolean) bandData.get("istSpecial"));
+
+            // Loggen der umgewandelten Band-Daten
+            System.out.println("Umgewandelte Band-Daten: " + band);
+
+            // Update des Bands
+            bandService.updateBand(band);
+
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-
-        band.setIstGelesen((Boolean) bandData.get("istGelesen"));
-        band.setIstSpecial((Boolean) bandData.get("istSpecial"));
-
-        // Loggen der umgewandelten Band-Daten
-        System.out.println("Umgewandelte Band-Daten: " + band);
-
-        // Update des Bands
-        bandService.updateBand(band);
-
-        return ResponseEntity.noContent().build();
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
-}
-
 
     @GetMapping("/autofillBandData/{bandIndex}")
     public ResponseEntity<Map<String, String>> autofillBandData(@PathVariable String bandIndex) {
