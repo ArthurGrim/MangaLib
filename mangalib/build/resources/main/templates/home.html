@@ -666,6 +666,10 @@
           <!-- Fünfte Reihe -->
           <div class="form-row form-row-5">
             <div class="checkbox-group">
+              <label for="istgelesen">Gelesen</label>
+              <input type="checkbox" id="istgelesen" name="istgelesen" />
+            </div>
+            <div class="checkbox-group">
               <label for="istvergriffen">Vergriffen</label>
               <input type="checkbox" id="istvergriffen" name="istvergriffen" />
             </div>
@@ -742,7 +746,7 @@
                 <label for="status-edit">Status</label>
                 <select id="status-edit" name="status">
                   <option value=""></option>
-                  <!-- Die Optionen über den Controler abrufen -->
+                  <!-- Die Optionen über den Controller abrufen -->
                   <option
                     th:each="status : ${alleStatus}"
                     th:value="${status.statusId}"
@@ -754,7 +758,7 @@
                 <label for="verlag-edit">Verlag</label>
                 <select id="verlag-edit" name="verlag">
                   <option value=""></option>
-                  <!-- Die Optionen über den Controler abrufen -->
+                  <!-- Die Optionen über den Controller abrufen -->
                   <option
                     th:each="verlag : ${alleVerlage}"
                     th:value="${verlag.verlagId}"
@@ -766,7 +770,7 @@
                 <label for="typ-edit">Typ</label>
                 <select id="typ-edit" name="typ">
                   <option value=""></option>
-                  <!-- Die Optionen über den Controler abrufen -->
+                  <!-- Die Optionen über den Controller abrufen -->
                   <option
                     th:each="typ : ${alleTypen}"
                     th:value="${typ.typId}"
@@ -786,7 +790,7 @@
                 <label for="format-edit">Format</label>
                 <select id="format-edit" name="format">
                   <option value=""></option>
-                  <!-- Die Optionen über den Controler abrufen -->
+                  <!-- Die Optionen über den Controller abrufen -->
                   <option
                     th:each="format : ${alleFormate}"
                     th:value="${format.formatId}"
@@ -805,15 +809,14 @@
                   id="anzahl_baende-edit"
                   name="anzahl_baende"
                 />
-                <!-- Buttons zum Erhöhen/Vermindern -->
               </div>
               <div class="input-group">
                 <label for="preis_pro_band-edit">Preis pro Band in €</label>
-                <input
-                  type="text"
+                <label
                   id="preis_pro_band-edit"
                   name="preis_pro_band"
-                />
+                  class="id-label"
+                ></label>
               </div>
               <div class="input-group">
                 <label for="anilist_url-edit">AniList URL</label>
@@ -827,6 +830,10 @@
 
             <!-- Fünfte Reihe -->
             <div class="form-row form-row-5">
+              <div class="checkbox-group">
+                <label for="istgelesen-edit">Gelesen</label>
+                <input type="checkbox" id="istgelesen-edit" name="istgelesen" />
+              </div>
               <div class="checkbox-group">
                 <label for="istvergriffen-edit">Vergriffen</label>
                 <input
@@ -855,16 +862,16 @@
                 <label for="gesamtpreis_aenderung-edit"
                   >Änderung Preis in €</label
                 >
-                <input
-                  type="text"
+                <label
                   id="gesamtpreis_aenderung-edit"
                   name="gesamtpreis_aenderung"
-                />
+                  class="id-label"
+                ></label>
               </div>
               <div class="input-group">
                 <label for="sammelband_typ-edit">Sammelband Typ</label>
                 <select id="sammelband_typ-edit" name="sammelband_typ">
-                  <!-- Die Optionen über den Controler abrufen -->
+                  <!-- Die Optionen über den Controller abrufen -->
                   <option
                     th:each="sammelband : ${alleSammelbaende}"
                     th:value="${sammelband.id}"
@@ -887,83 +894,106 @@
     </div>
 
     <!-- Bereich für das PopUp zum Bearbeiten von Bänden -->
-<div id="editBaendePopupContainer" class="popup-container">
-  <div class="popup-edit-band">
-      <div class="popup-header">
+    <div id="editBaendePopupContainer" class="popup-container">
+      <div class="popup-edit-band">
+        <div class="popup-header">
           <div class="cover-bild-edit">
-              <img id="editBandCoverImage" src="" alt="Cover Bild" />
+            <img id="editBandCoverImage" src="" alt="Cover Bild" />
           </div>
           <label id="editBandTitleLabel" class="title-label">Titel</label>
-          <button type="button" class="save-button-edit" onclick="saveBand()">Save</button>
-      </div>
-      <div class="popup-body">
+          <button type="button" class="save-button-edit" onclick="saveBand()">
+            Save
+          </button>
+        </div>
+        <div class="popup-body">
+          <div class="loading-label-band-edit" style="display: none">Lädt...</div>
           <form id="editBandForm" action="/editBand" method="post">
-              <!-- Erste Reihe -->
-              <div class="form-row form-row-1">
-                  <div class="input-group">
-                      <label for="manga_reihe_id">Manga Reihe ID</label>
-                      <lable id="manga_reihe_id" name="manga_reihe_id" class="id-label"/>
-                  </div>
-                  <div class="input-group">
-                      <label for="band_nr">Band Nr</label>
-                      <lable id="band_nr" name="band_nr" class="id-label"/>
-                  </div>
-                  <div class="input-group">
-                      <label for="band_index">Band Index</label>
-                      <input type="text" id="band_index" name="band_index" />
-                  </div>
+            <!-- Erste Reihe -->
+            <div class="form-row form-row-1">
+              <div class="input-group">
+                <label for="manga_reihe_id">Manga Reihe ID</label>
+                <label
+                  id="manga_reihe_id"
+                  name="manga_reihe_id"
+                  class="id-label"
+                ></label>
               </div>
+              <div class="input-group">
+                <label for="band_nr">Band Nr</label>
+                <label id="band_nr" name="band_nr" class="id-label"></label>
+              </div>
+              <div class="input-group">
+                <label for="band_index">Band Index</label>
+                <input type="text" id="band_index" name="band_index" />
+              </div>
+            </div>
 
-              <!-- Zweite Reihe -->
-              <div class="form-row form-row-2">
-                  <div class="input-group">
-                      <label for="preis">Preis</label>
-                      <input type="text" id="preis" name="preis" />
-                  </div>
-                  <div class="input-group">
-                      <label for="aenderung_preis">Änderung Preis</label>
-                      <input type="text" id="aenderung_preis" name="aenderung_preis" />
-                  </div>
+            <!-- Zweite Reihe -->
+            <div class="form-row form-row-2">
+              <div class="input-group">
+                <label for="preis">Preis</label>
+                <input type="text" id="preis" name="preis" />
               </div>
+              <div class="input-group">
+                <label for="aenderung_preis">Änderung Preis</label>
+                <input
+                  type="text"
+                  id="aenderung_preis"
+                  name="aenderung_preis"
+                />
+              </div>
+            </div>
 
-              <!-- Dritte Reihe -->
-              <div class="form-row form-row-3">
-                  <div class="input-group">
-                      <label for="bild_url">Bild URL</label>
-                      <input type="text" id="bild_url" name="bild_url" />
-                  </div>
-                  <div class="input-group">
-                      <label for="mp_url">MP URL</label>
-                      <input type="text" id="mp_url" name="mp_url" />
-                  </div>
+            <!-- Dritte Reihe -->
+            <div class="form-row form-row-3">
+              <div class="input-group">
+                <label for="bild_url">Bild URL</label>
+                <input type="text" id="bild_url" name="bild_url" />
               </div>
+              <div class="input-group">
+                <label for="mp_url">MP URL</label>
+                <input type="text" id="mp_url" name="mp_url" />
+              </div>
+            </div>
 
-              <!-- Vierte Reihe -->
-              <div class="form-row form-row-4">
-                  <div class="checkbox-group">
-                      <label for="ist_gelesen">Ist Gelesen</label>
-                      <input type="checkbox" id="ist_gelesen" name="ist_gelesen" />
-                  </div>
-                  <div class="checkbox-group">
-                      <label for="ist_spezial">Ist Spezial</label>
-                      <input type="checkbox" id="ist_spezial" name="ist_spezial" />
-                  </div>
+            <!-- Vierte Reihe -->
+            <div class="form-row form-row-4">
+              <div class="checkbox-group">
+                <label for="ist_gelesen">Ist Gelesen</label>
+                <input type="checkbox" id="ist_gelesen" name="ist_gelesen" />
               </div>
+              <div class="checkbox-group">
+                <label for="ist_spezial">Ist Spezial</label>
+                <input type="checkbox" id="ist_spezial" name="ist_spezial" />
+              </div>
+            </div>
 
-              <!-- Letzte Reihe -->
-              <div class="form-row form-row-5">
-                  <button type="button" class="mp-autofill-button" onclick="autofillBandData()">MP Autofill</button>
-                  <button type="button" class="cancel-button" onclick="closeEditBandPopup()">Cancel</button>
-              </div>
+            <!-- Letzte Reihe -->
+            <div class="form-row form-row-5">
+              <button
+                type="button"
+                class="mp-autofill-button"
+                onclick="autofillBandData()"
+              >
+                MP Autofill
+              </button>
+              <button
+                type="button"
+                class="cancel-button"
+                onclick="closeEditBandPopup()"
+              >
+                Cancel
+              </button>
+            </div>
           </form>
+        </div>
       </div>
-  </div>
-</div>
+    </div>
 
     <script src="/js/scrollToTop.js"></script>
-    <script th:src="@{/js/home.js}"></script>
     <script src="/js/popup_add_reihe.js"></script>
     <script src="/js/popup_edit_reihe.js"></script>
-    <script src="/js/popup_edit_band.js"></script>
+    <script src="/js/popup_edit_baende.js"></script>
+    <script th:src="@{/js/home.js}"></script>
   </body>
 </html>

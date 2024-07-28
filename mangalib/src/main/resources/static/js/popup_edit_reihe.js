@@ -107,17 +107,18 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("typ-edit").value = data.typId;
         document.getElementById("format-edit").value = data.formatId;
         document.getElementById("anzahl_baende-edit").value = data.anzahlBaende;
-        document.getElementById("preis_pro_band-edit").value =
+        document.getElementById("preis_pro_band-edit").textContent =
           data.preisProBand;
         document.getElementById("anilist_url-edit").value = data.anilistUrl;
         document.getElementById("coverUrl-edit").value = data.coverUrl;
+        document.getElementById("istgelesen-edit").checked = data.istGelesen;
         document.getElementById("istvergriffen-edit").checked =
           data.istVergriffen;
         document.getElementById("istebaypreis-edit").checked =
           data.istEbayPreis;
         document.getElementById("istsammelband-edit").checked =
           data.istSammelband;
-        document.getElementById("gesamtpreis_aenderung-edit").value =
+        document.getElementById("gesamtpreis_aenderung-edit").textContent =
           data.gesamtpreisAenderung;
         document.getElementById("sammelband_typ-edit").value =
           data.sammelbandTypId;
@@ -221,18 +222,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const anzahlBaende = document
       .querySelector("#anzahl_baende-edit")
       .value.trim();
-    const preisProBandString = document
-      .querySelector("#preis_pro_band-edit")
-      .value.trim();
-    const preisProBand = preisProBandString.replace(",", ".");
     const anilistUrl = document.querySelector("#anilist_url-edit").value.trim();
     const coverUrl = document.querySelector("#coverUrl-edit").value.trim();
+    const istGelesen = document.querySelector("#istgelesen-edit").checked;
     const istVergriffen = document.querySelector("#istvergriffen-edit").checked;
     const istEbayPreis = document.querySelector("#istebaypreis-edit").checked;
-    const gesamtpreisAenderungString = document
-      .querySelector("#gesamtpreis_aenderung-edit")
-      .value.trim();
-    const gesamtpreisAenderung = gesamtpreisAenderungString.replace(",", ".");
     const istSammelband = document.querySelector("#istsammelband-edit").checked;
     const sammelbandTypId = document.querySelector(
       "#sammelband_typ-edit"
@@ -267,19 +261,6 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("Anzahl der Bände muss eine positive ganze Zahl sein.");
       return;
     }
-    if (!/^\d+(\.\d{1,2})?$/.test(preisProBand)) {
-      alert(
-        "Preis pro Band muss eine Zahl mit maximal zwei Dezimalstellen sein."
-      );
-      return;
-    }
-    if (istEbayPreis && !/^[-+]?\d+(\.\d+)?$/.test(gesamtpreisAenderung)) {
-      alert(
-        "Der eBay-Preis muss eine gültige Dezimalzahl sein (Vorzeichen relevant)."
-      );
-      return;
-    }
-
     if (anilistUrl && !anilistUrl.match(/^https?:\/\/.+$/)) {
       alert("Bitte geben Sie eine gültige AniList-URL ein.");
       return;
@@ -297,11 +278,10 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("FormatId: ", formatId);
     console.log("Titel: ", titel);
     console.log("Anzahl Baende: ", anzahlBaende);
-    console.log("preisProBand: ", preisProBand);
     console.log("anilistUrl: ", anilistUrl);
+    console.log("istGelesen: ", istGelesen);
     console.log("istVergriffen: ", istVergriffen);
     console.log("istEbayPreis: ", istEbayPreis);
-    console.log("gesamtpreisAenderung: ", gesamtpreisAenderung);
     console.log("istSammelband: ", istSammelband);
     console.log("sammelbandTypId: ", sammelbandTypId);
 
@@ -317,10 +297,9 @@ document.addEventListener("DOMContentLoaded", function () {
       formatId,
       titel,
       anzahlBaende: parseInt(anzahlBaende, 10),
-      preisProBand,
+      istGelesen,
       istVergriffen,
       istEbayPreis,
-      gesamtpreisAenderung: istEbayPreis ? gesamtpreisAenderung : "0",
       anilistUrl,
       coverUrl,
       sammelbandTypId: istSammelband ? sammelbandTypId : null,

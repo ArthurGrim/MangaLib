@@ -3,8 +3,10 @@ package de.mangalib.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import de.mangalib.entity.Band;
+import de.mangalib.entity.MangaDetails;
 import de.mangalib.entity.MangaReihe;
 import de.mangalib.repository.BandRepository;
+import de.mangalib.repository.MangaReiheRepository;
 
 import java.util.*;
 import java.time.Year;
@@ -23,6 +25,9 @@ public class BandService {
 
     @Autowired
     private BandRepository bandRepository;
+
+    @Autowired
+    private MangaReiheRepository mangaReiheRepository;
 
     private final BandScraper bandScraper;
 
@@ -292,7 +297,7 @@ public class BandService {
         for (Band band : baende) {
             gesamtpreis = gesamtpreis.add(band.getPreis());
         }
-        gesamtpreis.add(mangaReihe.getAenderungGesamtpreis());
+        gesamtpreis = gesamtpreis.add(mangaReihe.getAenderungGesamtpreis());
         return gesamtpreis;
     }
 
@@ -324,8 +329,12 @@ public class BandService {
                 System.out.println("Aktualisiere existierenden Band: " + band.getBandNr());
                 // Aktualisieren des Preises, wenn die Anzahl der Bände sich nicht geändert hat
                 if (!anzahlBaendeChanged) {
-                    band.setPreis(preisProBand);
-                    band.setAenderungPreis(gesamtpreisAenderung.divide(new BigDecimal(anzahlBaende)));
+                    if (preisProBand.compareTo(BigDecimal.ZERO) != 0) {
+                        band.setPreis(preisProBand);
+                    }
+                    if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
+                        band.setAenderungPreis(gesamtpreisAenderung.divide(new BigDecimal(anzahlBaende)));
+                    }
                 }
             } else {
                 // Erstellen eines neuen Bandes
@@ -426,12 +435,20 @@ public class BandService {
         return bandRepository.findByMangaReiheId(mangaReiheId);
     }
 
-    // Wenn die Attribute des Bands über das editBandPopUp geupdatet wird
+    /**
+     * Aktualisiert einen Band und passt den Preis und den Status der zugehörigen
+     * MangaDetails an.
+     * 
+     * @param bandData Der zu aktualisierende Band.
+     */
     public void updateBand(Band bandData) {
         Optional<Band> optionalBand = bandRepository.findById(bandData.getId());
         if (optionalBand.isPresent()) {
             Band band = optionalBand.get();
 
+            boolean preisChanged = false;
+
+            // Aktualisiere die Attribute des Bands
             if (bandData.getBandNr() != null && !bandData.getBandNr().equals(band.getBandNr())) {
                 band.setBandNr(bandData.getBandNr());
             }
@@ -439,11 +456,14 @@ public class BandService {
                 band.setBandIndex(bandData.getBandIndex());
             }
             if (bandData.getPreis() != null && !bandData.getPreis().equals(band.getPreis())) {
+                preisChanged = true;
                 band.setPreis(bandData.getPreis());
             }
             if (bandData.getAenderungPreis() != null
                     && !bandData.getAenderungPreis().equals(band.getAenderungPreis())) {
+                preisChanged = true;
                 band.setAenderungPreis(bandData.getAenderungPreis());
+                System.out.println("AenderungPreis: "+bandData.getAenderungPreis());
             }
             if (bandData.getBildUrl() != null && !bandData.getBildUrl().equals(band.getBildUrl())) {
                 band.setBildUrl(bandData.getBildUrl());
@@ -459,6 +479,56 @@ public class BandService {
             }
 
             bandRepository.save(band);
+
+            // Berechne und speichere die neuen Gesamtpreise
+            MangaReihe mangaReihe = band.getMangaReihe();
+            System.out.println("Alte Aenderung Gesamtpreis: " + mangaReihe.getAenderungGesamtpreis());
+            BigDecimal neueAenderungGesamtpreis = calculateAenderungGesamtpreis(mangaReihe);
+            System.out.println("Neue Aenderung Gesamtpreis: " + neueAenderungGesamtpreis);
+            mangaReihe.setAenderungGesamtpreis(neueAenderungGesamtpreis);
+            System.out.println("Aenderung Gesamtpreis gesetzt auf: " + mangaReihe.getAenderungGesamtpreis());
+            System.out.println("Alter Gesamtpreis: " + mangaReihe.getGesamtpreis());
+            BigDecimal neuerGesamtpreis = calculateGesamtpreis(mangaReihe);
+            System.out.println("Neuer Gesamtpreis: " + neuerGesamtpreis);
+            mangaReihe.setGesamtpreis(neuerGesamtpreis);
+            System.out.println("Gesamtpreis gesetzt auf: " + mangaReihe.getGesamtpreis());
+
+            // Nur aktualisieren, wenn sich die Anzahl der Bände geändert hat
+            if (preisChanged) {
+                System.out.println("Preis Pro Band wird neu berechnet");
+                mangaReihe.setPreisProBand(
+                        neuerGesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2,
+                                RoundingMode.HALF_UP));
+            }
+
+            if(neueAenderungGesamtpreis.compareTo(BigDecimal.ZERO) != 0){
+                mangaReihe.setIstEbayPreis(true);
+            }
+    
+
+            // Überprüfen und aktualisieren des istGelesen-Status der MangaDetails
+            updateMangaDetailsIstGelesenStatus(mangaReihe.getMangaDetails());
+
+            // Speichere die aktualisierte MangaReihe
+            mangaReiheRepository.save(mangaReihe);
+        }
+    }
+
+    /**
+     * Überprüft den Status aller Bände einer MangaDetails und aktualisiert
+     * entsprechend den istGelesen-Status.
+     * 
+     * @param mangaDetails Die MangaDetails, deren istGelesen-Status überprüft und
+     *                     aktualisiert werden soll.
+     */
+    private void updateMangaDetailsIstGelesenStatus(MangaDetails mangaDetails) {
+        List<Band> baende = bandRepository.findByMangaReiheId(mangaDetails.getMangaReihe().getId());
+        boolean alleBaendeGelesen = baende.stream().allMatch(Band::isIstGelesen);
+
+        if (alleBaendeGelesen && !mangaDetails.isIstGelesen()) {
+            mangaDetails.setIstGelesen(true);
+        } else if (!alleBaendeGelesen && mangaDetails.isIstGelesen()) {
+            mangaDetails.setIstGelesen(false);
         }
     }
 

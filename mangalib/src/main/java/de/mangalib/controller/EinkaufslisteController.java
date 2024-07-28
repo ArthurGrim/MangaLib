@@ -233,7 +233,7 @@ public class EinkaufslisteController {
                     reihe.getTitel(), reihe.getAnzahlBaende() + item.getAnzahlBaende(), item.getPreis(),
                     reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
                     reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
-                    item.getAenderungGesamtpreis(), itemId);
+                    item.getAenderungGesamtpreis(), false, itemId);
 
             einkaufslisteService.updateGekauft(item.getId(), true);
 
@@ -252,7 +252,7 @@ public class EinkaufslisteController {
                     reihe.getTitel(), reihe.getAnzahlBaende() + item.getAnzahlBaende(), item.getPreis(),
                     reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
                     reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
-                    item.getAenderungGesamtpreis(), itemId);
+                    item.getAenderungGesamtpreis(), false, itemId);
 
             einkaufslisteService.updateGekauft(item.getId(), true);
 
@@ -302,7 +302,7 @@ public class EinkaufslisteController {
             Boolean istVergriffen = item.getIstVergriffen();
             Boolean istEbayPreis = item.getIstEbayPreis();
             String anilistUrl = details.getAnilistUrl() != null ? details.getAnilistUrl() : null;
-            Long sammelbandTypId = (details.getSammelbaendeId() != null) ? details.getSammelbaendeId().getId() : null;
+            Long sammelbandTypId = (details.getSammelbaendeId() != null) ? details.getSammelbaendeId().getId() : 1L;
             BigDecimal gesamtpreisAenderung = item.getAenderungGesamtpreis(); // Annahme: gesamtpreisAenderung
                                                                               // ist BigDecimal
 
@@ -329,7 +329,7 @@ public class EinkaufslisteController {
             // Neue MangaReihe erstellen und speichern
             MangaReihe neueReihe = mangaReiheService.saveMangaReihe(
                     mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende, preisProBand,
-                    istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, scrapedData);
+                    istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, false, scrapedData);
 
             System.out.println("Test 3 - Nach der saveMethode");
 

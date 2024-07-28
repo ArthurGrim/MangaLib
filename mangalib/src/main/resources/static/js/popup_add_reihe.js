@@ -142,6 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .value.trim();
     const preisProBand = preisProBandString.replace(",", ".");
     const anilistUrl = document.querySelector("#anilist_url").value.trim();
+    const istGelesen = document.querySelector("#istgelesen").checked;
     const istVergriffen = document.querySelector("#istvergriffen").checked;
     const istEbayPreis = document.querySelector("#istebaypreis").checked;
     const gesamtpreisAenderungString = document
@@ -207,6 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Anzahl Baende: ", anzahlBaende);
     console.log("preisProBand: ", preisProBand);
     console.log("anilistUrl: ", anilistUrl);
+    console.log("istGelesen", istGelesen);
     console.log("istVergriffen: ", istVergriffen);
     console.log("istEbayPreis: ", istEbayPreis);
     console.log("gesamtpreisAenderung: ", gesamtpreisAenderung);
@@ -225,6 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
       titel,
       anzahlBaende: parseInt(anzahlBaende, 10),
       preisProBand,
+      istGelesen,
       istVergriffen,
       istEbayPreis,
       gesamtpreisAenderung: istEbayPreis ? gesamtpreisAenderung : "0",

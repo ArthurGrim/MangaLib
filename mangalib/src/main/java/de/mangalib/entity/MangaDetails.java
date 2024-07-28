@@ -44,7 +44,7 @@ public class MangaDetails {
 
     @ManyToOne
     @JsonBackReference
-    @JoinColumn(name = "sammelbaende_id", referencedColumnName = "id", columnDefinition = "BIGINT DEFAULT 5")
+    @JoinColumn(name = "sammelbaende_id", referencedColumnName = "id", columnDefinition = "BIGINT DEFAULT 1")
     private Sammelband sammelbaende;
 
     @Column(name = "anilist_url")
