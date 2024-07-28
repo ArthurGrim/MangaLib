@@ -17,8 +17,8 @@ function editBand(bandId) {
         .then(data => {
             console.log("Fetched data for band:", data);
             document.getElementById("editBandCoverImage").src = data.bildUrl;
-            document.getElementById("manga_reihe_id").value = data.id;
-            document.getElementById("band_nr").value = data.bandNr;
+            document.getElementById("manga_reihe_id").textContent = data.id;
+            document.getElementById("band_nr").textContent = data.bandNr;
             document.getElementById("band_index").value = data.bandIndex;
             document.getElementById("preis").value = data.preis;
             document.getElementById("aenderung_preis").value = data.aenderungPreis;
@@ -30,7 +30,7 @@ function editBand(bandId) {
             const titleLabel = document.querySelector("#editBaendePopupContainer .title-label");
             titleLabel.textContent = `${data.titel} Band ${data.bandNr}`;
 
-            document.getElementById("editBaendePopupContainer").style.display = "block";
+            document.getElementById("editBaendePopupContainer").style.display = "flex";
         })
         .catch(error => console.error("Error fetching band data:", error));
 }
@@ -79,17 +79,15 @@ function saveBand() {
         if (data) {
             console.log('Success:', data);
         }
-        // Schließen des Popups oder andere Erfolgsbehandlung
+        // Schließen des Popups
         document.querySelector("#editBaendePopupContainer").style.display = "none";
-        // Optional: Seite aktualisieren oder UI-Komponenten aktualisieren
+        // Seite neu laden
+        window.location.reload();
     })
     .catch(error => {
         console.error('Error updating band:', error);
     });
 }
-
-
-
 
 function autofillBandData() {
     const bandIndex = document.getElementById("band_index").value;

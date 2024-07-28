@@ -53,7 +53,7 @@ public class Band {
     private Boolean istSpecial; 
     
     @Column(name = "aenderung_preis", precision = 10, scale = 2)
-    private BigDecimal aenderungPreis;
+    private BigDecimal aenderungPreis = BigDecimal.ZERO;
 
     @CreationTimestamp
     @Temporal(TemporalType.DATE) // Nur das Datum ohne Uhrzeit
