@@ -57,12 +57,12 @@ function saveBand() {
         return;
     }
 
-    if (!bildUrlElement.value.trim() || !bildUrlElement.value.match(/^https?:\/\/.+$/)) {
+    if (bildUrlElement.value.trim() && !bildUrlElement.value.match(/^https?:\/\/.+$/)) {
         alert("Bitte geben Sie eine gültige Bild-URL ein.");
         return;
     }
 
-    if (!mpUrlElement.value.trim() || !mpUrlElement.value.match(/^https?:\/\/.+$/)) {
+    if (mpUrlElement.value.trim() && !mpUrlElement.value.match(/^https?:\/\/.+$/)) {
         alert("Bitte geben Sie eine gültige MP-URL ein.");
         return;
     }

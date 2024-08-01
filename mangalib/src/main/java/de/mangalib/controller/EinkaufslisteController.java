@@ -303,8 +303,8 @@ public class EinkaufslisteController {
             Boolean istEbayPreis = item.getIstEbayPreis();
             String anilistUrl = details.getAnilistUrl() != null ? details.getAnilistUrl() : null;
             Long sammelbandTypId = (details.getSammelbaendeId() != null) ? details.getSammelbaendeId().getId() : 1L;
-            BigDecimal gesamtpreisAenderung = item.getAenderungGesamtpreis(); // Annahme: gesamtpreisAenderung
-                                                                              // ist BigDecimal
+            BigDecimal gesamtpreisAenderung = item.getAenderungGesamtpreis();
+            System.out.println("EinkaufslisteController Aenderung Gesamtpreis: " + gesamtpreisAenderung);
 
             System.out.println("Test 1");
 

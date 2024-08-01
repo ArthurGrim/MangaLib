@@ -92,7 +92,8 @@ public class MangaDetailsService {
      * @param scrapedData     Die gescrapten Daten.
      * @return Die erstellte MangaDetails.
      */
-    public MangaDetails createMangaDetails(MangaReihe savedMangaReihe, String anilistUrl, Long sammelbandTypId, Boolean istGelesen,
+    public MangaDetails createMangaDetails(MangaReihe savedMangaReihe, String anilistUrl, Long sammelbandTypId,
+            Boolean istGelesen,
             Map<String, String> scrapedData) {
         MangaDetails details = new MangaDetails();
         details.setMangaReihe(savedMangaReihe);
@@ -104,10 +105,9 @@ public class MangaDetailsService {
             details.setSammelbaende(sammelband);
             System.out.println(details.getSammelbaende().getId());
         }
-        if(istGelesen != null){
+        if (istGelesen != null) {
             details.setIstGelesen(istGelesen);
-        }
-        else {
+        } else {
             Sammelband defaultSammelband = sammelbaendeService.findById(5L).orElse(null);
             details.setSammelbaende(defaultSammelband);
         }
@@ -161,7 +161,8 @@ public class MangaDetailsService {
      *                        wurden.
      * @return Die aktualisierten MangaDetails.
      */
-    public MangaDetails updateMangaDetails(MangaReihe mangaReihe, String anilistUrl, String coverUrl, boolean istGelesen,
+    public MangaDetails updateMangaDetails(MangaReihe mangaReihe, String anilistUrl, String coverUrl,
+            boolean istGelesen,
             Long sammelbandTypId,
             Map<String, String> scrapedData) {
         MangaDetails details = mangaReihe.getMangaDetails();
@@ -169,50 +170,62 @@ public class MangaDetailsService {
             details = new MangaDetails();
             details.setMangaReihe(mangaReihe);
         }
-        if (anilistUrl != null && !anilistUrl.equals(details.getAnilistUrl())) {
-            details.setAnilistUrl(anilistUrl);
+        if (anilistUrl != null) {
+            if (!anilistUrl.equals(details.getAnilistUrl() != null ? details.getAnilistUrl() : "")) {
+                details.setAnilistUrl(anilistUrl);
+            }
         }
-        if (coverUrl != null && !coverUrl.equals(details.getCoverUrl())) {
-            details.setCoverUrl(coverUrl);
+        if (coverUrl != null) {
+            if (!coverUrl.equals(details.getCoverUrl() != null ? details.getCoverUrl() : "")) {
+                details.setCoverUrl(coverUrl);
+            }
         }
-        if(details.isIstGelesen() != istGelesen){
+        if (details.isIstGelesen() != istGelesen) {
             details.setIstGelesen(istGelesen);
         }
-        if (sammelbandTypId != null
-                && (details.getSammelbaende() == null || !details.getSammelbaende().getId().equals(sammelbandTypId))) {
-            Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Sammelband mit ID " + sammelbandTypId + " nicht gefunden"));
-            details.setSammelbaende(sammelband);
-        } 
+        if (sammelbandTypId != null) {
+            if (details.getSammelbaende() == null || !details.getSammelbaende().getId().equals(sammelbandTypId)) {
+                Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId)
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "Sammelband mit ID " + sammelbandTypId + " nicht gefunden"));
+                details.setSammelbaende(sammelband);
+            }
+        }
 
         // Weitere Details aktualisieren
-        if (scrapedData.containsKey("Deutsche Ausgabe Status")
-                && !scrapedData.get("Deutsche Ausgabe Status").equals(details.getStatusDe())) {
-            details.setStatusDe(scrapedData.get("Deutsche Ausgabe Status"));
+        if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
+            if (!scrapedData.get("Deutsche Ausgabe Status")
+                    .equals(details.getStatusDe() != null ? details.getStatusDe() : "")) {
+                details.setStatusDe(scrapedData.get("Deutsche Ausgabe Status"));
+            }
         }
         if (scrapedData.containsKey("Deutsche Ausgabe Bände")) {
             try {
                 int anzahlBaendeDe = Integer.parseInt(scrapedData.get("Deutsche Ausgabe Bände"));
-                if (!Integer.valueOf(anzahlBaendeDe).equals(details.getAnzahlBaendeDe())) {
+                if (!Integer.valueOf(anzahlBaendeDe)
+                        .equals(details.getAnzahlBaendeDe() != null ? details.getAnzahlBaendeDe() : 0)) {
                     details.setAnzahlBaendeDe(anzahlBaendeDe);
                 }
             } catch (NumberFormatException e) {
                 // Fehlerbehandlung
             }
         }
-        if (scrapedData.containsKey("Erstveröffentlichung Status")
-                && !scrapedData.get("Erstveröffentlichung Status").equals(details.getStatusErstv())) {
-            details.setStatusErstv(scrapedData.get("Erstveröffentlichung Status"));
+        if (scrapedData.containsKey("Erstveröffentlichung Status")) {
+            if (!scrapedData.get("Erstveröffentlichung Status")
+                    .equals(details.getStatusErstv() != null ? details.getStatusErstv() : "")) {
+                details.setStatusErstv(scrapedData.get("Erstveröffentlichung Status"));
+            }
         }
-        if (scrapedData.containsKey("Erstveröffentlichung Herkunft")
-                && !scrapedData.get("Erstveröffentlichung Herkunft").equals(details.getHerkunft())) {
-            details.setHerkunft(scrapedData.get("Erstveröffentlichung Herkunft"));
+        if (scrapedData.containsKey("Erstveröffentlichung Herkunft")) {
+            if (!scrapedData.get("Erstveröffentlichung Herkunft")
+                    .equals(details.getHerkunft() != null ? details.getHerkunft() : "")) {
+                details.setHerkunft(scrapedData.get("Erstveröffentlichung Herkunft"));
+            }
         }
         if (scrapedData.containsKey("Erstveröffentlichung Startjahr")) {
             try {
                 int startjahr = Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr"));
-                if (!Integer.valueOf(startjahr).equals(details.getStartJahr())) {
+                if (!Integer.valueOf(startjahr).equals(details.getStartJahr() != null ? details.getStartJahr() : 0)) {
                     details.setStartJahr(startjahr);
                 }
             } catch (NumberFormatException e) {
@@ -222,13 +235,15 @@ public class MangaDetailsService {
         if (scrapedData.containsKey("Erstveröffentlichung Bände")) {
             try {
                 int anzahlBaendeErstv = Integer.parseInt(scrapedData.get("Erstveröffentlichung Bände"));
-                if (!Integer.valueOf(anzahlBaendeErstv).equals(details.getAnzahlBaendeErstv())) {
+                if (!Integer.valueOf(anzahlBaendeErstv)
+                        .equals(details.getAnzahlBaendeErstv() != null ? details.getAnzahlBaendeErstv() : 0)) {
                     details.setAnzahlBaendeErstv(anzahlBaendeErstv);
                 }
             } catch (NumberFormatException e) {
                 // Fehlerbehandlung
             }
         }
+
         return details;
     }
 

@@ -22,6 +22,8 @@ import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.*;
 
@@ -122,8 +124,11 @@ public class MangaReiheService {
     @Transactional
     public MangaReihe saveMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
             String titel, Integer anzahlBaende, BigDecimal preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
-            String anilistUrl, Long sammelbandTypId, BigDecimal gesamtpreisAenderung, Boolean istGelesen, Map<String, String> scrapedData) {
+            String anilistUrl, Long sammelbandTypId, BigDecimal gesamtpreisAenderung, Boolean istGelesen,
+            Map<String, String> scrapedData) {
         System.out.println("SaveMangaReihe gestartet");
+
+        System.out.println("Save MangaReihe Aenderung Gesamtpreis: " + gesamtpreisAenderung);
 
         MangaReihe mangaReihe = createMangaReihe(mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
                 preisProBand, istVergriffen, istEbayPreis, gesamtpreisAenderung);
@@ -133,7 +138,8 @@ public class MangaReiheService {
         System.out.println("MangaReihe Objekt erstellt");
 
         System.out.println("Setze Details");
-        MangaDetails details = mangaDetailsService.createMangaDetails(savedMangaReihe, anilistUrl,  sammelbandTypId, istGelesen,
+        MangaDetails details = mangaDetailsService.createMangaDetails(savedMangaReihe, anilistUrl, sammelbandTypId,
+                istGelesen,
                 scrapedData);
         mangaDetailsRepository.save(details);
         System.out.println("Details gesetzt");
@@ -248,17 +254,26 @@ public class MangaReiheService {
                 preisProBand, istVergriffen, istEbayPreis,
                 gesamtpreisAenderung != null ? gesamtpreisAenderung : BigDecimal.ZERO);
 
-        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, istGelesen, sammelbandTypId, 
+        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, istGelesen,
+                sammelbandTypId,
                 scrapedData);
         mangaDetailsRepository.save(details);
+
+        // Überprüfen und aktualisieren des istGelesen-Status der Bände
+        updateBaendeIstGelesenStatus(details);
 
         bandService.updateOrCreateBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData,
                 anzahlBaendeChanged);
 
+        if (anzahlBaendeChanged)
+            details.setIstGelesen(false);
+
+        mangaDetailsRepository.save(details);
+
         BigDecimal aenderungGesamtPreis = bandService.calculateAenderungGesamtpreis(mangaReihe);
         mangaReihe.setAenderungGesamtpreis(aenderungGesamtPreis);
 
-        if(aenderungGesamtPreis.compareTo(BigDecimal.ZERO) != 0){
+        if (aenderungGesamtPreis.compareTo(BigDecimal.ZERO) != 0) {
             mangaReihe.setIstEbayPreis(true);
         }
 
@@ -271,9 +286,7 @@ public class MangaReiheService {
             mangaReihe.setPreisProBand(
                     gesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2, RoundingMode.HALF_UP));
         }
-
-        // Überprüfen und aktualisieren des istGelesen-Status der Bände
-        updateBaendeIstGelesenStatus(details);
+        mangaReihe.setAktualisiertAm(Timestamp.valueOf(LocalDateTime.now()));
 
         return Optional.of(mangaReiheRepository.save(mangaReihe));
     }
@@ -328,10 +341,10 @@ public class MangaReiheService {
             mangaReihe.setIstEbayPreis(istEbayPreis);
         }
         if (preisProBand.compareTo(BigDecimal.ZERO) != 0) {
-        mangaReihe.setPreisProBand(preisProBand);
+            mangaReihe.setPreisProBand(preisProBand);
         }
         if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
-        mangaReihe.setAenderungGesamtpreis(gesamtpreisAenderung);
+            mangaReihe.setAenderungGesamtpreis(gesamtpreisAenderung);
         }
     }
 
@@ -554,29 +567,31 @@ public class MangaReiheService {
     }
 
     /**
- * Überprüft und aktualisiert den istGelesen-Status aller Bände basierend auf dem istGelesen-Status der MangaDetails.
- * 
- * @param mangaDetails Die MangaDetails, deren istGelesen-Status überprüft und aktualisiert werden soll.
- */
-private void updateBaendeIstGelesenStatus(MangaDetails mangaDetails) {
-    List<Band> baende = bandRepository.findByMangaReiheId(mangaDetails.getMangaReihe().getId());
+     * Überprüft und aktualisiert den istGelesen-Status aller Bände basierend auf
+     * dem istGelesen-Status der MangaDetails.
+     * 
+     * @param mangaDetails Die MangaDetails, deren istGelesen-Status überprüft und
+     *                     aktualisiert werden soll.
+     */
+    private void updateBaendeIstGelesenStatus(MangaDetails mangaDetails) {
+        List<Band> baende = bandRepository.findByMangaReiheId(mangaDetails.getMangaReihe().getId());
 
-    if (mangaDetails.isIstGelesen()) {
-        baende.forEach(band -> {
-            if (!band.isIstGelesen()) {
-                band.setIstGelesen(true);
-                bandRepository.save(band);
-            }
-        });
-    } else {
-        baende.forEach(band -> {
-            if (band.isIstGelesen()) {
-                band.setIstGelesen(false);
-                bandRepository.save(band);
-            }
-        });
+        if (mangaDetails.isIstGelesen()) {
+            baende.forEach(band -> {
+                if (!band.isIstGelesen()) {
+                    band.setIstGelesen(true);
+                    bandRepository.save(band);
+                }
+            });
+        } else {
+            baende.forEach(band -> {
+                if (band.isIstGelesen()) {
+                    band.setIstGelesen(false);
+                    bandRepository.save(band);
+                }
+            });
+        }
     }
-}
 
     // ------------------------------Filtern--------------------------------
 
