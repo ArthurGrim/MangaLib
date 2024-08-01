@@ -45,7 +45,7 @@ CREATE TABLE mangareihe (
     gesamtpreis DECIMAL(10, 2),
     aenderung_gesamtpreis DECIMAL(10 ,2),
     erstellt_am DATE DEFAULT (CURRENT_DATE),
-    aktualisiert_am DATE DEFAULT (CURRENT_DATE),
+    aktualisiert_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     ist_ebay_preis BOOLEAN DEFAULT FALSE,
     ist_vergriffen BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (status_id) REFERENCES status(status_id),

@@ -201,6 +201,7 @@ public class BandService {
      */
     public void createAndSaveBaende(MangaReihe mangaReihe, Integer anzahlBaende, BigDecimal preisProBand,
             BigDecimal gesamtpreisAenderung, Map<String, String> scrapedData) {
+        System.out.println("createAndSaveBaende Aenderung Gesamtpreis: " + gesamtpreisAenderung);
         for (int i = 1; i <= anzahlBaende; i++) {
             Band band = new Band();
             band.setMangaReihe(mangaReihe);
@@ -251,7 +252,7 @@ public class BandService {
                 }
 
                 // Setzt AenderungGesamtpreis, wenn vorhanden
-                if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) > 0) {
+                if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
                     BigDecimal aenderungPreis = gesamtpreisAenderung.divide(BigDecimal.valueOf(anzahlBaende), 2,
                             RoundingMode.HALF_UP);
                     band.setAenderungPreis(aenderungPreis);
@@ -351,32 +352,36 @@ public class BandService {
 
             try {
                 // Fuege den Link zum Bild bei den ersten 5 Baenden ein
-                if ((scrapedData.containsKey(bildUrlKey) && i <= 5)
-                        && !scrapedData.get(bildUrlKey).equals(band.getBildUrl().toString())) {
-                    String bildUrlString = scrapedData.get(bildUrlKey);
-                    if (bildUrlString != null && !bildUrlString.isEmpty()) {
-                        URI bildUri = new URI(bildUrlString);
-                        URL bildUrl = bildUri.toURL();
-                        band.setBildUrl(bildUrl);
+                if (scrapedData.containsKey(bildUrlKey) && i <= 5) {
+                    if (band.getBildUrl() == null || !scrapedData.get(bildUrlKey)
+                            .equals(band.getBildUrl().toString() != null ? band.getBildUrl().toString() : "")) {
+                        String bildUrlString = scrapedData.get(bildUrlKey);
+                        if (bildUrlString != null && !bildUrlString.isEmpty()) {
+                            URI bildUri = new URI(bildUrlString);
+                            URL bildUrl = bildUri.toURL();
+                            band.setBildUrl(bildUrl);
+                        }
                     }
                 }
 
                 // Fuege den Link zur entsprechenden MangaPassion Seite ein
-                if (scrapedData.containsKey(mpUrlKey)
-                        && !scrapedData.get(mpUrlKey).equals(band.getMpUrl().toString())) {
-                    String mpUrlString = scrapedData.get(mpUrlKey);
-                    if (mpUrlString != null && !mpUrlString.isEmpty()) {
-                        // Extrahiere den Index aus dem Link
-                        Pattern pattern = Pattern.compile("volumes/(\\d+)");
-                        Matcher matcher = pattern.matcher(mpUrlString);
-                        if (matcher.find()) {
-                            int bandIndex = Integer.parseInt(matcher.group(1));
-                            band.setBandIndex(bandIndex);
-                        }
+                if (scrapedData.containsKey(mpUrlKey)) {
+                    if (band.getMpUrl() == null || !scrapedData.get(mpUrlKey)
+                            .equals(band.getMpUrl().toString() != null ? band.getMpUrl().toString() : "")) {
+                        String mpUrlString = scrapedData.get(mpUrlKey);
+                        if (mpUrlString != null && !mpUrlString.isEmpty()) {
+                            // Extrahiere den Index aus dem Link
+                            Pattern pattern = Pattern.compile("volumes/(\\d+)");
+                            Matcher matcher = pattern.matcher(mpUrlString);
+                            if (matcher.find()) {
+                                int bandIndex = Integer.parseInt(matcher.group(1));
+                                band.setBandIndex(bandIndex);
+                            }
 
-                        URI mpUri = new URI(mpUrlString);
-                        URL mpUrl = mpUri.toURL();
-                        band.setMpUrl(mpUrl);
+                            URI mpUri = new URI(mpUrlString);
+                            URL mpUrl = mpUri.toURL();
+                            band.setMpUrl(mpUrl);
+                        }
                     }
                 }
 
@@ -449,27 +454,38 @@ public class BandService {
             boolean preisChanged = false;
 
             // Aktualisiere die Attribute des Bands
-            if (bandData.getBandNr() != null && !bandData.getBandNr().equals(band.getBandNr())) {
-                band.setBandNr(bandData.getBandNr());
+            if (bandData.getBandNr() != null) {
+                if (!bandData.getBandNr().equals(band.getBandNr())) {
+                    band.setBandNr(bandData.getBandNr());
+                }
             }
-            if (bandData.getBandIndex() != null && !bandData.getBandIndex().equals(band.getBandIndex())) {
-                band.setBandIndex(bandData.getBandIndex());
+            if (bandData.getBandIndex() != null) {
+                if (!bandData.getBandIndex().equals(band.getBandIndex())) {
+                    band.setBandIndex(bandData.getBandIndex());
+                }
             }
-            if (bandData.getPreis() != null && !bandData.getPreis().equals(band.getPreis())) {
-                preisChanged = true;
-                band.setPreis(bandData.getPreis());
+            if (bandData.getPreis() != null) {
+                if (!bandData.getPreis().equals(band.getPreis())) {
+                    preisChanged = true;
+                    band.setPreis(bandData.getPreis());
+                }
             }
-            if (bandData.getAenderungPreis() != null
-                    && !bandData.getAenderungPreis().equals(band.getAenderungPreis())) {
-                preisChanged = true;
-                band.setAenderungPreis(bandData.getAenderungPreis());
-                System.out.println("AenderungPreis: "+bandData.getAenderungPreis());
+            if (bandData.getAenderungPreis() != null) {
+                if (!bandData.getAenderungPreis().equals(band.getAenderungPreis())) {
+                    preisChanged = true;
+                    band.setAenderungPreis(bandData.getAenderungPreis());
+                    System.out.println("AenderungPreis: " + bandData.getAenderungPreis());
+                }
             }
-            if (bandData.getBildUrl() != null && !bandData.getBildUrl().equals(band.getBildUrl())) {
-                band.setBildUrl(bandData.getBildUrl());
+            if (bandData.getBildUrl() != null) {
+                if (bandData.getBildUrl() != band.getBildUrl()) {
+                    band.setBildUrl(bandData.getBildUrl());
+                }
             }
-            if (bandData.getMpUrl() != null && !bandData.getMpUrl().equals(band.getMpUrl())) {
-                band.setMpUrl(bandData.getMpUrl());
+            if (bandData.getMpUrl() != null) {
+                if (bandData.getMpUrl() != band.getMpUrl()) {
+                    band.setMpUrl(bandData.getMpUrl());
+                }
             }
             if (bandData.isIstGelesen() != band.isIstGelesen()) {
                 band.setIstGelesen(bandData.isIstGelesen());
@@ -501,10 +517,9 @@ public class BandService {
                                 RoundingMode.HALF_UP));
             }
 
-            if(neueAenderungGesamtpreis.compareTo(BigDecimal.ZERO) != 0){
+            if (neueAenderungGesamtpreis.compareTo(BigDecimal.ZERO) != 0) {
                 mangaReihe.setIstEbayPreis(true);
             }
-    
 
             // Überprüfen und aktualisieren des istGelesen-Status der MangaDetails
             updateMangaDetailsIstGelesenStatus(mangaReihe.getMangaDetails());

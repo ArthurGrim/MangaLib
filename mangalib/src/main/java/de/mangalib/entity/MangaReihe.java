@@ -1,6 +1,7 @@
 package de.mangalib.entity;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -75,9 +76,8 @@ public class MangaReihe {
     private LocalDate erstelltAm;
 
     @UpdateTimestamp
-    @Temporal(TemporalType.DATE) // Nur das Datum ohne Uhrzeit
     @Column(name = "aktualisiert_am")
-    private LocalDate aktualisiertAm;
+    private Timestamp aktualisiertAm;
 
     @Column(name = "ist_ebay_preis")
     private Boolean istEbayPreis;
