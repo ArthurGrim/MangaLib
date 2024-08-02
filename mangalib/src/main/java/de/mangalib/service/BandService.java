@@ -213,7 +213,7 @@ public class BandService {
 
             try {
                 // Fuege den Link zum Bild bei den ersten 5 Baenden ein
-                if (scrapedData.containsKey(bildUrlKey) && i <= 5) {
+                if (scrapedData.containsKey(bildUrlKey)) {
                     String bildUrlString = scrapedData.get(bildUrlKey);
                     if (bildUrlString != null && !bildUrlString.isEmpty()) {
                         URI bildUri = new URI(bildUrlString);
@@ -351,8 +351,9 @@ public class BandService {
             String preisKey = "Band " + i + " Preis";
 
             try {
+                System.out.println("Hat BildURL Key: " + scrapedData.containsKey(bildUrlKey));
                 // Fuege den Link zum Bild bei den ersten 5 Baenden ein
-                if (scrapedData.containsKey(bildUrlKey) && i <= 5) {
+                if (scrapedData.containsKey(bildUrlKey)) {
                     if (band.getBildUrl() == null || !scrapedData.get(bildUrlKey)
                             .equals(band.getBildUrl().toString() != null ? band.getBildUrl().toString() : "")) {
                         String bildUrlString = scrapedData.get(bildUrlKey);
@@ -369,6 +370,7 @@ public class BandService {
                     if (band.getMpUrl() == null || !scrapedData.get(mpUrlKey)
                             .equals(band.getMpUrl().toString() != null ? band.getMpUrl().toString() : "")) {
                         String mpUrlString = scrapedData.get(mpUrlKey);
+                        System.out.println("MP Url String existiert: " + (mpUrlString != null && !mpUrlString.isEmpty()));
                         if (mpUrlString != null && !mpUrlString.isEmpty()) {
                             // Extrahiere den Index aus dem Link
                             Pattern pattern = Pattern.compile("volumes/(\\d+)");
@@ -376,6 +378,7 @@ public class BandService {
                             if (matcher.find()) {
                                 int bandIndex = Integer.parseInt(matcher.group(1));
                                 band.setBandIndex(bandIndex);
+                                System.out.println("Band Index gesetzt auf: " + bandIndex);
                             }
 
                             URI mpUri = new URI(mpUrlString);
@@ -389,7 +392,7 @@ public class BandService {
                     // Fuege den Preis ein, wenn vorhanden
                     if (scrapedData.containsKey(preisKey)) {
                         try {
-                            band.setPreis(new BigDecimal(scrapedData.get(preisKey)));
+                            band.setPreis(new BigDecimal(scrapedData.get(preisKey).replace(",", ".")));
                         } catch (NumberFormatException e) {
                             band.setPreis(preisProBand);
                             System.out.println("Fehler beim Setzen des Preises für Band " + i);
