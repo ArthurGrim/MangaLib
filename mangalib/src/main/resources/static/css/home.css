@@ -654,7 +654,7 @@ body {
   font-size: 100%;
 }
 
-.loading-label-edit {
+.loading-label-edit, .loading-label-band-edit{
   position: absolute; /* oder eine andere Positionierung */
   top: 10%; /* Zentriert das Label vertikal */
   left: 50%; /* Zentriert das Label horizontal */
