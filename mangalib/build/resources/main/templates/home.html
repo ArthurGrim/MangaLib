@@ -431,18 +431,15 @@
         <div class="mangaReihe-container">
           <div class="cover-bild">
             <th:block th:with="coverUrl=${coverUrlsMap[mangaReihe.id]}">
-              <!-- Prüfen, ob coverUrl nicht null ist -->
-              <img th:if="${coverUrl != null}" th:src="${coverUrl}" />
-              <!-- Optional: Etwas anzeigen, wenn coverUrl null ist -->
-              <div th:if="${coverUrl == null}">
-                <img
-                  th:src="@{/svg/filler_img2.png}"
-                  alt="Filler Image"
-                  style="width: 75%; height: auto"
-                />
-              </div>
+                <!-- Prüfen, ob coverUrl nicht null ist -->
+                <img class="lazy" th:if="${coverUrl != null}" th:attr="data-src=${coverUrl}" src="@{/svg/filler_img2.png}" alt="Cover Image" style="width: 75%; height: auto" />
+                <!-- Optional: Etwas anzeigen, wenn coverUrl null ist -->
+                <div th:if="${coverUrl == null}">
+                    <img th:src="@{/svg/filler_img2.png}" alt="Filler Image" style="width: 75%; height: auto" />
+                </div>
             </th:block>
-          </div>
+        </div>
+        
           <div class="status">
             <p
               th:text="${mangaReihe.status?.beschreibung ?: 'Status nicht verfügbar'}"
