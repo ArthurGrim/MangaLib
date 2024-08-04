@@ -1,3 +1,5 @@
+--Drop Database mangalib;
+--Create Database mangalib;
 USE mangalib;
 
 -- Tabelle für Verlage
@@ -97,7 +99,7 @@ CREATE TABLE einkaufsliste (
     anzahl_baende INT,
     preis DECIMAL(10, 2),
     gesamtpreis DECIMAL(10, 2),
-    aenderung_gesamtpreis DECIMAL(10 ,2),
+    aenderung_gesamtpreis DECIMAL(10 ,2) DEFAULT 0.00,
     erscheinungsdatum DATE,
     ist_ebay_preis BOOLEAN,
     ist_vergriffen BOOLEAN,
@@ -117,7 +119,7 @@ CREATE TABLE einkaufslistedetails (
     anzahl_baende_erstv INT,
     anilist_url VARCHAR(255),
     cover_url VARCHAR(255),
-    sammelbaende_id BIGINT,
+    sammelbaende_id BIGINT DEFAULT 1,
     FOREIGN KEY (id) REFERENCES einkaufsliste(id),
     FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)
 );

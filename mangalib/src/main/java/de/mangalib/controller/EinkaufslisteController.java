@@ -120,7 +120,8 @@ public class EinkaufslisteController {
         model.addAttribute("alleFormate", alleFormate);
         model.addAttribute("alleSammelbaende", alleSammelbaende);
         model.addAttribute("alleStatus", alleStatus);
-        return "einkaufsliste"; // Name Ihrer Thymeleaf-Vorlage
+        return "einkaufsliste";
+ 
     }
 
     public String getGermanMonthName(int monthNumber) {
@@ -222,7 +223,7 @@ public class EinkaufslisteController {
         EinkaufslisteItem item = itemOptional.get();
 
         // Versuchen, eine MangaReihe anhand des MangaIndex zu finden
-        List<MangaReihe> reihen = mangaReiheService.findByMangaIndex(item.getMangaIndex());
+        List<MangaReihe> reihen = mangaReiheService.findByMangaIndex(item.getMangaIndex() != null ? item.getMangaIndex() : 0);
         System.out.println(reihen.isEmpty());
         if (!reihen.isEmpty()) {
             // Update der vorhandenen Reihe
@@ -306,8 +307,6 @@ public class EinkaufslisteController {
             BigDecimal gesamtpreisAenderung = item.getAenderungGesamtpreis();
             System.out.println("EinkaufslisteController Aenderung Gesamtpreis: " + gesamtpreisAenderung);
 
-            System.out.println("Test 1");
-
             // ScrapedData von item verwenden, falls erforderlich
             Map<String, String> scrapedData = new HashMap<>();
             scrapedData.put("Deutsche Ausgabe Status", details.getStatusDe() != null ? details.getStatusDe() : null);
@@ -324,14 +323,10 @@ public class EinkaufslisteController {
             scrapedData.put("Erstveröffentlichung Bände",
                     details.getAnzahlBaendeErstv() != null ? String.valueOf(details.getAnzahlBaendeErstv()) : null);
 
-            System.out.println("Test 2");
-
             // Neue MangaReihe erstellen und speichern
             MangaReihe neueReihe = mangaReiheService.saveMangaReihe(
                     mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende, preisProBand,
                     istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, false, scrapedData);
-
-            System.out.println("Test 3 - Nach der saveMethode");
 
             if (neueReihe != null) {
                 einkaufslisteService.updateGekauft(item.getId(), true);

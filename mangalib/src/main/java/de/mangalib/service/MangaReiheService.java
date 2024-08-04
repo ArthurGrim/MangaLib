@@ -128,8 +128,6 @@ public class MangaReiheService {
             Map<String, String> scrapedData) {
         System.out.println("SaveMangaReihe gestartet");
 
-        System.out.println("Save MangaReihe Aenderung Gesamtpreis: " + gesamtpreisAenderung);
-
         MangaReihe mangaReihe = createMangaReihe(mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
                 preisProBand, istVergriffen, istEbayPreis, gesamtpreisAenderung);
 
@@ -249,21 +247,32 @@ public class MangaReiheService {
         MangaReihe mangaReihe = mangaReiheOptional.get();
 
         boolean anzahlBaendeChanged = !mangaReihe.getAnzahlBaende().equals(anzahlBaende);
+        System.out.println("Update die Stammdaten");
 
         updateMangaReiheAttributes(mangaReihe, mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
                 preisProBand, istVergriffen, istEbayPreis,
                 gesamtpreisAenderung != null ? gesamtpreisAenderung : BigDecimal.ZERO);
 
+        System.out.println("MangaReihe Objekt geupdated");
+
+        System.out.println("Setze Details");
+
         MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, istGelesen,
                 sammelbandTypId,
                 scrapedData);
         mangaDetailsRepository.save(details);
+        System.out.println("Details gesetzt");
 
+        System.out.println("Update den Gelesenstatus");
         // Überprüfen und aktualisieren des istGelesen-Status der Bände
         updateBaendeIstGelesenStatus(details);
 
+        System.out.println("Update die Bände");
+
         bandService.updateOrCreateBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData,
                 anzahlBaendeChanged);
+
+        System.out.println("Bände geupdatet");
 
         if (anzahlBaendeChanged)
             details.setIstGelesen(false);
@@ -312,7 +321,7 @@ public class MangaReiheService {
             Boolean istVergriffen,
             Boolean istEbayPreis, BigDecimal gesamtpreisAenderung) {
 
-        if (!mangaReihe.getMangaIndex().equals(mangaIndex)) {
+        if (mangaIndex == null || !mangaIndex.equals(mangaReihe.getMangaIndex())) {
             mangaReihe.setMangaIndex(mangaIndex);
         }
         if (!mangaReihe.getStatus().getStatusId().equals(statusId)) {

@@ -404,7 +404,9 @@ document.addEventListener("DOMContentLoaded", function () {
               })
               .then((response) => response.json())
               .then((data) => {
-                if (data.message === "Neue MangaReihe erfolgreich gespeichert") {
+                if (
+                  data.message === "Neue MangaReihe erfolgreich gespeichert"
+                ) {
                   console.log(data);
                   window.location.reload();
                 }
@@ -425,18 +427,22 @@ document.addEventListener("DOMContentLoaded", function () {
     return new Promise((resolve, reject) => {
       console.log("PopUp zur Auswahl des Status anzeigen.");
       var statusPopup = document.querySelector(".ask-for-status-popup");
-      statusPopup.style.visibility = 'visible';
-  
+      statusPopup.style.visibility = "visible";
+
       var confirmButton = document.getElementById("confirmStatus");
       var cancelButton = document.getElementById("cancelStatus");
-  
+
       // Hilfsfunktion, um Event Listener zu entfernen
       function cleanUp() {
         confirmButton.removeEventListener("click", onConfirm);
         cancelButton.removeEventListener("click", onCancel);
-        statusPopup.style.visibility = 'hidden';
+        statusPopup.style.visibility = "hidden";
+
+        // Auswahl im Select zurücksetzen
+        var statusSelect = document.getElementById("status");
+        statusSelect.value = "";
       }
-  
+
       // Event Handler für den Confirm-Button
       function onConfirm() {
         var selectedStatus = document.getElementById("status").value;
@@ -447,13 +453,13 @@ document.addEventListener("DOMContentLoaded", function () {
           alert("Bitte wählen Sie einen Status aus.");
         }
       }
-  
+
       // Event Handler für den Cancel-Button
       function onCancel() {
         cleanUp();
         reject(new Error("Statusauswahl abgebrochen"));
       }
-  
+
       confirmButton.addEventListener("click", onConfirm);
       cancelButton.addEventListener("click", onCancel);
     });

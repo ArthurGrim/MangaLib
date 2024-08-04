@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("editCoverImage").src =
           data["bildUrl"] || "/svg/filler_img2.png";
         document.getElementById("editTitleLabel").textContent = data.titel;
-        document.getElementById("manga_index-edit").value = data.mangaIndex;
+        document.getElementById("manga_index-edit").value = data.mangaIndex ?? '';
         document.getElementById("titel-edit").value = data.titel;
         document.getElementById("status-edit").value = data.statusId;
         document.getElementById("verlag-edit").value = data.verlagId;
@@ -109,8 +109,8 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("anzahl_baende-edit").value = data.anzahlBaende;
         document.getElementById("preis_pro_band-edit").textContent =
           data.preisProBand;
-        document.getElementById("anilist_url-edit").value = data.anilistUrl;
-        document.getElementById("coverUrl-edit").value = data.coverUrl;
+        document.getElementById("anilist_url-edit").value = data.anilistUrl ?? '';
+        document.getElementById("coverUrl-edit").value = data.coverUrl ?? '';
         document.getElementById("istgelesen-edit").checked = data.istGelesen;
         document.getElementById("istvergriffen-edit").checked =
           data.istVergriffen;
@@ -233,10 +233,6 @@ document.addEventListener("DOMContentLoaded", function () {
     ).value;
 
     // Validierung der Werte
-    if (mangaIndex && !isNum(mangaIndex)) {
-      alert("MangaIndex muss eine positive ganze Zahl sein.");
-      return;
-    }
     if (!statusId) {
       alert("Bitte wählen Sie einen Status aus.");
       return;

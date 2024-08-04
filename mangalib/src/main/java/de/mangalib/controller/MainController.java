@@ -236,7 +236,7 @@ public class MainController {
                     ? Long.valueOf(((String) requestData.get("mangaReiheId")))
                     : null;
             System.out.println("Die Id der Reihe ist: " + mangaReiheId);
-            Integer mangaIndex = (Integer) requestData.get("mangaIndex");
+            Integer mangaIndex = requestData.get("mangaIndex") != null ? (Integer) requestData.get("mangaIndex") : null;
             System.out.println("Der Index der Manga Reihe ist: " + mangaIndex);
             Long statusId = Long.valueOf((String) requestData.get("statusId"));
             Long verlagId = Long.valueOf((String) requestData.get("verlagId"));
