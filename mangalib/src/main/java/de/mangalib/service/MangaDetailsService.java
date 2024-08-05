@@ -175,8 +175,7 @@ public class MangaDetailsService {
      * @return Die aktualisierten MangaDetails.
      */
     public MangaDetails updateMangaDetails(MangaReihe mangaReihe, String anilistUrl, String coverUrl,
-            boolean istGelesen,
-            Long sammelbandTypId,
+            boolean istGelesen, Integer reread, Long sammelbandTypId,
             Map<String, String> scrapedData) {
         MangaDetails details = mangaReihe.getMangaDetails();
         if (details == null) {
@@ -195,6 +194,11 @@ public class MangaDetailsService {
         }
         if (details.isIstGelesen() != istGelesen) {
             details.setIstGelesen(istGelesen);
+        }
+        if(reread != null){
+            if (reread.equals(details.getReread() != null ? details.getReread() : 0)) {
+                details.setReread(reread);
+            }
         }
         if (sammelbandTypId != null) {
             if (details.getSammelbaende() == null || !details.getSammelbaende().getId().equals(sammelbandTypId)) {

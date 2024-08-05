@@ -447,9 +447,32 @@ body {
   gap: 10px;
 }
 
+#editBaendePopupContainer .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+#editBaendePopupContainer .form-row-1 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
 #editBaendePopupContainer .form-row-3 {
   display: grid;
   grid-template-columns: 1fr 1fr; /* Zwei Drittel für Titel und ein Drittel für Format */
+  gap: 10px;
+}
+
+#editBaendePopupContainer .form-row-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 5px;
+}
+
+#editPopupContainer .form-row-4{
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
   gap: 10px;
 }
 

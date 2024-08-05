@@ -236,7 +236,7 @@ public class MangaReiheService {
     public Optional<MangaReihe> updateMangaReihe(Long mangaReiheId, Integer mangaIndex, Long statusId, Long verlagId,
             Long typId, Long formatId, String titel, Integer anzahlBaende, BigDecimal preisProBand,
             Boolean istVergriffen, Boolean istEbayPreis, String anilistUrl, String coverUrl, Long sammelbandTypId,
-            BigDecimal gesamtpreisAenderung, Boolean istGelesen, Map<String, String> scrapedData) {
+            BigDecimal gesamtpreisAenderung, Boolean istGelesen, Integer reread, Map<String, String> scrapedData) {
         System.out.println("----------------------updateMangaReihe gestartet----------------------");
 
         Optional<MangaReihe> mangaReiheOptional = findById(mangaReiheId);
@@ -257,7 +257,7 @@ public class MangaReiheService {
 
         System.out.println("Setze Details");
 
-        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, istGelesen,
+        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, istGelesen, reread,
                 sammelbandTypId,
                 scrapedData);
         mangaDetailsRepository.save(details);

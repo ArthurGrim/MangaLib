@@ -112,6 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("anilist_url-edit").value = data.anilistUrl ?? '';
         document.getElementById("coverUrl-edit").value = data.coverUrl ?? '';
         document.getElementById("istgelesen-edit").checked = data.istGelesen;
+        document.getElementById("reread-edit").value = data.reread ?? 0;
         document.getElementById("istvergriffen-edit").checked =
           data.istVergriffen;
         document.getElementById("istebaypreis-edit").checked =
@@ -225,6 +226,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const anilistUrl = document.querySelector("#anilist_url-edit").value.trim();
     const coverUrl = document.querySelector("#coverUrl-edit").value.trim();
     const istGelesen = document.querySelector("#istgelesen-edit").checked;
+    const reread = document.querySelector("#reread-edit").value.trim();
     const istVergriffen = document.querySelector("#istvergriffen-edit").checked;
     const istEbayPreis = document.querySelector("#istebaypreis-edit").checked;
     const istSammelband = document.querySelector("#istsammelband-edit").checked;
@@ -267,6 +269,11 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    if (reread && !isNum(reread)) {
+      alert("Reread muss eine positive ganze Zahl sein.");
+      return;
+    }
+
     console.log("Ausgelesene Werte:");
     console.log("MangaIndex: ", mangaIndex);
     console.log("VerlagID: ", verlagId);
@@ -280,6 +287,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("istEbayPreis: ", istEbayPreis);
     console.log("istSammelband: ", istSammelband);
     console.log("sammelbandTypId: ", sammelbandTypId);
+    console.log("reread: ", reread);
 
     scrapedData["istEdit"] = "true";
 
@@ -299,6 +307,7 @@ document.addEventListener("DOMContentLoaded", function () {
       anilistUrl,
       coverUrl,
       sammelbandTypId: istSammelband ? sammelbandTypId : null,
+      reread: reread ? parseInt(reread, 10) : 0,
       scrapedData: scrapedData,
     };
 

@@ -234,7 +234,7 @@ public class EinkaufslisteController {
                     reihe.getTitel(), reihe.getAnzahlBaende() + item.getAnzahlBaende(), item.getPreis(),
                     reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
                     reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
-                    item.getAenderungGesamtpreis(), false, itemId);
+                    item.getAenderungGesamtpreis(), false, reihe.getMangaDetails().getReread(), itemId);
 
             einkaufslisteService.updateGekauft(item.getId(), true);
 
@@ -253,7 +253,7 @@ public class EinkaufslisteController {
                     reihe.getTitel(), reihe.getAnzahlBaende() + item.getAnzahlBaende(), item.getPreis(),
                     reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
                     reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
-                    item.getAenderungGesamtpreis(), false, itemId);
+                    item.getAenderungGesamtpreis(), false, reihe.getMangaDetails().getReread(), itemId);
 
             einkaufslisteService.updateGekauft(item.getId(), true);
 
