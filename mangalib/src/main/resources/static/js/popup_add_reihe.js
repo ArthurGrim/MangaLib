@@ -143,6 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const preisProBand = preisProBandString.replace(",", ".");
     const anilistUrl = document.querySelector("#anilist_url").value.trim();
     const istGelesen = document.querySelector("#istgelesen").checked;
+    const reread = document.querySelector("#reread").value.trim();
     const istVergriffen = document.querySelector("#istvergriffen").checked;
     const istEbayPreis = document.querySelector("#istebaypreis").checked;
     const gesamtpreisAenderungString = document
@@ -198,6 +199,10 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("Bitte geben Sie eine gültige AniList-URL ein.");
       return;
     }
+    if (reread && !isNum(reread)) {
+      alert("Reread muss eine positive ganze Zahl sein.");
+      return;
+    }
 
     console.log("Ausgelesene Werte:");
     console.log("MangaIndex: ", mangaIndex);
@@ -214,6 +219,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("gesamtpreisAenderung: ", gesamtpreisAenderung);
     console.log("istSammelband: ", istSammelband);
     console.log("sammelbandTypId: ", sammelbandTypId);
+    console.log("reread: ", reread);
 
     scrapedData["istEdit"] = "false";
 
@@ -233,6 +239,7 @@ document.addEventListener("DOMContentLoaded", function () {
       gesamtpreisAenderung: istEbayPreis ? gesamtpreisAenderung : "0",
       anilistUrl,
       sammelbandTypId: istSammelband ? sammelbandTypId : null,
+      reread: reread ? parseInt(reread, 10) : null,
       scrapedData: scrapedData,
     };
 

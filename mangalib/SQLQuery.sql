@@ -68,6 +68,7 @@ CREATE TABLE mangadetails (
     anilist_url VARCHAR(255),
     cover_url VARCHAR(255),
     ist_gelesen BOOLEAN DEFAULT FALSE,
+    reread INT DEFAULT 0
     PRIMARY KEY (id),
     FOREIGN KEY (id) REFERENCES mangareihe(id),
     FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)
@@ -86,6 +87,7 @@ CREATE TABLE baende (
     erstellt_am DATE DEFAULT (CURRENT_DATE),
     aktualisiert_am DATE DEFAULT (CURRENT_DATE),
     ist_gelesen BOOLEAN DEFAULT FALSE,
+    reread INT DEFAULT 0,
     FOREIGN KEY (manga_reihe_id) REFERENCES mangareihe(id)
 );
 

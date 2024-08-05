@@ -370,7 +370,8 @@ public class BandService {
                     if (band.getMpUrl() == null || !scrapedData.get(mpUrlKey)
                             .equals(band.getMpUrl().toString() != null ? band.getMpUrl().toString() : "")) {
                         String mpUrlString = scrapedData.get(mpUrlKey);
-                        System.out.println("MP Url String existiert: " + (mpUrlString != null && !mpUrlString.isEmpty()));
+                        System.out
+                                .println("MP Url String existiert: " + (mpUrlString != null && !mpUrlString.isEmpty()));
                         if (mpUrlString != null && !mpUrlString.isEmpty()) {
                             // Extrahiere den Index aus dem Link
                             Pattern pattern = Pattern.compile("volumes/(\\d+)");
@@ -492,6 +493,11 @@ public class BandService {
             }
             if (bandData.isIstGelesen() != band.isIstGelesen()) {
                 band.setIstGelesen(bandData.isIstGelesen());
+            }
+            if (bandData.getReread() != null) {
+                if (bandData.getReread() != band.getReread()) {
+                    band.setReread(bandData.getReread());
+                }
             }
             if (bandData.getIstSpecial() != band.getIstSpecial()) {
                 band.setIstSpecial(bandData.getIstSpecial());

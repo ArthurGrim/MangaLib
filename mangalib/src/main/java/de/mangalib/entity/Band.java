@@ -68,6 +68,9 @@ public class Band {
     @Column(name = "ist_gelesen")
     private boolean istGelesen;
 
+    @Column(name = "reread")
+    private Integer reread;
+
     public Band() {
         try {
             this.bildUrl = new URI("https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png?20200912122019").toURL();

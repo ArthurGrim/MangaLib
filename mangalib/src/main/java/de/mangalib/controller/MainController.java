@@ -246,6 +246,7 @@ public class MainController {
             Integer anzahlBaende = (Integer) requestData.get("anzahlBaende");
             BigDecimal preisProBand = requestData.containsKey("preisProBand") ? new BigDecimal((String) requestData.get("preisProBand")) : BigDecimal.ZERO;
             Boolean istGelesen = (Boolean) requestData.get("istGelesen");
+            Integer reread = (Integer) requestData.get("reread") != null ? (Integer) requestData.get("reread") : 0;
             Boolean istVergriffen = (Boolean) requestData.get("istVergriffen");
             Boolean istEbayPreis = (Boolean) requestData.get("istEbayPreis");
             String anilistUrl = (String) requestData.get("anilistUrl");
@@ -273,7 +274,7 @@ public class MainController {
                         .updateMangaReihe(mangaReiheId, mangaIndex, statusId, verlagId, typId,
                                 formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
                                 coverUrl,
-                                sammelbandTypId, gesamtpreisAenderung, istGelesen, scrapedData)
+                                sammelbandTypId, gesamtpreisAenderung, istGelesen, reread, scrapedData)
                         .orElse(null);
             }
             return ResponseEntity.ok(savedMangaReihe);
@@ -343,6 +344,7 @@ public class MainController {
         BigDecimal preisProBand = mangaReihe.getPreisProBand();
         response.put("preisProBand", String.valueOf(preisProBand).replace(".", ","));
         response.put("istGelesen", mangaReihe.getMangaDetails().isIstGelesen());
+        response.put("reread", mangaReihe.getMangaDetails().getReread() != null ? mangaReihe.getMangaDetails().getReread() : 0);
         response.put("istEbayPreis", mangaReihe.getIstEbayPreis());
         response.put("istVergriffen", mangaReihe.getIstVergriffen());
         BigDecimal gesamtpreisAenderung = mangaReihe.getAenderungGesamtpreis() != null
@@ -350,7 +352,6 @@ public class MainController {
                 : null;
         response.put("gesamtpreisAenderung",
                 gesamtpreisAenderung != null ? gesamtpreisAenderung.toString().replace(".", ",") : null);
-        System.out.println("Gesamtpreis Änderung: " + response.get("gesamtpreisAenderung"));
 
         if (mangaReihe.getMangaDetails() != null) {
             MangaDetails details = mangaReihe.getMangaDetails();
@@ -421,6 +422,7 @@ public class MainController {
             bandData.put("istSpecial", band.getIstSpecial() != null ? band.getIstSpecial() : false);
             bandData.put("mpUrl", band.getMpUrl() != null ? band.getMpUrl().toString() : "");
             bandData.put("bandIndex", band.getBandIndex() != null ? band.getBandIndex() : "");
+            bandData.put("reread", band.getReread() != null ? band.getReread() : 0);
 
             // Titel der Manga-Reihe abrufen
             MangaReihe mangaReihe = band.getMangaReihe();
@@ -485,6 +487,22 @@ public class MainController {
                 }
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+            // Überprüfen und setzen von bandIndex, wenn vorhanden
+            String bandReread = (String) bandData.get("reread");
+            if (bandReread != null && !bandReread.isEmpty()) {
+                band.setReread(Integer.parseInt(bandReread));
+            } else {
+                band.setReread(0);
+            }
+
+            // Überprüfen und setzen von bandIndex, wenn vorhanden
+            String bandRereadString = (String) bandData.get("reread");
+            if (bandRereadString != null && !bandRereadString.isEmpty()) {
+                band.setReread(Integer.parseInt(bandRereadString));
+            } else {
+                band.setReread(0);
             }
 
             band.setIstGelesen((Boolean) bandData.get("istGelesen"));

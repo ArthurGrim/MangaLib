@@ -56,4 +56,7 @@ public class MangaDetails {
     @Column(name = "ist_gelesen")
     private boolean istGelesen;
 
+    @Column(name = "reread")
+    private Integer reread;
+
 }

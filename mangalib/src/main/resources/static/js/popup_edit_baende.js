@@ -26,6 +26,7 @@ function editBand(bandId) {
             document.getElementById("mp_url").value = data.mpUrl;
             document.getElementById("ist_gelesen").checked = data.istGelesen;
             document.getElementById("ist_spezial").checked = data.istSpecial;
+            document.getElementById("reread_band").value = data.reread;
 
             const titleLabel = document.querySelector("#editBaendePopupContainer .title-label");
             titleLabel.textContent = `${data.titel} Band ${data.bandNr}`;
@@ -45,6 +46,7 @@ function saveBand() {
     const mpUrlElement = document.getElementById("mp_url");
     const istGelesenElement = document.getElementById("ist_gelesen");
     const istSpezialElement = document.getElementById("ist_spezial");
+    const reread = document.getElementById("reread_band");
 
     // Validierung
     if (!bandNrElement.textContent.trim()) {
@@ -83,7 +85,8 @@ function saveBand() {
         bildUrl: bildUrlElement.value,
         mpUrl: mpUrlElement.value,
         istGelesen: istGelesenElement.checked,
-        istSpecial: istSpezialElement.checked
+        istSpecial: istSpezialElement.checked,
+        reread: reread.value,
     };
 
     fetch('/editBand', {
