@@ -257,7 +257,8 @@ public class MangaReiheService {
 
         System.out.println("Setze Details");
 
-        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, istGelesen, reread,
+        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, istGelesen,
+                reread,
                 sammelbandTypId,
                 scrapedData);
         mangaDetailsRepository.save(details);
@@ -296,6 +297,11 @@ public class MangaReiheService {
                     gesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2, RoundingMode.HALF_UP));
         }
         mangaReihe.setAktualisiertAm(Timestamp.valueOf(LocalDateTime.now()));
+
+        // Reread-Wert der MangaReihe aktualisieren
+        if (reread != null) {
+            updateMangaReiheReread(details, reread);
+        }
 
         return Optional.of(mangaReiheRepository.save(mangaReihe));
     }
@@ -600,6 +606,34 @@ public class MangaReiheService {
                 }
             });
         }
+    }
+
+    /**
+     * Aktualisiert den Reread-Wert der MangaReihe und setzt alle Bände mindestens
+     * auf den gleichen Wert.
+     * Falls der Reread-Wert eines Bands höher ist, bleibt er gleich.
+     *
+     * @param mangaDetails Die Details der MangaReihe, die aktualisiert werden
+     *                     sollen.
+     * @param rereadValue  Der neue Reread-Wert für die MangaReihe.
+     */
+    private void updateMangaReiheReread(MangaDetails mangaDetails, Integer rereadValue) {
+        mangaDetails.setReread(rereadValue);
+
+        List<Band> bands = bandRepository.findByMangaReiheId(mangaDetails.getMangaReihe().getId());
+        for (Band band : bands) {
+            // Wenn band.getReread() null ist, setze es auf 0
+            if (band.getReread() == null) {
+                band.setReread(0);
+            }
+
+            if (band.getReread() < rereadValue) {
+                band.setReread(rereadValue);
+                bandRepository.save(band);
+            }
+        }
+
+        mangaDetailsService.save(mangaDetails);
     }
 
     // ------------------------------Filtern--------------------------------
