@@ -408,6 +408,10 @@ body {
   margin-bottom: 10px;
 }
 
+.input-group input#reread-edit {
+  width: 82%; /* or any other desired width */
+}
+
 .input-group {
   flex: 1 1 150px; /* Jedes Feld nimmt mindestens 150px ein, aber kann wachsen */
   display: flex;
@@ -466,14 +470,19 @@ body {
 
 #editBaendePopupContainer .form-row-4 {
   display: grid;
-  grid-template-columns: 1fr 1fr 2fr;
-  gap: 5px;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 10px;
 }
 
 #editPopupContainer .form-row-4{
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 2fr 2fr 1fr;
   gap: 10px;
+}
+
+.sub-group-1, .sub-group-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }
 
 /* Stil für Checkbox-Gruppen */

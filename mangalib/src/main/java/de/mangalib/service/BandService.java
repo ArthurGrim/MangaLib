@@ -29,6 +29,9 @@ public class BandService {
     @Autowired
     private MangaReiheRepository mangaReiheRepository;
 
+    @Autowired
+    private MangaDetailsService mangaDetailsService;
+
     private final BandScraper bandScraper;
 
     public BandService(BandScraper bandScraper) {
@@ -456,48 +459,37 @@ public class BandService {
             Band band = optionalBand.get();
 
             boolean preisChanged = false;
+            boolean rereadChanged = false;
 
             // Aktualisiere die Attribute des Bands
-            if (bandData.getBandNr() != null) {
-                if (!bandData.getBandNr().equals(band.getBandNr())) {
-                    band.setBandNr(bandData.getBandNr());
-                }
+            if (bandData.getBandNr() != null && !bandData.getBandNr().equals(band.getBandNr())) {
+                band.setBandNr(bandData.getBandNr());
             }
-            if (bandData.getBandIndex() != null) {
-                if (!bandData.getBandIndex().equals(band.getBandIndex())) {
-                    band.setBandIndex(bandData.getBandIndex());
-                }
+            if (bandData.getBandIndex() != null && !bandData.getBandIndex().equals(band.getBandIndex())) {
+                band.setBandIndex(bandData.getBandIndex());
             }
-            if (bandData.getPreis() != null) {
-                if (!bandData.getPreis().equals(band.getPreis())) {
-                    preisChanged = true;
-                    band.setPreis(bandData.getPreis());
-                }
+            if (bandData.getPreis() != null && !bandData.getPreis().equals(band.getPreis())) {
+                preisChanged = true;
+                band.setPreis(bandData.getPreis());
             }
-            if (bandData.getAenderungPreis() != null) {
-                if (!bandData.getAenderungPreis().equals(band.getAenderungPreis())) {
-                    preisChanged = true;
-                    band.setAenderungPreis(bandData.getAenderungPreis());
-                    System.out.println("AenderungPreis: " + bandData.getAenderungPreis());
-                }
+            if (bandData.getAenderungPreis() != null
+                    && !bandData.getAenderungPreis().equals(band.getAenderungPreis())) {
+                preisChanged = true;
+                band.setAenderungPreis(bandData.getAenderungPreis());
+                System.out.println("AenderungPreis: " + bandData.getAenderungPreis());
             }
-            if (bandData.getBildUrl() != null) {
-                if (bandData.getBildUrl() != band.getBildUrl()) {
-                    band.setBildUrl(bandData.getBildUrl());
-                }
+            if (bandData.getBildUrl() != null && !bandData.getBildUrl().equals(band.getBildUrl())) {
+                band.setBildUrl(bandData.getBildUrl());
             }
-            if (bandData.getMpUrl() != null) {
-                if (bandData.getMpUrl() != band.getMpUrl()) {
-                    band.setMpUrl(bandData.getMpUrl());
-                }
+            if (bandData.getMpUrl() != null && !bandData.getMpUrl().equals(band.getMpUrl())) {
+                band.setMpUrl(bandData.getMpUrl());
             }
             if (bandData.isIstGelesen() != band.isIstGelesen()) {
                 band.setIstGelesen(bandData.isIstGelesen());
             }
-            if (bandData.getReread() != null) {
-                if (bandData.getReread() != band.getReread()) {
-                    band.setReread(bandData.getReread());
-                }
+            if (bandData.getReread() != null && !bandData.getReread().equals(band.getReread())) {
+                rereadChanged = true;
+                band.setReread(bandData.getReread());
             }
             if (bandData.getIstSpecial() != band.getIstSpecial()) {
                 band.setIstSpecial(bandData.getIstSpecial());
@@ -518,7 +510,7 @@ public class BandService {
             mangaReihe.setGesamtpreis(neuerGesamtpreis);
             System.out.println("Gesamtpreis gesetzt auf: " + mangaReihe.getGesamtpreis());
 
-            // Nur aktualisieren, wenn sich die Anzahl der Bände geändert hat
+            // Nur aktualisieren, wenn sich der Preis geändert hat
             if (preisChanged) {
                 System.out.println("Preis Pro Band wird neu berechnet");
                 mangaReihe.setPreisProBand(
@@ -535,6 +527,10 @@ public class BandService {
 
             // Speichere die aktualisierte MangaReihe
             mangaReiheRepository.save(mangaReihe);
+
+            if (rereadChanged) {
+                updateMangaReiheRereadOnBandChange(mangaReihe.getMangaDetails());
+            }
         }
     }
 
@@ -576,6 +572,26 @@ public class BandService {
         }
 
         return relevantData;
+    }
+
+    /**
+     * Aktualisiert den Reread-Wert der MangaReihe basierend auf dem minimalen
+     * Reread-Wert der Bände.
+     * Falls der Reread-Wert eines Bands null ist, wird er als 0 betrachtet.
+     *
+     * @param mangaDetails Die Details der MangaReihe, die aktualisiert werden
+     *                     sollen.
+     */
+    private void updateMangaReiheRereadOnBandChange(MangaDetails mangaDetails) {
+        List<Band> bands = bandRepository.findByMangaReiheId(mangaDetails.getMangaReihe().getId());
+
+        int minReread = bands.stream()
+                .map(band -> band.getReread() != null ? band.getReread() : 0) // Setze null Werte auf 0
+                .min(Integer::compareTo)
+                .orElse(0);
+
+        mangaDetails.setReread(minReread);
+        mangaDetailsService.save(mangaDetails);
     }
 
 }
