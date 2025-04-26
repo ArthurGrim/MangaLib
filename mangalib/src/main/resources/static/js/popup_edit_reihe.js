@@ -100,7 +100,8 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("editCoverImage").src =
           data["bildUrl"] || "/svg/filler_img2.png";
         document.getElementById("editTitleLabel").textContent = data.titel;
-        document.getElementById("manga_index-edit").value = data.mangaIndex ?? '';
+        document.getElementById("manga_index-edit").value =
+          data.mangaIndex ?? "";
         document.getElementById("titel-edit").value = data.titel;
         document.getElementById("status-edit").value = data.statusId;
         document.getElementById("verlag-edit").value = data.verlagId;
@@ -109,8 +110,9 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("anzahl_baende-edit").value = data.anzahlBaende;
         document.getElementById("preis_pro_band-edit").textContent =
           data.preisProBand;
-        document.getElementById("anilist_url-edit").value = data.anilistUrl ?? '';
-        document.getElementById("coverUrl-edit").value = data.coverUrl ?? '';
+        document.getElementById("anilist_url-edit").value =
+          data.anilistUrl ?? "";
+        document.getElementById("coverUrl-edit").value = data.coverUrl ?? "";
         document.getElementById("istgelesen-edit").checked = data.istGelesen;
         document.getElementById("reread-edit").value = data.reread ?? 0;
         document.getElementById("istvergriffen-edit").checked =
@@ -140,11 +142,27 @@ document.addEventListener("DOMContentLoaded", function () {
     // Weitere Funktionen und Logik...
   }
 
+  function showLoading() {
+    document.querySelector(".loading-label").style.display = "block";
+  }
+
+  function hideLoading() {
+    document.querySelector(".loading-label").style.display = "none";
+  }
+
+  function showError() {
+    const errorLabel = document.querySelector(".error-label");
+    errorLabel.style.display = "block";
+
+    setTimeout(() => {
+      errorLabel.style.display = "none";
+    }, 2000); // Fehler verschwindet nach 2 Sekunden
+  }
+
   // Event-Handler, für den MangaPassion-Autofill Button
   autofillButton.addEventListener("click", function () {
     console.log("Der MP-Autofill Button wurde gedrückt");
     const mangaIndex = mangaIndexInput.value.trim();
-    const loadingLabel = document.querySelector(".loading-label-edit");
 
     // Validierung des Manga-Index
     if (!mangaIndex || isNaN(mangaIndex)) {
@@ -154,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Der MangaIndex ist", mangaIndex);
 
     // Anzeigen des Lade-Labels
-    loadingLabel.style.display = "block";
+    showLoading();
 
     // Senden des Manga-Index an den Web Scraper
     fetch("/scrape", {
@@ -182,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelector("#editCoverImage").src = data["Band 1 Bild Url"];
 
         // Verstecken des Lade-Labels
-        loadingLabel.style.display = "none";
+        hideLoading();
 
         // Entfernen der nicht mehr benötigten Schlüssel
         delete data["verlagId"];
@@ -195,6 +213,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       })
       .catch((error) => {
+        hideLoading();
+        showError();
         console.error("Fehler beim Abrufen der Manga-Daten:", error);
       });
   });
@@ -393,11 +413,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((response) => response.json())
       .then((data) => {
         if (data.mangaIndex == null) alert("Kein AniList URL hinterlegt!");
-        else
-          window.open(
-            data.anilistUrl,
-            "_blank"
-          );
+        else window.open(data.anilistUrl, "_blank");
       })
       .catch((error) => {
         console.error("Fehler beim Abrufen der MangaReihe-Daten:", error);
