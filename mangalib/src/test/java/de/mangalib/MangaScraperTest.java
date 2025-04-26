@@ -28,6 +28,7 @@ public class MangaScraperTest {
 
             // Drucken Sie die extrahierten Daten
             if (extractedData != null) {
+                System.out.println("Test");
                 extractedData.forEach((key, value) -> System.out.println(key + ": " + value));
             } else {
                 System.out.println("Keine Daten für Index " + index + " gefunden.");

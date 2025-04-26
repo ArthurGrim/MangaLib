@@ -5,11 +5,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import de.mangalib.service.EinkaufslisteService;
 import de.mangalib.service.MangaReiheService;
 
 @Controller
@@ -17,6 +20,9 @@ public class StatistikController {
 
     @Autowired
     private MangaReiheService mangaReiheService;
+
+    @Autowired
+    private EinkaufslisteService einkaufslisteService;
 
     // Methode um die Statistik Overview Seite aufzurufen
     @GetMapping("/statistik/st_overview")
@@ -63,7 +69,7 @@ public class StatistikController {
         return "statistik/st_format";
     }
 
-    @GetMapping("/api/statistik/bandKategorien")
+    @GetMapping("/statistik/bandKategorien")
     @ResponseBody
     public Map<String, Integer> getBandKategorienStatistik() {
         Map<String, Integer> statistik = new HashMap<>();
@@ -78,5 +84,19 @@ public class StatistikController {
                 mangaReiheService.getReihenMitEinundfuenfzigBisHundertBaenden());
         statistik.put("reihenMitMehrAlsHundertBaenden", mangaReiheService.getReihenMitMehrAlsHundertBaenden());
         return statistik;
+    }
+
+    @GetMapping("/statistik/monatsdaten")
+    public ResponseEntity<Map<Integer, ?>> getMonatsdaten(
+            @RequestParam("jahr") int jahr,
+            @RequestParam("typ") String typ) {
+
+        if ("baende".equals(typ)) {
+            return ResponseEntity.ok(einkaufslisteService.getBaendeProMonat(jahr));
+        } else if ("geld".equals(typ)) {
+            return ResponseEntity.ok(einkaufslisteService.getGeldProMonat(jahr));
+        } else {
+            return ResponseEntity.badRequest().body(null);
+        }
     }
 }

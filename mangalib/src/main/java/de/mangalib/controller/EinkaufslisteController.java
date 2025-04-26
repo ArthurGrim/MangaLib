@@ -77,9 +77,10 @@ public class EinkaufslisteController {
         Map<String, String> totalPriceByMonth = new HashMap<>();
         DecimalFormat df = new DecimalFormat("#,##0.00 €", new DecimalFormatSymbols(Locale.GERMANY));
 
-        // Beispiel: Daten für die nächsten 6 Monate abrufen
-        LocalDate currentDate = LocalDate.now().minusMonths(1);
-        for (int i = 0; i < 7; i++) {
+        // Starte die Schleife bei -12, um die letzten 12 Monate rückwirkend zu
+        // überprüfen
+        LocalDate currentDate = LocalDate.now();
+        for (int i = -12; i <= 6; i++) { // -12 für die letzten 12 Monate, 6 für die kommenden Monate
             LocalDate month = currentDate.plusMonths(i);
             List<EinkaufslisteItem> items = einkaufslisteService.getItemsForMonth(month);
 
@@ -121,7 +122,7 @@ public class EinkaufslisteController {
         model.addAttribute("alleSammelbaende", alleSammelbaende);
         model.addAttribute("alleStatus", alleStatus);
         return "einkaufsliste";
- 
+
     }
 
     public String getGermanMonthName(int monthNumber) {
@@ -223,7 +224,8 @@ public class EinkaufslisteController {
         EinkaufslisteItem item = itemOptional.get();
 
         // Versuchen, eine MangaReihe anhand des MangaIndex zu finden
-        List<MangaReihe> reihen = mangaReiheService.findByMangaIndex(item.getMangaIndex() != null ? item.getMangaIndex() : 0);
+        List<MangaReihe> reihen = mangaReiheService
+                .findByMangaIndex(item.getMangaIndex() != null ? item.getMangaIndex() : 0);
         System.out.println(reihen.isEmpty());
         if (!reihen.isEmpty()) {
             // Update der vorhandenen Reihe
