@@ -314,10 +314,26 @@ document.addEventListener("DOMContentLoaded", function () {
   const autofillButton = document.querySelector(".mp-autofill-button");
   const mangaIndexInput = document.querySelector("#manga_index");
 
+  function showLoading() {
+    document.querySelector('.loading-label').style.display = 'block';
+  }
+  
+  function hideLoading() {
+    document.querySelector('.loading-label').style.display = 'none';
+  }
+  
+  function showError() {
+    const errorLabel = document.querySelector('.error-label');
+    errorLabel.style.display = 'block';
+  
+    setTimeout(() => {
+      errorLabel.style.display = 'none';
+    }, 2000); // Fehler verschwindet nach 2 Sekunden
+  }
+
   // Event-Handler, für den MangaPassion-Autofill Button
   autofillButton.addEventListener("click", function () {
     const mangaIndex = mangaIndexInput.value.trim();
-    const loadingLabel = document.querySelector(".loading-label");
 
     // Validierung des Manga-Index
     if (!mangaIndex || isNaN(mangaIndex)) {
@@ -326,7 +342,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Anzeigen des Lade-Labels
-    loadingLabel.style.display = "block";
+    showLoading();
 
     // Senden des Manga-Index an den Web Scraper
     fetch("/scrape", {
@@ -351,7 +367,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelector("#preis_pro_band").value = data["Band 1 Preis"];
 
         // Verstecken des Lade-Labels
-        loadingLabel.style.display = "none";
+        hideLoading();
 
         // Entfernen der nicht mehr benötigten Schlüssel
         delete data["verlagId"];
@@ -364,6 +380,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       })
       .catch((error) => {
+        hideLoading();
+        showError();
         console.error("Fehler beim Abrufen der Manga-Daten:", error);
       });
   });
