@@ -401,6 +401,19 @@ body {
   border-radius: 10px;
 }
 
+.error-label {
+  position: absolute; /* oder eine andere Positionierung */
+  top: 10%; /* Zentriert das Label vertikal */
+  left: 50%; /* Zentriert das Label horizontal */
+  transform: translate(-50%, -50%); /* Korrigiert die Positionierung */
+  background-color: red;
+  color: var(--font-dark);
+  z-index: 1010;
+  padding: 10px 15px;
+  font-size: 100%;
+  border-radius: 10px;
+}
+
 .form-row {
   display: flex;
   flex-wrap: wrap; /* Erlaubt das Umfließen von Elementen auf kleinen Bildschirmen */

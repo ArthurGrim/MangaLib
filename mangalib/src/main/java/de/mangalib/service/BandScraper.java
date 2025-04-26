@@ -1,6 +1,5 @@
 package de.mangalib.service;
 
-import org.springframework.stereotype.Component;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,52 +9,59 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.io.IOException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
 public class BandScraper {
 
     private static final String BASE_URL = "https://www.manga-passion.de";
 
-    public Map<String, String> scrapeBandData(String bandIndex) {
+    public static Map<String, String> scrapeBandData(String bandIndex) {
         Map<String, String> bandData = new HashMap<>();
-        String url = BASE_URL + "/volumes/" + bandIndex;
+        String fullUrl = BASE_URL + "/volumes/" + bandIndex;
+
+        System.out.println("Scraping Band-URL: " + fullUrl);
 
         try {
-            // Jsoup zum Extrahieren der meisten Daten
-            Document document = Jsoup.connect(url).get();
+            WebDriver driver = setupWebDriver();
+            driver.get(fullUrl);
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
-            // Überprüfen, ob die Seite existiert
-            if (!document.select("div.manga_sidebarInfoBlock__rJiuy:nth-child(2)").isEmpty()) {
+            // Warte auf das Cover Bild
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".img_img__jkdIh")));
 
-                // Extraktion von Verlag, Status, Format, Bänden und Preis
-                Elements infoBlocks = document.select("div.manga_sidebarInfoBlock__rJiuy");
-                for (Element block : infoBlocks) {
-                    Elements items = block.children();
-                    for (Element item : items) {
-                        if (item.children().size() >= 2) {
-                            String key = item.child(0).text().trim();
-                            String value = item.child(1).text().trim();
-                            bandData.put(key, value);
-                        }
+            // Bild-URL extrahieren
+            WebElement imgElement = driver.findElement(By.cssSelector(".img_img__jkdIh"));
+            String bildUrl = imgElement.getAttribute("src");
+            bandData.put("BildUrl", bildUrl);
+            System.out.println("BildUrl: " + bildUrl);
+
+            // HTML-Quelltext holen
+            Document doc = Jsoup.parse(driver.getPageSource());
+
+            // Infos extrahieren
+            Elements infoBlocks = doc.select("div.manga_sidebarInfoBlock__rJiuy");
+            for (Element block : infoBlocks) {
+                Elements infoItems = block.select("div.manga_mangaInfoItem___pa9z");
+
+                for (Element infoItem : infoItems) {
+                    try {
+                        String label = infoItem.selectFirst(".manga_mangaInfoLabel__bhH_Z").text().trim();
+                        String value = infoItem.selectFirst(".manga_mangaInfoValue__WPSmh").text().trim();
+                        bandData.put(label, value);
+                    } catch (Exception e) {
+                        System.out.println("Fehler beim Auslesen eines Info-Items.");
                     }
                 }
             }
 
-            // Selenium zum Extrahieren des Bild-URLs
-            WebDriver driver = setupWebDriver();
-                        driver.get(url);
-
-            WebElement tileItem = driver.findElement(By.cssSelector("div.manga_mangaCover__WdSrA span.lightbox_lightbox__y2RzP img.img_img__jkdIh"));
-            String bildUrl = tileItem.getAttribute("src");
-            bandData.put("BildUrl", bildUrl);
-
             driver.quit();
-
-        } catch (IOException e) {
+        } catch (Exception e) {
+            System.out.println("Fehler beim Scrapen des Bandes: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -67,5 +73,12 @@ public class BandScraper {
         FirefoxOptions options = new FirefoxOptions();
         options.addArguments("--headless");
         return new FirefoxDriver(options);
+    }
+
+    public static void main(String[] args) {
+        String bandIndex = "15295"; // Beispiel ID
+        Map<String, String> bandData = scrapeBandData(bandIndex);
+
+        bandData.forEach((key, value) -> System.out.println(key + ": " + value));
     }
 }

@@ -19,7 +19,7 @@ public class BandScraperTest {
         System.out.println("Test with index: " + index);
         try {
             // Rufe die Methode auf, die getestet werden soll
-            Map<String, String> extractedData = scraper.scrapeBandData(index);
+            Map<String, String> extractedData = BandScraper.scrapeBandData(index);
 
             // Drucken Sie die extrahierten Daten
             if (extractedData != null) {
