@@ -204,9 +204,8 @@ body {
 
 /* Stile für das Säulendiagramm mit den Reihen */
 .container-baende-bar-chart {
-  background-color: var(--bg-container);
   margin-top: 30px;
-  border-radius: 15px;
+  margin-bottom: 60px;
 }
 
 .heading-score {
@@ -221,6 +220,8 @@ body {
 .bar-chart-wrap {
   display: flex;
   justify-content: space-evenly;
+  border-radius: 15px 15px 0px 0px;
+  background-color: var(--bg-container);
 }
 
 .bar-wrap {
@@ -264,3 +265,109 @@ body {
   z-index: 15;
   color: var(--font-container);
 }
+
+/* CSS Style fue Statistik pro Monat */
+
+.container-statistik-pro-monat{
+  margin-bottom: 60px;
+}
+
+.statistik-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px 0px 35px;
+}
+
+.header-title {
+  color: var(--font-container);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+}
+
+#yearSelector {
+  margin-right: 20px;
+  padding: 5px 10px;
+  background-color: var(--bg-container);
+  color: var(--font-light);
+  border: none;
+  border-radius: 5px;
+}
+
+.switch {
+  display: flex;
+  background-color: var(--bg-container);
+  border-radius: 25px;
+  padding: 3px;
+}
+
+.option {
+  padding: 5px 15px;
+  cursor: pointer;
+  border-radius: 20px;
+  color: var(--font-light);
+  background-color: var(--bg-panel);
+  transition: background-color 0.3s ease;
+}
+
+.option.active {
+  background-color: var(--blue-normal);
+  color: var(--font-page);
+}
+
+.line-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background-color: var(--bg-panel);
+  padding: 20px 40px 40px 40px;  /* Abstand innen: Oben, Rechts, Unten, Links */
+  box-sizing: border-box; /* Padding wird in die Gesamtgröße eingerechnet */
+}
+
+.line-chart {
+  width: 100%;
+  height: 100%;
+  overflow: visible; /* Sicherstellen, dass nichts abgeschnitten wird */
+  background-color: var(--bg-container);
+  border-radius: 15px 15px 0px 0px;
+  margin-bottom: -5px;
+}
+
+.point {
+  fill: var(--blue-normal);
+}
+
+.value-label {
+  font-size: 12px;
+  color: var(--font-container);
+  text-anchor: middle;
+}
+
+.x-axis-pro-monat {
+  background: var(--bg-panel);
+  display: inline-flex;
+  overflow: visible;
+  user-select: none;
+  text-align: center;
+  justify-content: space-evenly;
+  width: 100%;
+  border-radius: 0px 0px 15px 15px;
+}
+
+.x-axis-label {
+  display: inline-block;
+  padding-bottom: 15px;
+  padding-top: 20px;
+  position: relative;
+  text-align: center;
+  z-index: 15;
+  color: var(--font-container);
+}
+
+
+
+
+

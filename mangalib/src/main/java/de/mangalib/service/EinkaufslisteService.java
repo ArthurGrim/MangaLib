@@ -111,6 +111,44 @@ public class EinkaufslisteService {
     }
 
     /**
+     * Holt die Anzahl der gekauften Bände pro Monat für ein bestimmtes Jahr.
+     * 
+     * @param jahr Das Jahr, für das die Daten abgerufen werden.
+     * @return Eine Map, die den Monat als Schlüssel und die Anzahl der gekauften Bände als Wert enthält.
+     */
+    public Map<Integer, Long> getBaendeProMonat(int jahr) {
+        List<Object[]> results = einkaufslisteRepository.findBandeProMonat(jahr);
+        return mapResultsToLong(results);
+    }
+
+    /**
+     * Holt die Gesamtausgaben pro Monat für ein bestimmtes Jahr und formatiert den Betrag mit einem Euro-Zeichen.
+     * 
+     * @param jahr Das Jahr, für das die Daten abgerufen werden.
+     * @return Eine Map, die den Monat als Schlüssel und den formatierten Betrag (als String) mit Euro-Zeichen als Wert enthält.
+     */
+    public Map<Integer, Long> getGeldProMonat(int jahr) {
+        List<Object[]> results = einkaufslisteRepository.findGeldProMonat(jahr);
+        return mapResultsToLong(results);
+    }
+
+    /**
+     * Hilfsmethode, um die rohen Ergebnisse aus den Repository-Abfragen in eine Map mit Long-Werten zu konvertieren.
+     * 
+     * @param results Die rohen Ergebnisse, die aus der Datenbankabfrage stammen.
+     * @return Eine Map, die den Monat als Schlüssel und die Anzahl der gekauften Bände (als Long) als Wert enthält.
+     */
+    private Map<Integer, Long> mapResultsToLong(List<Object[]> results) {
+        Map<Integer, Long> resultMap = new HashMap<>();
+        for (Object[] result : results) {
+            Integer month = (Integer) result[0];
+            Long value = ((Number) result[1]).longValue();
+            resultMap.put(month, value);
+        }
+        return resultMap;
+    }
+
+    /**
      * Speichert eine neue MangaReihe in der Datenbank mit den zugehörigen
      * MangaDetails und Bänden.
      * 

@@ -293,6 +293,7 @@ public class MainController {
             // Umwandlung der Namen in IDs
             Long verlagId = verlagService.findVerlagIdByName(mangaData.get("Deutsche Ausgabe Verlag"));
             Long typId;
+            System.out.println("Erhaltene Manga-Daten: " + mangaData);
             if (((mangaData.get("Erstveröffentlichung Herkunft").equals("China")
                     || mangaData.get("Erstveröffentlichung Herkunft").equals("Südkorea"))
                     && !mangaData.get("Erstveröffentlichung Typ").equals("Light Novel"))

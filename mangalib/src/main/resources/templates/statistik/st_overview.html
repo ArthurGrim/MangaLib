@@ -152,6 +152,36 @@
             </div>
           </section>
         </div>
+
+        <!-- Container für das Liniendiagramm mit den Statistiken pro-->
+        <div class="container-statistik-pro-monat">
+          <div class="statistik-header">
+            <!-- Linker Teil: Titel -->
+            <h3 class="header-title">Wert Pro Monat</h3>
+
+            <!-- Rechter Teil: Jahr auswählen und Switch -->
+            <div class="header-controls">
+              <!-- Jahr auswählen -->
+              <select id="yearSelector">
+                <!-- Optionen werden dynamisch über JavaScript hinzugefügt -->
+              </select>
+              <div class="switch">
+                <div id="optionBands" class="option active">Bände gekauft</div>
+                <div id="optionSpending" class="option">Geld ausgegeben</div>
+              </div>
+            </div>
+          </div>
+          <div class="draggable">
+            <div class="statistik-pro-monat">
+                <svg class="line-chart">
+                  <!-- Automatisch genrierte Punkte für das Diagramm und die Linie im Style <circle data-v-84e71bc6="" cx="0" cy="141.30049261083744" r="5" class="point"></circle> -->
+                </svg>
+                <div class="x-axis-pro-monat">
+                  <!-- Automatisch genrierte Label für jeden Monat -->
+                </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
     <script src="/js/scrollToTop.js"></script>
