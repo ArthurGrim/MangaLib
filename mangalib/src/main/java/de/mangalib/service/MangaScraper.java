@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class MangaScraper {
 
@@ -37,9 +38,6 @@ public class MangaScraper {
             } catch (Exception e) {
                 System.out.println("Kein Cookie-Banner gefunden.");
             }
-
-            // Scrollen, falls nötig
-            ((JavascriptExecutor) driver).executeScript("window.scrollTo(0, document.body.scrollHeight)");
 
             // ✅ Titel auslesen
             try {
@@ -78,6 +76,15 @@ public class MangaScraper {
                 }
             }
 
+            // Scrollen Sie die Seite langsam bis nach ganz unten
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            long lastHeight = (long) js.executeScript("return document.body.scrollHeight");
+
+            for(int i = 500; lastHeight-i >= 500; i += 500) {
+                js.executeScript("window.scrollBy(0, 500);");
+                TimeUnit.MILLISECONDS.sleep(500); // Kurze Pause zwischen den Scroll-Schritten
+            }
+
             // ✅ Danach Bände, Bilder, Preise extrahieren
             List<WebElement> bands = driver.findElements(By.className("manga-list_tileItemWrapper__qR2Dl"));
             int bandNummer = 1;
@@ -92,9 +99,9 @@ public class MangaScraper {
                         preis = preis.substring(preis.indexOf("€") + 1).trim();
                     }
 
-                    mangaData.put("Band " + bandNummer + " href", href);
-                    mangaData.put("Band " + bandNummer + " Bild Url", bildUrl);
-                    mangaData.put("Band " + bandNummer + " Preis", preis);
+                    //mangaData.put("Band " + bandNummer + " href", href);
+                    //mangaData.put("Band " + bandNummer + " Bild Url", bildUrl);
+                    //mangaData.put("Band " + bandNummer + " Preis", preis);
 
                     System.out.println("Band " + bandNummer + ": " + href + ", Bild: " + bildUrl + ", Preis: " + preis);
                     bandNummer++;
@@ -134,7 +141,7 @@ public class MangaScraper {
     }
 
     public static void main(String[] args) {
-        String mangaIndex = "2882"; // Beispiel
+        String mangaIndex = "137"; // Beispiel
         Map<String, String> mangaData = scrapeMangaData(mangaIndex);
         mangaData.forEach((key, value) -> System.out.println(key + ": " + value));
     }

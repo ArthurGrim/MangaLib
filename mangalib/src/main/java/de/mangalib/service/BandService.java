@@ -32,12 +32,6 @@ public class BandService {
     @Autowired
     private MangaDetailsService mangaDetailsService;
 
-    private final BandScraper bandScraper;
-
-    public BandService(BandScraper bandScraper) {
-        this.bandScraper = bandScraper;
-    }
-
     /**
      * Findet einen Band anhand der ID.
      * 
@@ -554,7 +548,7 @@ public class BandService {
 
     // Wenn der MP Autofill Button gedrückt wird
     public Map<String, String> autofillBandData(String bandIndex) {
-        Map<String, String> scrapedData = bandScraper.scrapeBandData(bandIndex);
+        Map<String, String> scrapedData = BandScraper.scrapeBandData(bandIndex);
         Map<String, String> relevantData = new HashMap<>();
 
         if (scrapedData.containsKey("BildUrl")) {
