@@ -11,12 +11,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MangaScraper {
+
+    // Preis steht bei Manga-Passion typischerweise als "€ 7,00" (NBSP möglich)
+    private static final Pattern PRICE_PATTERN = Pattern.compile("€\\s*(\\d{1,3}(?:[\\.,]\\d{2})?)");
 
     public static Map<String, String> scrapeMangaData(String mangaIndex) {
         String baseUrl = "https://www.manga-passion.de";
         String url = baseUrl + "/editions/" + mangaIndex;
+
         System.out.println("Scraping URL: " + url);
 
         Map<String, String> mangaData = new HashMap<>();
@@ -25,14 +31,14 @@ public class MangaScraper {
         try {
             driver.get(url);
 
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-
-            // Warten bis die Seite geladen ist (Titel vorhanden)
+            // Einzelband braucht manchmal länger -> 20s ist sinnvoll
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("h1")));
 
             // Cookie-Banner schließen (falls vorhanden)
             try {
-                WebElement denyAllButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("consent-deny-all")));
+                WebElement denyAllButton = wait
+                        .until(ExpectedConditions.elementToBeClickable(By.id("consent-deny-all")));
                 denyAllButton.click();
                 System.out.println("Cookie-Banner geschlossen.");
             } catch (Exception e) {
@@ -42,83 +48,204 @@ public class MangaScraper {
             // ✅ Titel auslesen
             try {
                 WebElement titleElement = driver.findElement(By.cssSelector("h1"));
-                mangaData.put("Titel", titleElement.getText());
-                System.out.println("Titel: " + titleElement.getText());
+                mangaData.put("Titel", safeText(titleElement));
+                System.out.println("Titel: " + safeText(titleElement));
             } catch (Exception e) {
                 System.out.println("Titel konnte nicht gefunden werden.");
             }
 
-            // ✅ Alle Info-Blöcke durchgehen
-            List<WebElement> infoBlocks = driver.findElements(By.cssSelector("div.manga_sidebarInfoBlock__rJiuy"));
+            // ✅ Info-Blöcke (Deutsche Ausgabe / Erstveröffentlichung / ggf. weitere) robust
+            // auslesen
+            // Problemfall Einzelband: "Externe Links" hat KEIN Value-Span -> darf nicht
+            // crashen
+            By infoBlockSel = By.cssSelector("div[class*='title-item-page_sidebarInfoBlock']");
+            wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(infoBlockSel));
+
+            List<WebElement> infoBlocks = driver.findElements(infoBlockSel);
 
             for (WebElement block : infoBlocks) {
-                String blockTitle = block.findElement(By.tagName("h2")).getText().trim();
-                List<WebElement> infoItems = block.findElements(By.cssSelector("div.manga_mangaInfoItem___pa9z"));
+
+                // h2 kann in manchen Fällen tricky sein -> textContent ist robuster
+                String blockTitle;
+                try {
+                    WebElement h2 = block.findElement(By.cssSelector("h2"));
+                    blockTitle = h2.getDomProperty("textContent");
+                    blockTitle = (blockTitle == null ? "" : blockTitle.replace('\u00A0', ' ').trim());
+                } catch (Exception e) {
+                    continue;
+                }
+
+                if (blockTitle.isBlank())
+                    continue;
+
+                // ✅ "Externe Links" ist für Fachdaten irrelevant und hat oft keinen Value-Span
+                if (blockTitle.startsWith("Externe Links")) {
+                    continue;
+                }
+
+                List<WebElement> infoItems = block
+                        .findElements(By.cssSelector("div[class*='title-item-page_mangaInfoItem']"));
 
                 for (WebElement item : infoItems) {
-                    String label = item.findElement(By.cssSelector("span.manga_mangaInfoLabel__bhH_Z")).getText().trim();
-                    String value;
-
-                    // Manchmal sind Werte als <li> (Liste) enthalten, manchmal als normaler Text
                     try {
-                        List<WebElement> listItems = item.findElements(By.cssSelector("span.manga_mangaInfoValue__WPSmh li"));
-                        if (!listItems.isEmpty()) {
-                            value = listItems.get(0).getText().trim(); // Erster Eintrag
-                        } else {
-                            value = item.findElement(By.cssSelector("span.manga_mangaInfoValue__WPSmh")).getText().trim();
-                        }
-                    } catch (Exception ex) {
-                        value = "Unbekannt";
-                    }
+                        // Label
+                        WebElement labelEl = item
+                                .findElement(By.cssSelector("span[class*='title-item-page_mangaInfoLabel']"));
+                        String label = safeText(labelEl);
+                        if (label.isBlank())
+                            continue;
 
-                    mangaData.put(blockTitle + " " + label, value);
-                    System.out.println(blockTitle + " " + label + ": " + value);
+                        // Value (optional!)
+                        List<WebElement> valueCandidates = item
+                                .findElements(By.cssSelector("span[class*='title-item-page_mangaInfoValue']"));
+                        if (valueCandidates.isEmpty()) {
+                            // bei Einzelband/Links/sonderfällen existiert kein Value-Span -> überspringen
+                            continue;
+                        }
+
+                        WebElement valueEl = valueCandidates.get(0);
+
+                        // textContent ist in headless/React stabiler als getText
+                        String value = valueEl.getDomProperty("textContent");
+                        if (value == null || value.isBlank())
+                            value = safeText(valueEl);
+
+                        value = value.replace('\u00A0', ' ').trim();
+                        if (value.isBlank())
+                            value = "Unbekannt";
+
+                        String key = blockTitle + " " + label;
+                        mangaData.put(key, value);
+
+                        System.out.println(key + ": " + value);
+
+                    } catch (Exception ignored) {
+                        // einzelne Zeilen überspringen, Scrape nicht abbrechen
+                    }
                 }
             }
 
-            // Scrollen Sie die Seite langsam bis nach ganz unten
+            // ✅ Danach Bände, Bilder, Preise extrahieren (nur wenn es eine Bänderliste
+            // gibt)
             JavascriptExecutor js = (JavascriptExecutor) driver;
-            long lastHeight = (long) js.executeScript("return document.body.scrollHeight");
 
-            for(int i = 500; lastHeight-i >= 500; i += 500) {
-                js.executeScript("window.scrollBy(0, 500);");
-                TimeUnit.MILLISECONDS.sleep(500); // Kurze Pause zwischen den Scroll-Schritten
-            }
+            By bandTileSel = By.cssSelector("div[class*='manga-list_tileItemWrapper']");
+            List<WebElement> bands = driver.findElements(bandTileSel);
 
-            // ✅ Danach Bände, Bilder, Preise extrahieren
-            List<WebElement> bands = driver.findElements(By.className("manga-list_tileItemWrapper__qR2Dl"));
             int bandNummer = 1;
 
             for (WebElement band : bands) {
                 try {
-                    String href = band.findElement(By.tagName("a")).getAttribute("href");
-                    String bildUrl = band.findElement(By.className("img_img__jkdIh")).getAttribute("src");
-                    String preis = band.findElement(By.className("manga-list_top__S1J_8")).getText();
+                    // Tile in Viewport bringen (Lazy Load trigger)
+                    js.executeScript("arguments[0].scrollIntoView({block:'center', inline:'nearest'});", band);
+                    TimeUnit.MILLISECONDS.sleep(150);
 
-                    if (preis.contains("€")) {
-                        preis = preis.substring(preis.indexOf("€") + 1).trim();
+                    // Link (Volume URL)
+                    WebElement linkEl = band.findElement(By.cssSelector("a[href*='/volumes/']"));
+                    String href = linkEl.getDomProperty("href");
+                    if (href == null || href.isBlank()) {
+                        href = linkEl.getDomAttribute("href");
+                        if (href != null && href.startsWith("/"))
+                            href = baseUrl + href;
                     }
 
-                    //mangaData.put("Band " + bandNummer + " href", href);
-                    //mangaData.put("Band " + bandNummer + " Bild Url", bildUrl);
-                    //mangaData.put("Band " + bandNummer + " Preis", preis);
+                    // Bild-URL: currentSrc/src/srcset via JS
+                    WebElement imgEl = band.findElement(By.cssSelector("img"));
+                    String bildUrl = (String) js.executeScript(
+                            "const i=arguments[0]; return (i.currentSrc || i.src || i.getAttribute('data-src') || i.getAttribute('srcset') || '');",
+                            imgEl);
+                    if (bildUrl != null && bildUrl.contains(",")) {
+                        bildUrl = bildUrl.split(",")[0].trim().split("\\s+")[0];
+                    }
+                    if (bildUrl == null || bildUrl.isBlank())
+                        bildUrl = "Unbekannt";
+
+                    // ✅ Preis: aus div[class*='manga-list_top'] via textContent (funktioniert
+                    // zuverlässig)
+                    String preis = "Unbekannt";
+                    try {
+                        WebElement priceEl = band.findElement(By.cssSelector("div[class*='manga-list_top']"));
+
+                        String priceText = priceEl.getDomProperty("textContent");
+                        if (priceText == null || priceText.isBlank())
+                            priceText = priceEl.getText();
+
+                        priceText = (priceText == null ? "" : priceText.replace('\u00A0', ' ').trim());
+
+                        Matcher pm = PRICE_PATTERN.matcher(priceText);
+                        if (pm.find()) {
+                            preis = pm.group(1).replace(".", ",");
+                        }
+                    } catch (NoSuchElementException ignored) {
+                    }
+
+                    // Optional speichern (falls du es nutzen willst)
+                    mangaData.put("Band " + bandNummer + " href", href);
+                    mangaData.put("Band " + bandNummer + " Bild Url", bildUrl);
+                    mangaData.put("Band " + bandNummer + " Preis", preis);
 
                     System.out.println("Band " + bandNummer + ": " + href + ", Bild: " + bildUrl + ", Preis: " + preis);
                     bandNummer++;
+
                 } catch (Exception e) {
-                    System.out.println("Fehler beim Lesen eines Bandes");
+                    System.out.println("Fehler beim Lesen eines Bandes (Band " + bandNummer + "): "
+                            + e.getClass().getSimpleName() + " - " + e.getMessage());
                 }
             }
 
-            // Falls keine Bände gefunden wurden → Einzelband
+            // ✅ Falls keine Bände gefunden wurden → Einzelband-Edition (Cover robust
+            // extrahieren)
             if (bands.isEmpty()) {
-                mangaData.put("Deutsche Ausgabe Bände", "1");
-                mangaData.put("Band 1 href", url);
+
                 try {
-                    WebElement imgElement = driver.findElement(By.cssSelector(".img_img__jkdIh"));
-                    mangaData.put("Band 1 Bild Url", imgElement.getAttribute("src"));
-                } catch (Exception e) {
-                    System.out.println("Einzelband-Bild konnte nicht extrahiert werden.");
+                    // 1) Versuche gezielt das Cover-Image (Next/Image) zu finden
+                    // (in der Regel hat das img eine CSS-Module Klasse wie "img_img__....")
+                    List<WebElement> imgs = driver.findElements(By.cssSelector("img[class*='img_img']"));
+
+                    // Fallback: falls Manga-Passion das mal anders nennt
+                    if (imgs.isEmpty()) {
+                        imgs = driver.findElements(By.cssSelector("img"));
+                    }
+
+                    String coverUrl = null;
+
+                    for (WebElement img : imgs) {
+                        // currentSrc/src/srcset/data-src sind bei Next/Image relevant
+                        String candidate = img.getDomProperty("currentSrc");
+                        if (candidate == null || candidate.isBlank()) {
+                            candidate = (String) js.executeScript(
+                                    "const i=arguments[0]; return (i.currentSrc || i.src || i.getAttribute('data-src') || i.getAttribute('srcset') || '');",
+                                    img);
+                        }
+
+                        if (candidate == null)
+                            continue;
+                        candidate = candidate.trim();
+
+                        // srcset -> erste URL nehmen
+                        if (candidate.contains(",")) {
+                            candidate = candidate.split(",")[0].trim().split("\\s+")[0];
+                        }
+
+                        // ✅ Placeholder aussortieren
+                        if (candidate.isBlank())
+                            continue;
+                        if (candidate.startsWith("data:image"))
+                            continue;
+
+                        // ✅ Nur “echte” Manga-Passion Cover nehmen
+                        // (meist _next/image oder media.manga-passion.de)
+                        if (candidate.contains("_next/image") || candidate.contains("media.manga-passion.de")) {
+                            coverUrl = candidate;
+                            break;
+                        }
+                    }
+
+                    if (coverUrl != null) {
+                        mangaData.put("Cover", coverUrl);
+                    }
+
+                } catch (Exception ignored) {
                 }
             }
 
@@ -126,22 +253,36 @@ public class MangaScraper {
             System.out.println("FEHLER: Konnte die Webseite nicht korrekt laden!");
             e.printStackTrace();
         } finally {
-            driver.quit();
+            try {
+                driver.quit();
+            } catch (Exception ignored) {
+            }
         }
 
         System.out.println("Finale Manga-Daten: " + mangaData);
         return mangaData;
     }
 
+    private static String safeText(WebElement el) {
+        try {
+            return el == null ? "" : el.getText().trim();
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
     private static WebDriver setupWebDriver() {
+        // ggf. Pfad anpassen
         System.setProperty("webdriver.gecko.driver", "E:\\Programme\\Test\\geckodriver.exe");
+
         FirefoxOptions options = new FirefoxOptions();
         options.addArguments("--headless");
+
         return new FirefoxDriver(options);
     }
 
     public static void main(String[] args) {
-        String mangaIndex = "137"; // Beispiel
+        String mangaIndex = "2502"; // Einzelband-Beispiel
         Map<String, String> mangaData = scrapeMangaData(mangaIndex);
         mangaData.forEach((key, value) -> System.out.println(key + ": " + value));
     }
