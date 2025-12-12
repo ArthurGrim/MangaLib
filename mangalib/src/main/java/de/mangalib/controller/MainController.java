@@ -244,7 +244,9 @@ public class MainController {
             Long formatId = Long.valueOf((String) requestData.get("formatId"));
             String titel = (String) requestData.get("titel");
             Integer anzahlBaende = (Integer) requestData.get("anzahlBaende");
-            BigDecimal preisProBand = requestData.containsKey("preisProBand") ? new BigDecimal((String) requestData.get("preisProBand")) : BigDecimal.ZERO;
+            BigDecimal preisProBand = requestData.containsKey("preisProBand")
+                    ? new BigDecimal((String) requestData.get("preisProBand"))
+                    : BigDecimal.ZERO;
             Boolean istGelesen = (Boolean) requestData.get("istGelesen");
             Integer reread = (Integer) requestData.get("reread") != null ? (Integer) requestData.get("reread") : 0;
             Boolean istVergriffen = (Boolean) requestData.get("istVergriffen");
@@ -254,7 +256,9 @@ public class MainController {
             Long sammelbandTypId = requestData.get("sammelbandTypId") != null
                     ? Long.valueOf((String) requestData.get("sammelbandTypId"))
                     : null;
-            BigDecimal gesamtpreisAenderung = requestData.containsKey("gesamtpreisAenderung") ? new BigDecimal((String) requestData.get("gesamtpreisAenderung")) : BigDecimal.ZERO;
+            BigDecimal gesamtpreisAenderung = requestData.containsKey("gesamtpreisAenderung")
+                    ? new BigDecimal((String) requestData.get("gesamtpreisAenderung"))
+                    : BigDecimal.ZERO;
             @SuppressWarnings("unchecked")
             Map<String, String> scrapedData = (Map<String, String>) requestData.get("scrapedData");
             Boolean istEdit = Boolean.valueOf(scrapedData.get("istEdit"));
@@ -294,10 +298,12 @@ public class MainController {
             Long verlagId = verlagService.findVerlagIdByName(mangaData.get("Deutsche Ausgabe Verlag"));
             Long typId;
             System.out.println("Erhaltene Manga-Daten: " + mangaData);
-            if (((mangaData.get("Erstveröffentlichung Herkunft").equals("China")
-                    || mangaData.get("Erstveröffentlichung Herkunft").equals("Südkorea"))
-                    && !mangaData.get("Erstveröffentlichung Typ").equals("Light Novel"))
-                    && !mangaData.get("Erstveröffentlichung Typ").equals("Artbook & Sonstiges")) {
+            String herkunft = mangaData.get("Erstveröffentlichung Herkunft");
+            String typ = mangaData.get("Erstveröffentlichung Typ");
+
+            if ((("China".equals(herkunft) || "Südkorea".equals(herkunft))
+                    && !"Light Novel".equals(typ))
+                    && !"Artbook & Sonstiges".equals(typ)) {
                 typId = typService.findTypIdByBezeichnung("Webtoon");
             } else {
                 typId = typService.findTypIdByBezeichnung(mangaData.get("Erstveröffentlichung Typ"));
@@ -345,7 +351,8 @@ public class MainController {
         BigDecimal preisProBand = mangaReihe.getPreisProBand();
         response.put("preisProBand", String.valueOf(preisProBand).replace(".", ","));
         response.put("istGelesen", mangaReihe.getMangaDetails().isIstGelesen());
-        response.put("reread", mangaReihe.getMangaDetails().getReread() != null ? mangaReihe.getMangaDetails().getReread() : 0);
+        response.put("reread",
+                mangaReihe.getMangaDetails().getReread() != null ? mangaReihe.getMangaDetails().getReread() : 0);
         response.put("istEbayPreis", mangaReihe.getIstEbayPreis());
         response.put("istVergriffen", mangaReihe.getIstVergriffen());
         BigDecimal gesamtpreisAenderung = mangaReihe.getAenderungGesamtpreis() != null
@@ -401,8 +408,8 @@ public class MainController {
             bandData.put("titel", mangaReihe.getTitel());
 
             // Calculate and format the total price
-        BigDecimal totalPrice = band.getPreis().add(band.getAenderungPreis());
-        bandData.put("totalPreis", String.format("%.2f €", totalPrice));
+            BigDecimal totalPrice = band.getPreis().add(band.getAenderungPreis());
+            bandData.put("totalPreis", String.format("%.2f €", totalPrice));
             result.add(bandData);
         }
         return result;
