@@ -315,19 +315,19 @@ document.addEventListener("DOMContentLoaded", function () {
   const mangaIndexInput = document.querySelector("#manga_index");
 
   function showLoading() {
-    document.querySelector('.loading-label').style.display = 'block';
+    document.querySelector(".loading-label").style.display = "block";
   }
-  
+
   function hideLoading() {
-    document.querySelector('.loading-label').style.display = 'none';
+    document.querySelector(".loading-label").style.display = "none";
   }
-  
+
   function showError() {
-    const errorLabel = document.querySelector('.error-label');
-    errorLabel.style.display = 'block';
-  
+    const errorLabel = document.querySelector(".error-label");
+    errorLabel.style.display = "block";
+
     setTimeout(() => {
-      errorLabel.style.display = 'none';
+      errorLabel.style.display = "none";
     }, 2000); // Fehler verschwindet nach 2 Sekunden
   }
 
@@ -359,12 +359,52 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelector("#typ").value = data["typId"];
         document.querySelector("#titel").value = data["Titel"];
         document.querySelector("#format").value = data["formatId"];
-        document.querySelector("#anzahl_baende").value = data[
-          "Deutsche Ausgabe Bände"
-        ]
-          .replace("+", "")
-          .trim();
-        document.querySelector("#preis_pro_band").value = data["Band 1 Preis"];
+        // Anzahl Bände: Serien liefern "Deutsche Ausgabe Bände", Einzelband nicht -> fallback 1
+        const baendeRaw = data["Deutsche Ausgabe Bände"];
+        const baende =
+          baendeRaw != null && String(baendeRaw).trim() !== ""
+            ? String(baendeRaw).replace("+", "").trim()
+            : "1";
+
+        document.querySelector("#anzahl_baende").value = baende;
+        // ==========================
+        // Preis pro Band ermitteln
+        // ==========================
+
+        // akzeptiert "7,00", "7.00", "€ 7,00", "´┐¢ 7,00"
+        const extractPrice = (raw) => {
+          if (!raw) return null;
+          const m = String(raw).match(/(\d{1,3}(?:[.,]\d{2})?)/);
+          return m ? m[1].replace(".", ",") : null;
+        };
+
+        // 1️⃣ Letzten Bandpreis suchen
+        let lastBandPrice = null;
+
+        for (let i = 1; ; i++) {
+          const key = `Band ${i} Preis`;
+          if (!(key in data)) break;
+
+          const p = extractPrice(data[key]);
+          if (p && p !== "0,00") {
+            lastBandPrice = p;
+          }
+        }
+
+        // 2️⃣ Fallback: Deutsche Ausgabe Preis (Einzelband / Sammelband)
+        let germanEditionPrice = extractPrice(data["Deutsche Ausgabe Preis"]);
+
+        // 3️⃣ Entscheidung
+        let finalPrice = "0,00";
+
+        if (lastBandPrice) {
+          finalPrice = lastBandPrice;
+        } else if (germanEditionPrice && germanEditionPrice !== "0,00") {
+          finalPrice = germanEditionPrice;
+        }
+
+        // setzen
+        document.querySelector("#preis_pro_band").value = finalPrice;
 
         // Verstecken des Lade-Labels
         hideLoading();
