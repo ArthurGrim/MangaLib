@@ -122,21 +122,67 @@ public class MangaReiheService {
      * @return Die gespeicherte MangaReihe mit zugewiesener ID.
      */
     @Transactional
-    public MangaReihe saveMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
-            String titel, Integer anzahlBaende, BigDecimal preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
-            String anilistUrl, Long sammelbandTypId, BigDecimal gesamtpreisAenderung, Boolean istGelesen,
+    public MangaReihe saveMangaReihe(
+            Integer mangaIndex,
+            Long statusId,
+            Long verlagId,
+            Long typId,
+            Long formatId,
+            String titel,
+            Integer anzahlBaende,
+            BigDecimal preisProBand,
+            Boolean istVergriffen,
+            Boolean istEbayPreis,
+            String anilistUrl,
+            Long sammelbandTypId,
+            BigDecimal gesamtpreisAenderung,
+            Boolean istGelesen,
             Map<String, String> scrapedData) {
         System.out.println("SaveMangaReihe gestartet");
 
-        MangaReihe mangaReihe = createMangaReihe(mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
-                preisProBand, istVergriffen, istEbayPreis, gesamtpreisAenderung);
+        // --- Stammdaten-Entities laden (damit die Relationen gesetzt werden können)
+        // ---
+        Status status = statusRepository.findById(statusId)
+                .orElseThrow(() -> new IllegalArgumentException("Status not found: " + statusId));
+
+        Verlag verlag = verlagRepository.findById(verlagId)
+                .orElseThrow(() -> new IllegalArgumentException("Verlag not found: " + verlagId));
+
+        Typ typ = typRepository.findById(typId)
+                .orElseThrow(() -> new IllegalArgumentException("Typ not found: " + typId));
+
+        Format format = formatRepository.findById(formatId)
+                .orElseThrow(() -> new IllegalArgumentException("Format not found: " + formatId));
+
+        // --- MangaReihe erstellen ---
+        MangaReihe mangaReihe = createMangaReihe(
+                mangaIndex,
+                statusId,
+                verlagId,
+                typId,
+                formatId,
+                titel,
+                anzahlBaende,
+                preisProBand,
+                istVergriffen,
+                istEbayPreis,
+                gesamtpreisAenderung);
+
+        // >>> DAS ist der entscheidende Fix: Relationen setzen <<<
+        mangaReihe.setStatus(status);
+        mangaReihe.setVerlag(verlag);
+        mangaReihe.setTyp(typ);
+        mangaReihe.setFormat(format);
 
         MangaReihe savedMangaReihe = mangaReiheRepository.save(mangaReihe);
 
         System.out.println("MangaReihe Objekt erstellt");
 
         System.out.println("Setze Details");
-        MangaDetails details = mangaDetailsService.createMangaDetails(savedMangaReihe, anilistUrl, sammelbandTypId,
+        MangaDetails details = mangaDetailsService.createMangaDetails(
+                savedMangaReihe,
+                anilistUrl,
+                sammelbandTypId,
                 istGelesen,
                 scrapedData);
         mangaDetailsRepository.save(details);
@@ -149,11 +195,12 @@ public class MangaReiheService {
         BigDecimal aenderungGesamtPreis = bandService.calculateAenderungGesamtpreis(savedMangaReihe);
         savedMangaReihe.setAenderungGesamtpreis(aenderungGesamtPreis);
 
-        // Aktualisierung des Gesamtpreises der MangaReihe basierend auf den Bänden
         BigDecimal gesamtpreis = bandService.calculateGesamtpreis(savedMangaReihe);
         savedMangaReihe.setGesamtpreis(gesamtpreis);
+
         savedMangaReihe.setPreisProBand(
                 gesamtpreis.divide(BigDecimal.valueOf(savedMangaReihe.getAnzahlBaende()), 2, RoundingMode.HALF_UP));
+
         mangaReiheRepository.save(savedMangaReihe);
 
         updateBaendeIstGelesenStatus(details);
@@ -177,22 +224,45 @@ public class MangaReiheService {
      * @param gesamtpreisAenderung Die Änderung des Gesamtpreises.
      * @return Die erstellte MangaReihe.
      */
-    private MangaReihe createMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
-            String titel, Integer anzahlBaende, BigDecimal preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
+    private MangaReihe createMangaReihe(
+            Integer mangaIndex,
+            Long statusId,
+            Long verlagId,
+            Long typId,
+            Long formatId,
+            String titel,
+            Integer anzahlBaende,
+            BigDecimal preisProBand,
+            Boolean istVergriffen,
+            Boolean istEbayPreis,
             BigDecimal gesamtpreisAenderung) {
         MangaReihe mangaReihe = new MangaReihe();
         mangaReihe.setMangaIndex(mangaIndex);
-        mangaReihe.setStatus(statusService.getStatusById(statusId).orElse(null));
-        mangaReihe.setVerlag(verlagService.getVerlagById(verlagId).orElse(null));
-        mangaReihe.setTyp(typService.getTypById(typId).orElse(null));
-        mangaReihe.setFormat(formatService.getFormatById(formatId).orElse(null));
+
+        // WICHTIG: hier nicht "orElse(null)" -> sonst speicherst du FK = NULL und
+        // bekommst später NPEs
+        mangaReihe.setStatus(
+                statusService.getStatusById(statusId)
+                        .orElseThrow(() -> new IllegalArgumentException("Status not found: " + statusId)));
+
+        mangaReihe.setVerlag(
+                verlagService.getVerlagById(verlagId)
+                        .orElseThrow(() -> new IllegalArgumentException("Verlag not found: " + verlagId)));
+
+        mangaReihe.setTyp(
+                typService.getTypById(typId)
+                        .orElseThrow(() -> new IllegalArgumentException("Typ not found: " + typId)));
+
+        mangaReihe.setFormat(
+                formatService.getFormatById(formatId)
+                        .orElseThrow(() -> new IllegalArgumentException("Format not found: " + formatId)));
+
         mangaReihe.setTitel(titel);
         mangaReihe.setAnzahlBaende(anzahlBaende);
         mangaReihe.setIstVergriffen(istVergriffen);
         mangaReihe.setIstEbayPreis(istEbayPreis);
 
         mangaReihe.setPreisProBand(preisProBand);
-
         mangaReihe.setAenderungGesamtpreis(gesamtpreisAenderung);
 
         return mangaReihe;
