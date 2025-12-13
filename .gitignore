@@ -1,5 +1,5 @@
-HELP.md
-.gradle
+!HELP.md
+.gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -18,7 +18,7 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -36,4 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
+# Local Backups
+Backup/
 **/Backup/*.sql
