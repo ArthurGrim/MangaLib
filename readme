@@ -1,4 +1,5 @@
 MangaLib - Manga Bibliotheksverwaltung
+Sichere Testausführung und Datenbankisolation: siehe TESTING.md.
 Überblick
 
 MangaLib ist eine Webanwendung zur Verwaltung einer Manga-Bibliothek. Sie ermöglicht es Benutzern, Manga-Reihen zu durchsuchen, zu sortieren und zu filtern. Die Anwendung bietet Funktionen wie das Filtern nach verschiedenen Kriterien (Status, Verlag, Typ, Format, Erstellungsdatum) und das Suchen nach Titel oder Index.

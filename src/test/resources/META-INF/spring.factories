@@ -1,0 +1,2 @@
+# Gilt auch für neue Spring-Tests, die @ActiveProfiles versehentlich vergessen.
+org.springframework.test.context.ContextCustomizerFactory=de.mangalib.testsupport.TestDatabaseContextCustomizerFactory

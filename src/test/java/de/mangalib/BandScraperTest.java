@@ -1,36 +1,20 @@
 package de.mangalib;
 
-import org.junit.jupiter.api.Test;
-
 import de.mangalib.service.BandScraper;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Map;
-
-public class BandScraperTest {
-
+@Tag("external-network")
+@Disabled("Manueller Selenium-/Netzwerktest; nur nach ausdrücklicher Freigabe aktivieren.")
+class BandScraperTest {
     @Test
-    public static void main(String[] args) {
-        BandScraper scraper = new BandScraper();
-
-        testScrapeBandData(scraper, "15295");
-    }
-
-    public static void testScrapeBandData(BandScraper scraper, String index) {
-        System.out.println("Test with index: " + index);
-        try {
-            // Rufe die Methode auf, die getestet werden soll
-            Map<String, String> extractedData = BandScraper.scrapeBandData(index);
-
-            // Drucken Sie die extrahierten Daten
-            if (extractedData != null) {
-                extractedData.forEach((key, value) -> System.out.println(key + ": " + value));
-            } else {
-                System.out.println("Keine Daten für Index " + index + " gefunden.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            ;
-        }
-        System.out.println("------------------------------------------");
+    void scrapesBandMetadata() {
+        var data = BandScraper.scrapeBandData("15295");
+        assertNotNull(data.get("Titel"));
+        assertFalse(data.get("Titel").isBlank());
+        assertNotNull(data.get("BildUrl"));
+        assertTrue(data.get("BildUrl").startsWith("https://"));
     }
 }

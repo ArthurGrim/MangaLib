@@ -22,6 +22,32 @@ Wichtig:
 Datenbankstruktur und bestehende Bestandsdaten müssen während
 aller Updates vollständig erhalten bleiben.
 
+### P1 – Anwendungssicherheit
+
+- [ ] Sämtliche Datenbankzugriffe auf SQL-Injection-Schwachstellen prüfen.
+  - Native SQL-Abfragen und dynamisch erzeugte Queries untersuchen.
+  - Ausschließlich parametrisierte Abfragen und Prepared Statements verwenden.
+  - Keine ungeprüfte Verkettung von Benutzereingaben in SQL-Statements.
+  - Dynamische Sortierfelder und Spaltennamen über Allowlisten absichern.
+  - Automatisierte Sicherheitstests für kritische Eingaben ergänzen.
+
+- [ ] XSS-Schwachstellen im Frontend beseitigen.
+  - Unsichere innerHTML-Verwendungen überprüfen und ersetzen.
+  - Benutzereingaben sicher ausgeben.
+  - Externe URLs und Bild-URLs validieren.
+  - Inline-Eventhandler nach Möglichkeit entfernen.
+
+- [ ] Sämtliche API-Endpunkte auf serverseitige Eingabevalidierung prüfen.
+
+- [ ] CSRF-Schutz und Zugriffssicherheit abhängig vom
+      vorgesehenen Betriebsmodell überprüfen.
+
+- [ ] Fehlermeldungen und Logging auf die Offenlegung
+      sensibler Informationen untersuchen.
+
+- [ ] Automatisierte Sicherheitstests dauerhaft in die
+      Test-Suite integrieren.
+
 
 - **Vorhandene Daten erhalten:** Schemaänderungen müssen mit allen bestehenden produktiven MangaLib-Datensätzen kompatibel sein. Bestehende Reihen, Bände, Einkaufspositionen, Preise, Lesestatus, Verknüpfungen und Metadaten dürfen nicht verloren gehen oder stillschweigend verändert werden.
 - **Migration statt Neuanlage:** Änderungen des produktiven Datenmodells erfolgen durch versionierte, nachvollziehbare Vorwärtsmigrationen (beispielsweise Flyway oder Liquibase nach gesonderter Entscheidung). Ein frisches Schema allein ist kein Ersatz für eine Migration bestehender Daten.
