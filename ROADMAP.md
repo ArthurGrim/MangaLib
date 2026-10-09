@@ -1,7 +1,7 @@
 # MangaLib – Entwicklungsroadmap
 
 > **Status:** Planungsgrundlage, Stand 09.10.2026  
-> **Geltungsbereich:** MangaLib (Java 21, Spring Boot 3.5.8, Spring Data JPA, MySQL, Thymeleaf, JavaScript, Gradle).  
+> **Geltungsbereich:** MangaLib (Java 21, Spring Boot 3.5.16, Spring Data JPA, MySQL, Thymeleaf, JavaScript, Gradle).
 > **Verbindlichkeit:** Die Kategorien **Muss / Soll / Kann** geben die fachlichen Prioritäten des Projekteigentümers wieder. Technische Voraussetzungen dürfen in der Umsetzungsreihenfolge vorgezogen werden; eine fachliche Umpriorisierung erfolgt nur nach Rücksprache.
 
 ## 1. Grundsätze und Definition of Done
@@ -9,7 +9,7 @@
 
 ### Spring Boot und Dependency-Modernisierung
 
-- [ ] Spring Boot von 3.5.8 auf 3.5.16 aktualisieren.
+- [x] Spring Boot von 3.5.8 auf 3.5.16 aktualisieren.
 - [ ] Bestehende Anwendung auf Kompatibilität prüfen.
 - [ ] Integrationstests gegen isolierte MySQL-Testdatenbank durchführen.
 - [ ] Migration von Spring Boot 3.5 auf 4.1.x vorbereiten.
@@ -17,6 +17,11 @@
 - [ ] Migration auf Spring Boot 4.1.x durchführen.
 - [ ] Regressionstests für zentrale MangaLib-Funktionen ausführen.
 - [ ] Regelmäßige Überprüfung von Framework- und Dependency-Updates etablieren.
+
+Validierungsstand des Updates: 31 datenbankfreie Schutzprüfungen und `assemble`
+erfolgreich. Der vollständige Lauf `clean test` unter 3.5.16 steht noch aus,
+da `MANGALIB_TEST_DB_PASSWORD` im ausführenden Codex-Prozess nicht verfügbar war.
+Java 21, Gradle 8.14.3 und die Testschutzmechanismen bleiben unverändert.
 
 Wichtig:
 Datenbankstruktur und bestehende Bestandsdaten müssen während
