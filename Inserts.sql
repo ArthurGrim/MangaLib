@@ -1,16 +1,23 @@
 Use mangalib;
 
 -- Inserts für Verlage
+INSERT INTO verlage (name) VALUES ('Aloha Comics');
 INSERT INTO verlage (name) VALUES ('altraverse');
+INSERT INTO verlage (name) VALUES ('AniMachon');
+INSERT INTO verlage (name) VALUES ('avant-verlag');
+INSERT INTO verlage (name) VALUES ('B-Love Manga');
 INSERT INTO verlage (name) VALUES ('BD erotix');
+INSERT INTO verlage (name) VALUES ('Bramble');
 INSERT INTO verlage (name) VALUES ('Bunte Dimensionen');
 INSERT INTO verlage (name) VALUES ('C LINES');
 INSERT INTO verlage (name) VALUES ('Cadmos Verlag');
 INSERT INTO verlage (name) VALUES ('Carlsen Manga');
 INSERT INTO verlage (name) VALUES ('CatMint');
 INSERT INTO verlage (name) VALUES ('Chinabooks');
+INSERT INTO verlage (name) VALUES ('Cinestrange Extreme');
 INSERT INTO verlage (name) VALUES ('Community Editions');
 INSERT INTO verlage (name) VALUES ('CROCU');
+INSERT INTO verlage (name) VALUES ('Cross Cult');
 INSERT INTO verlage (name) VALUES ('Crunchyroll');
 INSERT INTO verlage (name) VALUES ('dani books');
 INSERT INTO verlage (name) VALUES ('Dokico');
@@ -20,15 +27,18 @@ INSERT INTO verlage (name) VALUES ('FISCHER New Media');
 INSERT INTO verlage (name) VALUES ('frechverlag');
 INSERT INTO verlage (name) VALUES ('Hayabusa');
 INSERT INTO verlage (name) VALUES ('Heyne');
+INSERT INTO verlage (name) VALUES ('Hornico');
 INSERT INTO verlage (name) VALUES ('i am mangaka!');
 INSERT INTO verlage (name) VALUES ('JNC Nina');
 INSERT INTO verlage (name) VALUES ('KAZÉ Manga');
+INSERT INTO verlage (name) VALUES ('Loewe Graphix');
 INSERT INTO verlage (name) VALUES ('Loewe Manga');
 INSERT INTO verlage (name) VALUES ('LYX');
 INSERT INTO verlage (name) VALUES ('Magas Verlag');
 INSERT INTO verlage (name) VALUES ('Mahoroba Verlag');
 INSERT INTO verlage (name) VALUES ('Manga Cult');
 INSERT INTO verlage (name) VALUES ('Manga JAM Session');
+INSERT INTO verlage (name) VALUES ('MANGAMOON');
 INSERT INTO verlage (name) VALUES ('Manhwa Cult');
 INSERT INTO verlage (name) VALUES ('Manlin Verlag');
 INSERT INTO verlage (name) VALUES ('Mitteldeutscher Verlag');
@@ -38,17 +48,22 @@ INSERT INTO verlage (name) VALUES ('papertoons');
 INSERT INTO verlage (name) VALUES ('Pixelite Novels');
 INSERT INTO verlage (name) VALUES ('Planet Manga');
 INSERT INTO verlage (name) VALUES ('PYRAMOND');
+INSERT INTO verlage (name) VALUES ('Reichenbacher Verlag');
 INSERT INTO verlage (name) VALUES ('Reprodukt');
 INSERT INTO verlage (name) VALUES ('S.Fischer');
 INSERT INTO verlage (name) VALUES ('Schreiber & Leser');
 INSERT INTO verlage (name) VALUES ('Schwarzer Turm');
 INSERT INTO verlage (name) VALUES ('SKYLINE NOVELS');
+INSERT INTO verlage (name) VALUES ('Splitter Manga+');
+INSERT INTO verlage (name) VALUES ('Tiny Tusk');
 INSERT INTO verlage (name) VALUES ('TOKYOPOP');
 INSERT INTO verlage (name) VALUES ('Ullmann Medien');
 INSERT INTO verlage (name) VALUES ('VGS');
 INSERT INTO verlage (name) VALUES ('VIZ Media');
 INSERT INTO verlage (name) VALUES ('Yomeru');
 INSERT INTO verlage (name) VALUES ('YUNA');
+INSERT INTO verlage (name) VALUES ('Yurico');
+
 
 -- Inserts für Status
 INSERT INTO status (beschreibung) VALUES ('Vollständig');
