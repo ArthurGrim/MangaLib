@@ -177,3 +177,70 @@ Do not invent project-specific information.
 - Do not merge changes into the main branch automatically.
 - Review the final diff and run relevant checks before completion.
 - Keep the application in a buildable state whenever practical.
+
+
+## 14. Code documentation and comments
+
+All code should be understandable and sufficiently documented
+for future maintenance.
+
+- Write meaningful comments that explain complex logic,
+  business rules, assumptions and non-obvious decisions.
+- Document why an implementation works a certain way,
+  especially when the reasoning is not immediately obvious.
+- Use JavaDoc for important public classes, methods and
+  service interfaces where it improves understanding.
+- Document complex database queries, calculations,
+  transformations and scraping logic.
+- Explain important edge cases and special handling.
+- Keep comments accurate when modifying existing code.
+- Prefer German explanations and comments where consistent
+  with the project's conventions.
+- Preserve useful existing comments during refactoring.
+
+Avoid trivial comments that merely repeat what a line of
+code already expresses.
+
+Prioritize understandable code first and meaningful
+documentation second.
+
+## 15. UI design and consistency
+
+Preserve the existing MangaLib visual identity.
+
+- Reuse existing colors, typography, spacing and components.
+- Follow established layout and interaction patterns.
+- Integrate new features into the existing design.
+- Prefer existing CSS classes and shared styling rules.
+- Ensure consistent dialogs, forms, buttons and tables.
+- Maintain responsive layouts and existing interactions.
+- Avoid introducing a different design system or frontend
+  framework without explicit approval.
+- Do not redesign unrelated pages during feature development.
+- Improve accessibility where possible without disrupting
+  the existing visual design.
+
+New functionality should look and behave like a natural
+extension of the current application.
+
+## 16. Product roadmap and feature planning
+
+The project maintains a separate ROADMAP.md containing
+planned features and their priorities.
+
+- Read ROADMAP.md when planning significant changes.
+- Respect the priority categories: Must, Should and Could.
+- Consider planned features when making architectural
+  and data-model decisions.
+- Avoid refactorings that unnecessarily complicate
+  already planned functionality.
+- Do not implement unrelated roadmap features without
+  an explicit task.
+- Preserve existing behavior unless a change is requested
+  or necessary to fix an identified bug.
+- Suggest roadmap updates when new dependencies,
+  technical risks or improvements are discovered.
+- Do not independently change the user's functional priorities.
+
+Technical prerequisites may need to be completed before
+higher-priority features can be safely implemented.
