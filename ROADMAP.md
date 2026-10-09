@@ -6,6 +6,23 @@
 
 ## 1. Grundsätze und Definition of Done
 
+
+### Spring Boot und Dependency-Modernisierung
+
+- [ ] Spring Boot von 3.5.8 auf 3.5.16 aktualisieren.
+- [ ] Bestehende Anwendung auf Kompatibilität prüfen.
+- [ ] Integrationstests gegen isolierte MySQL-Testdatenbank durchführen.
+- [ ] Migration von Spring Boot 3.5 auf 4.1.x vorbereiten.
+- [ ] Abhängigkeiten und Konfigurationsänderungen prüfen.
+- [ ] Migration auf Spring Boot 4.1.x durchführen.
+- [ ] Regressionstests für zentrale MangaLib-Funktionen ausführen.
+- [ ] Regelmäßige Überprüfung von Framework- und Dependency-Updates etablieren.
+
+Wichtig:
+Datenbankstruktur und bestehende Bestandsdaten müssen während
+aller Updates vollständig erhalten bleiben.
+
+
 - **Vorhandene Daten erhalten:** Schemaänderungen müssen mit allen bestehenden produktiven MangaLib-Datensätzen kompatibel sein. Bestehende Reihen, Bände, Einkaufspositionen, Preise, Lesestatus, Verknüpfungen und Metadaten dürfen nicht verloren gehen oder stillschweigend verändert werden.
 - **Migration statt Neuanlage:** Änderungen des produktiven Datenmodells erfolgen durch versionierte, nachvollziehbare Vorwärtsmigrationen (beispielsweise Flyway oder Liquibase nach gesonderter Entscheidung). Ein frisches Schema allein ist kein Ersatz für eine Migration bestehender Daten.
 - **Expand → Migrate → Contract:** Wo erforderlich, zunächst neue Spalten/Tabellen ergänzen, Altdaten überführen und validieren, Anwendung anpassen und alte Strukturen erst nach expliziter Freigabe entfernen. Bei neuen Pflichtfeldern zunächst mit bestehenden Daten kompatible Defaults/Nullable-Phasen einplanen.
