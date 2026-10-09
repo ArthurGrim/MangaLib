@@ -244,3 +244,33 @@ planned features and their priorities.
 
 Technical prerequisites may need to be completed before
 higher-priority features can be safely implemented.
+
+
+## 17. Database migrations and legacy data compatibility
+
+Preserving existing MangaLib data is a mandatory requirement.
+
+- All database schema changes must remain compatible with the
+  existing production data or include a tested migration.
+- Never assume the production database is empty.
+- Never replace an existing database with a freshly initialized
+  schema as a shortcut.
+- Preserve all existing manga series, volumes, shopping entries,
+  prices, reading states, relationships and metadata.
+- Use versioned, reproducible database migrations.
+- Prefer additive, backwards-compatible schema changes.
+- For breaking changes, plan data migration and application
+  compatibility before removing old structures.
+- Never silently discard, reset or overwrite legacy values.
+- Do not invent historical information for newly introduced fields.
+- Test migrations against an isolated copy of the existing
+  database before proposing production execution.
+- Validate record counts, relationships and important business
+  values before and after migration.
+- Create and verify a backup before every production migration.
+- Document migration risks and recovery procedures.
+- Require explicit user approval before executing migrations
+  against the production database.
+
+Legacy data compatibility takes precedence over simplifying
+the database model.
