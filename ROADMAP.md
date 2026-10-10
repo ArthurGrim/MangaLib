@@ -1,6 +1,6 @@
 # MangaLib – Entwicklungsroadmap
 
-> **Status:** Planungsgrundlage, Stand 09.10.2026  
+> **Status:** Planungsgrundlage, Stand 10.10.2026
 > **Geltungsbereich:** MangaLib (Java 21, Spring Boot 3.5.16, Spring Data JPA, MySQL, Thymeleaf, JavaScript, Gradle).
 > **Verbindlichkeit:** Die Kategorien **Muss / Soll / Kann** geben die fachlichen Prioritäten des Projekteigentümers wieder. Technische Voraussetzungen dürfen in der Umsetzungsreihenfolge vorgezogen werden; eine fachliche Umpriorisierung erfolgt nur nach Rücksprache.
 
@@ -10,18 +10,37 @@
 ### Spring Boot und Dependency-Modernisierung
 
 - [x] Spring Boot von 3.5.8 auf 3.5.16 aktualisieren.
-- [ ] Bestehende Anwendung auf Kompatibilität prüfen.
-- [ ] Integrationstests gegen isolierte MySQL-Testdatenbank durchführen.
-- [ ] Migration von Spring Boot 3.5 auf 4.1.x vorbereiten.
-- [ ] Abhängigkeiten und Konfigurationsänderungen prüfen.
+- [x] Technische Kompatibilität unter 3.5.16 durch vorhandene Tests und `assemble` prüfen.
+- [x] Vorhandene Integrationstests gegen isolierte MySQL-Testdatenbank durchführen.
+- [x] Migrationsanalyse von Spring Boot 3.5 auf 4.1.x erstellen.
+- [x] Abhängigkeiten und Konfigurationsänderungen für den Migrationsplan statisch prüfen.
 - [ ] Migration auf Spring Boot 4.1.x durchführen.
 - [ ] Regressionstests für zentrale MangaLib-Funktionen ausführen.
 - [ ] Regelmäßige Überprüfung von Framework- und Dependency-Updates etablieren.
 
-Validierungsstand des Updates: 31 datenbankfreie Schutzprüfungen und `assemble`
-erfolgreich. Der vollständige Lauf `clean test` unter 3.5.16 steht noch aus,
-da `MANGALIB_TEST_DB_PASSWORD` im ausführenden Codex-Prozess nicht verfügbar war.
+Validierungsstand des Updates: Codex hat am 10.10.2026 eigenständig
+`.\gradlew.bat --no-daemon clean test` unter Spring Boot 3.5.16 erfolgreich
+ausgeführt: **34 Tests bestanden, 0 Fehler, 0 fehlgeschlagene Tests**.
+Davon entfallen 31 auf `TestDatabaseGuardTest`, zwei auf die Kontextprüfungen
+und einer auf den transaktionalen `ServiceTest`. Die XML-Berichte unter
+`build/test-results/test/` bestätigen diese Verteilung. `assemble` war bereits
+im Update-Auftrag erfolgreich.
+
+Die Datenbankisolierung wurde für diesen Lauf erfolgreich bestätigt:
+Testprofil, `GuardedTestDataSource`, ausschließlich `mangalib_test` und
+`mangalib_test_user`; kein produktiver Datenbankzugriff. Der Service-Test
+verwendet Rollback, die Stammdaten werden nur gelesen. Migrationen,
+Schemaänderungen und Selenium-/Scraping-Tests wurden nicht ausgeführt.
+Die eingeschränkten MySQL-Serverrechte bleiben eine separat administrativ
+zu bestätigende Schutzgrenze; die Tests ersetzen keine Rechteprüfung.
 Java 21, Gradle 8.14.3 und die Testschutzmechanismen bleiben unverändert.
+
+**Noch offen:** fachliche Regressionstests für Bearbeiten, Einkauf/Kaufübernahme,
+Lesestatus, Preise, Statistiken und die Oberfläche. Die 34 Tests sind keine
+vollständige fachliche oder Spring-Boot-4-Kompatibilitätsabnahme.
+Der konkrete Plan einschließlich zusätzlicher Tests und Freigabekriterien steht
+in [BOOT4_MIGRATION.md](BOOT4_MIGRATION.md); recherchiertes Ziel ist Spring Boot
+4.1.1 (Stand 10.10.2026). Die Migration selbst wurde noch nicht begonnen.
 
 Wichtig:
 Datenbankstruktur und bestehende Bestandsdaten müssen während
@@ -146,8 +165,9 @@ aller Updates vollständig erhalten bleiben.
 Die folgenden Punkte sind technische Voraussetzungen oder Qualitätsprobleme, **keine Änderung der fachlichen Muss-/Soll-/Kann-Kategorien**.
 
 ### T01 – Isolierte MySQL-Testumgebung und verlässliche Tests (zuerst)
-- Eigenes `test`-Profil mit gesonderter Datenbankkonfiguration; niemals produktive Zugangsdaten oder produktives Schema als Fallback.
-- Automatische Tests gegen isolierte MySQL-Testinstanz (lokal oder Testcontainers), Unit-Tests ohne Datenbank und Scraper-/Browser-Tests separat.
+- **Erledigt:** eigenes `test`-Profil und separate MySQL-Datenbank `mangalib_test` mit Testbenutzer `mangalib_test_user`; Passwort über `MANGALIB_TEST_DB_PASSWORD`, kein produktiver Fallback.
+- **Erledigt:** automatischer Schutz vor Kontext-/JDBC-Zugriffen, datenbankfreie Schutzprüfungen und transaktionaler Integrationstest; 34 Tests durch Codex erfolgreich ausgeführt. Selenium-/Netzwerktests sind deaktiviert und zusätzlich per Tag ausgeschlossen. Sicherheitsregeln: [TESTING.md](TESTING.md).
+- **Offen:** fachliche Regressionstests und zusätzliche Migrationsprüfungen gemäß [BOOT4_MIGRATION.md](BOOT4_MIGRATION.md). Testcontainers ist keine Voraussetzung für die bestehende funktionsfähige Testumgebung.
 - Vor dem ersten `gradlew test`, `check`, `build` und `bootRun` Konfiguration und potentielle Schreibzugriffe prüfen.
 - SQL-Bootstrap-Skript reparieren/validieren; Migrationen an echten Altbeständen testen.
 
@@ -207,8 +227,11 @@ Die folgenden Punkte sind technische Voraussetzungen oder Qualitätsprobleme, **
 - [x] Produktanforderungen initial dokumentiert.
 - [x] MySQL-Backup vor Beginn der Codex-Arbeiten erstellt (Wiederherstellung noch zu prüfen).
 - [x] Separater Git-Branch für erste Arbeiten angelegt.
-- [ ] Isolierte Testdatenbank und `test`-Profil eingerichtet.
-- [ ] Testlauf ohne Zugriff auf produktive Daten bestätigt.
+- [x] Isolierte Testdatenbank und `test`-Profil eingerichtet.
+- [x] Testlauf ohne Zugriff auf produktive Daten bestätigt (Codex, 10.10.2026, 34 Tests).
+- [x] Spring-Boot-3.5.16-Update technisch validiert.
+- [x] Spring-Boot-4.1-Migrationsanalyse dokumentiert; Umsetzung ausstehend.
+- [ ] Fachliche Regressionstests für zentrale Abläufe und UI abgeschlossen.
 - [ ] Technische Befunde und Feature-Tickets in ausführbare Codex-Aufgaben zerlegt.
 - [ ] Erste abgesicherte Fehlerbehebung umgesetzt.
 
