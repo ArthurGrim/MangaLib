@@ -2,7 +2,7 @@
 
 Stand: **10.10.2026**. Ausgangspunkt: **Spring Boot 3.5.16**. Recherchiertes Ziel: **4.1.1**.
 
-Dies ist eine statische Analyse und ein Umsetzungsplan, keine durchgeführte Migration. In diesem Auftrag wurden nur diese Datei und die ROADMAP.md bearbeitet. Keine Builds, Tests, Anwendungsstarts, Datenbankverbindungen, Schemaänderungen oder Scraper wurden ausgeführt. Die vorhandenen Testberichte wurden ausschließlich gelesen. AGENTS.md, ROADMAP.md und TESTING.md wurden vollständig berücksichtigt.
+Dies ist ein Umsetzungsplan, keine durchgeführte Migration. Der ursprüngliche Analyseauftrag war ausschließlich statisch und bearbeitete nur diese Datei und die ROADMAP.md. Im anschließenden P0-Testauftrag wurden Persistenz- und Datenintegritätstests unter **3.5.16** ergänzt und ausgeführt; den tatsächlichen Fortschritt dokumentiert Abschnitt 10. AGENTS.md, ROADMAP.md und TESTING.md bleiben verbindlich. Anwendungscode und Abhängigkeiten wurden dabei nicht geändert.
 
 ## 1. Ergebnis und Entscheidungsgrundlage
 
@@ -192,11 +192,11 @@ Die vorhandenen XML-Berichte vom **10.10.2026, 11:29 UTC** wurden gelesen. Ergeb
 
 Die beiden deaktivierten/taggefilterten Scraperklassen sind nicht Bestandteil dieser 34 Fälle. Die Zahl ist kein Coverage-Prozentsatz. **31 von 34 Fällen betreffen den Schutz, nur einer einen fachlichen Speicherablauf.** Es fehlen MVC/JSON, Templates, Einkauf/Kaufübernahme, Änderungen vorhandener Datensätze, Query-Ergebnisse, Null-/Randfälle, Datenvergleich nach Rollback und Performance-Baselines. Die Suite ist eine notwendige Grundlage, aber keine ausreichende Freigabe für Boot 4.
 
-`TESTING.md` enthält noch die historische Aussage aus dem damaligen Implementierungsauftrag, es seien keine Tests ausgeführt worden. Der aktuelle Laufstatus ist hier und in ROADMAP.md dokumentiert; die Sicherheitsregeln aus TESTING.md bleiben verbindlich. Eine sprachliche Aktualisierung dieser dritten Datei ist nicht Teil dieses Auftrags.
+`TESTING.md` enthält noch die historische Aussage aus dem damaligen Implementierungsauftrag, es seien keine Tests ausgeführt worden. Die obigen 34 Fälle beschreiben die ursprüngliche Baseline. Den erweiterten Laufstatus dokumentiert Abschnitt 10; die Sicherheitsregeln aus TESTING.md bleiben verbindlich.
 
 ## 6. Zusätzliche Tests mit Prioritäten und Akzeptanzkriterien
 
-Alle fachlichen Tests zunächst gegen **3.5.16** etablieren und danach unverändert gegen den Zielstack ausführen. Nur neue Testdatensätze verwenden; bestehende Stammdaten nicht ändern. Die genannten neuen Testdateien sind Vorschläge, noch nicht angelegt.
+Alle fachlichen Tests zunächst gegen **3.5.16** etablieren und danach unverändert gegen den Zielstack ausführen. Nur neue Testdatensätze verwenden; bestehende Stammdaten nicht ändern. Die drei P0-Zeilen sind inzwischen implementiert (Abschnitt 10); P1/P2 bleiben geplante Arbeiten.
 
 | Priorität | Vorgeschlagene Dateien unter `src/test/java/de/mangalib/` | Mindestinhalt / Akzeptanz |
 |---|---|---|
@@ -270,3 +270,50 @@ Diese Befehle sind **nur für einen später autorisierten Implementierungsauftra
 - Wann wird die separat freizugebende Browser-/Scraperkompatibilität geprüft? Bis dahin bleibt sie ausdrücklich unbestätigt.
 
 Die Analyse liefert damit einen begrenzten Upgrade-Pfad mit konkreten Prüfpunkten. Eine Zusicherung „ohne Datenverlust“ setzt das Bestehen der beschriebenen Daten- und Regressionstests voraus; sie wird nicht aus der Versionsnummer oder den bisherigen 34 Tests abgeleitet.
+
+## 10. Tatsächlicher Fortschritt: P0-Persistenztests unter 3.5.16
+
+Stand **10.10.2026**: Die P0-Tests aus Abschnitt 6 sind implementiert und durch Codex eigenständig gestuft ausgeführt. Spring Boot bleibt **3.5.16**, Java 21 und Gradle 8.14.3 bleiben unverändert. Keine Migration, Schemaänderung, produktive Verbindung oder Scraper-Ausführung; kein Git-Commit.
+
+### Implementierte Dateien und Sicherheitsnachweise
+
+- `src/test/java/de/mangalib/testsupport/TestDatabaseGuardTest.java`: bisherige 31 Fälle erhalten, 13 Fälle ergänzt (insgesamt 44). Zweite DataSource, Ersetzung unter demselben Bean-Namen sogar bei gleichem Typ, spätere URL-/Benutzer-/DDL-Overrides, höher priorisierte JVM-/Test-PropertySources und tatsächlich geparstes `SPRING_APPLICATION_JSON`. Lifecycle-Negativfälle brechen vor einer ORM-Probe-Bean ab; statischer DriverManager-Mock verhindert echte JDBC-Verbindungen.
+- `src/test/java/de/mangalib/testsupport/TestDatabaseContextCustomizerFactory.java`: bisherige Registrierung und Prüfungen in eine package-private Methode mit Passwort-Supplier verschoben, damit Lifecycle-Tests rein synthetisch funktionieren. Der automatisch registrierte Customizer liest weiterhin ausschließlich `MANGALIB_TEST_DB_PASSWORD`; die echte `GuardedTestDataSource` wird unverändert registriert und liest/prüft die Prozessvariable erneut vor jeder Verbindung. Bean-Anzahl und Definition-Identität werden unverändert vor regulärer Singleton-Erzeugung geprüft. Die Prüfstelle ist kein neuer Verbindungsweg.
+- `src/test/java/de/mangalib/PersistenceTestFixtures.java`: ausschließlich neue, eindeutig benannte Aggregate und Referenzen auf vorhandene Stammdaten. Vor dem ersten INSERT werden aktive Rollback-Testtransaktion, tatsächliches Schema `mangalib_test`, effektiver Benutzer `mangalib_test_user` und InnoDB für alle fünf beschriebenen Geschäftstabellen geprüft. Alle SELECTs und Schreibzugriffe laufen über den bestehenden geschützten EntityManager; keine eigenen JDBC-Verbindungen. URLs werden nur geparst und als Text verglichen, ohne HTTP-/DNS-Abfragen.
+- `src/test/java/de/mangalib/PersistenceCompatibilityTest.java`: fünf Fälle für Reihen/Details/Bände, Einkaufslisten/Details und Boolean-Werte `null`, `false`, `true`. Persistieren, Flush, Clear, Reload und Änderungen ausschließlich eigener Testdatensätze; beide `@MapsId`-Beziehungen, IDs/FK-Referenzen, positive/negative Centbeträge, DATE/Schalttag, Timestamp, URLs und Lesewerte werden geprüft. `@AfterTransaction` bestätigt für jeden Fall die Abwesenheit sämtlicher neu angelegter Aggregate nach dem tatsächlichen Rollback.
+- `src/test/java/de/mangalib/TestDataPreservationTest.java`: ein Fall mit skalaren, nach Primärschlüssel geordneten SQL-Snapshots sämtlicher Spalten aller zehn Anwendungstabellen. Vorher-/Nachher-Snapshots liegen außerhalb der Schreibtransaktion. Während der Transaktion müssen alle vorherigen Zeilen unverändert enthalten sein und exakt sechs neue Zeilen hinzukommen; nach Rollback müssen sämtliche Tabellen wieder identische Zeilen/Werte enthalten. Zusätzlich werden die neuen IDs auf Abwesenheit geprüft. Die fünf Stammdatentabellen werden weder angelegt noch verändert.
+
+Der zunächst fehlgeschlagene datenbankfreie Test war ein Fehler der Mock-Abgrenzung: Bereits der Konstruktor der erwarteten `SQLException` ruft `DriverManager.getLogWriter()` auf. Der Mock erlaubt nun ausschließlich diesen verbindungsfreien Aufruf und prüft, dass keine weiteren Aufrufe erfolgten. Der Guard wurde zur Behebung nicht gelockert. Kein fachlicher Produktionsfehler wurde durch diese P0-Fälle neu nachgewiesen.
+
+### Tatsächlich ausgeführte Validierung
+
+Vor Datenbanktests wurden Konfiguration und Aufgaben geprüft: `clean test --dry-run` enthielt nur Clean-, Compile-, Ressourcen- und Testaufgaben; `external-network` bleibt ausgeschlossen, beide Scraperklassen bleiben zusätzlich `@Disabled`. Das Testpasswort war in der Prozessumgebung vorhanden und nicht leer; sein Wert wurde nicht ausgegeben.
+
+```powershell
+.\gradlew.bat --no-daemon test --tests de.mangalib.testsupport.TestDatabaseGuardTest
+.\gradlew.bat --no-daemon test --tests de.mangalib.PersistenceCompatibilityTest --tests de.mangalib.TestDataPreservationTest
+.\gradlew.bat --no-daemon clean test
+```
+
+Die Integrationstests wurden erst nach allen bestandenen Schutztests gestartet. Nach Ergänzung der Rollback-Nachprüfung pro Persistenzfall wurden die sechs Integrationstestfälle erneut erfolgreich ausgeführt; danach folgte die vollständige Suite.
+
+| Prüfung / Klasse im abschließenden Lauf | Bestanden | Fehlgeschlagen / Errors | Skipped |
+|---|---:|---:|---:|
+| Datenbankfreier Schutzlauf: `TestDatabaseGuardTest` | 44 | 0 | 0 |
+| Gezielter Integrationslauf: beide neuen Testklassen | 6 | 0 | 0 |
+| `clean test`: `TestDatabaseGuardTest` | 44 | 0 | 0 |
+| `clean test`: `PersistenceCompatibilityTest` | 5 | 0 | 0 |
+| `clean test`: `TestDataPreservationTest` | 1 | 0 | 0 |
+| `clean test`: bestehende Kontext-/Service-Tests | 3 | 0 | 0 |
+| **Vollständige Suite (keine Addition der gestuften Läufe)** | **53** | **0** | **0** |
+
+Nachweis: `build/test-results/test/TEST-*.xml` und `build/reports/tests/test/index.html`. Der abschließende Lauf kompilierte Anwendung und Tests neu. Die ausgeschlossenen Scraper sind nicht Teil dieser 53 Fälle. Keine neuen Compilerwarnungen beobachtet; bekannte OSIV-, Mockito-/Byte-Buddy-Selbstanbindungs- und JVM-Class-Sharing-Warnungen bleiben bestehen. Erwartete Warnungen über abgebrochene Negativtest-Kontexte sind kein Integrationsfehler.
+
+### Verbleibende Grenzen und nächste Arbeiten
+
+- P0 ist für den aktuellen **3.5.16-Teststack** nachgewiesen; dieselben Tests müssen später unter dem Zielstack erneut bestehen. Keine Boot-4-Kompatibilitätsfreigabe durch diesen Auftrag.
+- P1-Verträge aus Abschnitt 6 (MVC/JSON, Repository-Abfragen, fachliche Kauf-/Service-Workflows, Template-Rendering) und P2-Performance bleiben offen. Die bereits bekannten fachlichen Roadmap-Probleme wurden nicht verändert.
+- Der aktuelle Testbestand wurde auf unveränderte Werte geprüft. Repräsentative historische Bestände, alle Null-/Randfälle und Zeitzonen-/Timestamp-Präzisionsvarianten sind damit nicht vollständig abgedeckt. FK-Referenzen und Reloads sind geprüft; gezielte Constraint-Verletzungs-/Löschtests sind noch nicht enthalten.
+- InnoDB wurde für die fünf beschriebenen Geschäftstabellen tatsächlich geprüft. Serverrechte, lokale Weiterleitungen und Gleichheit aller Schema-Metadaten mit Produktion wurden nicht administrativ auditiert. Die eingeschränkten Testrechte bleiben die unabhängige Schutzgrenze.
+- Die Vorher-/Nachher-Vergleiche benötigen eine während des Laufs exklusiv genutzte Testdatenbank. Gleichzeitige fremde Änderungen führen bewusst zu einem Fehler. AUTO_INCREMENT-Zähler können durch zurückgerollte Inserts steigen; sie sind keine vorhandenen Zeilenwerte und werden nicht zurückgesetzt.
+- Der vollständige Git-Diff einschließlich neuer Testdateien wurde auf diesen Testauftrag begrenzt geprüft; `git diff --check` meldete keine Whitespace-Fehler. Anwendungscode, Build-/Testkonfiguration, Abhängigkeiten und Scraper bleiben unverändert.
