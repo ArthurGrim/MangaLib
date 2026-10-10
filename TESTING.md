@@ -48,7 +48,7 @@ Rollback setzt eine transaktionale Storage Engine (InnoDB) voraus. AUTO_INCREMEN
 
 ## Erster kontrollierter Lauf – erst nach Prüfung und Freigabe
 
-In diesem Änderungsauftrag wurden keine Tests, Builds, Migrationen oder Datenbankverbindungen ausgeführt. Auch die Kompilierung der neuen Tests ist noch nicht bestätigt.
+Historischer Ablauf für den ersten freigegebenen Lauf. Inzwischen hat Codex die abgesicherte Suite unter Spring Boot 3.5.16 und unter **4.0.8** erfolgreich ausgeführt: jeweils **91 Tests, keine Fehler** (10.10.2026). Aktueller Stand, Daten-/Schema-Vergleich und verbleibende Grenzen: [BOOT4_MIGRATION.md, Abschnitt 12](BOOT4_MIGRATION.md#12-tatsächlicher-fortschritt-validierter-408-zwischenstand). Die technische Testfreigabe ersetzt keine Produktions-/Altbestands- oder Browserabnahme.
 
 1. Diff prüfen; ein Administrator bestätigt Zielinstanz, ausschließlich eingeschränkte Testrechte und InnoDB. Keine Schema-/Seed-Skripte ausführen.
 2. Zunächst nur die Schutzprüfungen ohne Datenbank ausführen:

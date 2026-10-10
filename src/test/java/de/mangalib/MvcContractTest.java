@@ -1,7 +1,7 @@
 package de.mangalib;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import de.mangalib.entity.Band;
 import de.mangalib.entity.MangaReihe;
 import de.mangalib.entity.EinkaufslisteItem;
@@ -14,9 +14,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.transaction.AfterTransaction;
@@ -25,6 +26,7 @@ import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
@@ -63,6 +65,13 @@ class MvcContractTest {
 
     @BeforeEach
     void prepareOnlyTransactionalFixturesAndBlockScrapers() throws Exception {
+        // Jackson 2 bleibt transitiv vorhanden; MVC muss die getestete Jackson-3-Bean verwenden.
+        var adapter = mvc.getDispatcherServlet().getWebApplicationContext()
+                .getBean(RequestMappingHandlerAdapter.class);
+        var jsonConverter = adapter.getMessageConverters().stream()
+                .filter(converter -> converter.canRead(Map.class, MediaType.APPLICATION_JSON))
+                .findFirst().orElseThrow();
+        assertSame(mapper, assertInstanceOf(JacksonJsonHttpMessageConverter.class, jsonConverter).getMapper());
         mangaScraper = mockStatic(MangaScraper.class, invocation -> {
             throw new AssertionError("Scraper-Aufruf im MVC-Vertragstest gesperrt.");
         });
@@ -135,13 +144,13 @@ class MvcContractTest {
         number(data, "formatId", graph.series().getFormat().getFormatId());
         number(data, "anzahlBaende", 2);
         number(data, "reread", 2);
-        assertTrue(data.get("preisProBand").isTextual());
-        assertEquals("5,99", data.get("preisProBand").textValue());
-        assertEquals("0,36", data.get("gesamtpreisAenderung").textValue());
+        assertTrue(data.get("preisProBand").isString());
+        assertEquals("5,99", data.get("preisProBand").stringValue());
+        assertEquals("0,36", data.get("gesamtpreisAenderung").stringValue());
         bool(data, "istGelesen", false);
         bool(data, "istEbayPreis", false);
         bool(data, "istVergriffen", false);
-        assertEquals(graph.seriesDetails().getAnilistUrl(), data.get("anilistUrl").textValue());
+        assertEquals(graph.seriesDetails().getAnilistUrl(), data.get("anilistUrl").stringValue());
         assertFalse(data.has("mangaDetails"));
         assertFalse(data.has("status"));
     }
@@ -168,8 +177,8 @@ class MvcContractTest {
         number(data, "reread", 0);
         var bandData = jsonGet("/getBand/" + band.getId());
         for (var field : List.of("bildUrl", "mpUrl", "bandIndex")) {
-            assertTrue(bandData.get(field).isTextual());
-            assertEquals("", bandData.get(field).textValue());
+            assertTrue(bandData.get(field).isString());
+            assertEquals("", bandData.get(field).stringValue());
         }
         bool(bandData, "istSpecial", false);
         number(bandData, "reread", 0);
@@ -184,8 +193,8 @@ class MvcContractTest {
         money(data, "aenderungPreis", "0.00");
         bool(data, "istGelesen", true);
         bool(data, "istSpecial", false);
-        assertTrue(data.get("bildUrl").isTextual());
-        assertEquals(graph.volumes().getFirst().getBildUrl().toExternalForm(), data.get("bildUrl").textValue());
+        assertTrue(data.get("bildUrl").isString());
+        assertEquals(graph.volumes().getFirst().getBildUrl().toExternalForm(), data.get("bildUrl").stringValue());
         assertFalse(data.has("mangaReihe"));
         var list = jsonGet("/mangaReihe/" + graph.series().getId() + "/bands");
         assertTrue(list.isArray());
@@ -193,8 +202,8 @@ class MvcContractTest {
         for (var row : list) {
             assertTrue(row.get("id").isIntegralNumber());
             assertTrue(row.get("preis").isNumber());
-            assertTrue(row.get("formattedPreis").isTextual());
-            assertTrue(row.get("totalPreis").isTextual());
+            assertTrue(row.get("formattedPreis").isString());
+            assertTrue(row.get("totalPreis").isString());
             assertFalse(row.has("mangaReihe"));
         }
     }
@@ -213,8 +222,8 @@ class MvcContractTest {
         assertTrue(data.get("id").isIntegralNumber());
         money(data, "preisProBand", "5.99");
         money(data, "gesamtpreis", "11.98");
-        assertEquals(LocalDate.now(), LocalDate.parse(data.get("erstelltAm").textValue()));
-        assertNotNull(OffsetDateTime.parse(data.get("aktualisiertAm").textValue()));
+        assertEquals(LocalDate.now(), LocalDate.parse(data.get("erstelltAm").stringValue()));
+        assertNotNull(OffsetDateTime.parse(data.get("aktualisiertAm").stringValue()));
         bool(data, "istVergriffen", false);
         assertFalse(data.has("status"));
         assertFalse(data.has("verlag"));
@@ -234,7 +243,7 @@ class MvcContractTest {
     void editsSeriesUsingPopupPayloadWithOmittedPricesAndSerializesDetailsWithoutCycles() throws Exception {
         var data = jsonPost("/addMangaReihe", seriesPayload(true), 200);
         number(data, "id", graph.series().getId());
-        assertEquals("MVC Reihe geändert", data.get("titel").textValue());
+        assertEquals("MVC Reihe geändert", data.get("titel").stringValue());
         var details = data.get("mangaDetails");
         assertNotNull(details);
         number(details, "id", graph.series().getId());
@@ -251,7 +260,7 @@ class MvcContractTest {
     @ValueSource(booleans = {false, true})
     void acceptsNullOrAbsentOptionalFieldsOnCreation(boolean explicitNull) throws Exception {
         var payload = mapper.readTree(seriesPayload(false));
-        var object = (com.fasterxml.jackson.databind.node.ObjectNode) payload;
+        var object = (tools.jackson.databind.node.ObjectNode) payload;
         for (var field : List.of("mangaIndex", "anilistUrl", "sammelbandTypId", "reread",
                 "istGelesen", "istEbayPreis", "istVergriffen")) {
             if (explicitNull) object.putNull(field); else object.remove(field);
@@ -305,7 +314,7 @@ class MvcContractTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void createsShoppingItemsWithDateOrNullFromJavascriptPayload(boolean missingDate) throws Exception {
-        var payload = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(seriesPayload(false));
+        var payload = (tools.jackson.databind.node.ObjectNode) mapper.readTree(seriesPayload(false));
         payload.remove("statusId");
         if (!missingDate) payload.put("erscheinungsdatum", "2024-02-29");
         var data = jsonPost("/addToEinkaufsliste", mapper.writeValueAsString(payload), 200);
@@ -317,7 +326,7 @@ class MvcContractTest {
         assertFalse(data.has("typId"));
         assertFalse(data.has("formatId"));
         if (missingDate) assertFalse(data.has("erscheinungsdatum"));
-        else assertEquals("2024-02-29", data.get("erscheinungsdatum").textValue());
+        else assertEquals("2024-02-29", data.get("erscheinungsdatum").stringValue());
         flushAndClear();
         var saved = em.find(EinkaufslisteItem.class, data.get("id").longValue());
         assertEquals(saved.getId(), saved.getEinkaufslisteItemDetails().getId());
@@ -346,12 +355,12 @@ class MvcContractTest {
         flushAndClear();
         var pending = jsonPost("/buyItemUpdate", "{\"itemId\":\"" + item.getId() + "\"}", 417);
         assertEquals(Set.of("message"), fields(pending));
-        assertEquals("Bitte Status für neue Reihe auswählen", pending.get("message").textValue());
+        assertEquals("Bitte Status für neue Reihe auswählen", pending.get("message").stringValue());
         var bought = jsonPost("/buyItemCreate", """
                 {"itemId":"%s","statusId":"%s"}
                 """.formatted(item.getId(), graph.series().getStatus().getStatusId()), 200);
         assertEquals(Set.of("message"), fields(bought));
-        assertEquals("Neue MangaReihe erfolgreich gespeichert", bought.get("message").textValue());
+        assertEquals("Neue MangaReihe erfolgreich gespeichert", bought.get("message").stringValue());
         flushAndClear();
         assertTrue(em.find(EinkaufslisteItem.class, item.getId()).getGekauft());
         var created = em.createQuery("select m from MangaReihe m where m.titel=:title", MangaReihe.class)
@@ -450,9 +459,7 @@ class MvcContractTest {
     }
 
     private static Set<String> fields(JsonNode data) {
-        var names = new HashSet<String>();
-        data.fieldNames().forEachRemaining(names::add);
-        return names;
+        return new HashSet<>(data.propertyNames());
     }
 
     private void flushAndClear() {
