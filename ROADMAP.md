@@ -178,6 +178,17 @@ Die folgenden Punkte sind technische Voraussetzungen oder Qualitätsprobleme, **
 - Externe URLs/Importfelder validieren; geeignete DTOs und serverseitige Prüfungen etablieren.
 - Erreichbarkeit der Anwendung klären; bei Netzbetrieb Zugriffsschutz priorisieren.
 
+**Präzisierung durch den statischen Security-Audit vom 10.10.2026:**
+Der interne, ausschließlich lokal aufbewahrte Sicherheitsbericht trennt belegte Codeprobleme von bedingten Risiken. Keine Tests, DB-Verbindungen oder Scraper wurden dafür ausgeführt; die 91 erfolgreichen Regressionstests sind keine Sicherheitsabnahme.
+
+- **P1:** Stored-XSS-Datenpfad konkret belegt: gespeicherter Reihentitel und Band-Links gelangen über `/mangaReihe/{id}/bands` in `home.js` (`innerHTML` und interpolierter `onclick`). Sichere DOM-Erzeugung/Textausgabe und Ereignisbindung statt Inline-Code ergänzen; DOM-Sicherheitstests vorsehen.
+- **P1:** Lokalen Betrieb explizit absichern: Im Repository fehlen Loopback-Bindung, Authentifizierung sowie Host-/Origin-/CSRF-Prüfungen. Tatsächliche Netzwerkerreichbarkeit ist ungeprüft; gewöhnliche JSON-Preflight-Hürden sind kein Zugriffsschutz. Scraperstart über GET `/autofillBandData/{bandIndex}` als geschützte Aktion behandeln; gewollten LAN-Betrieb separat absichern.
+- **P1/P2:** Bandanzahl vor Speicher-Schleifen begrenzen, Importdaten als untrusted Client-Eingabe behandeln, serverseitige Feld-/Referenz-/URL-Regeln vervollständigen. Erlaubte Bestandswerte und negative Preisänderungen nicht pauschal verwerfen.
+- **P2:** `URL.equals()` im Bandupdate durch einen Vergleich ohne DNS-Nebenwirkung ersetzen; URL-Syntaxprüfung um feldbezogene Protokoll-/Hostregeln ergänzen. Allgemeines SSRF ist nicht bewiesen; Weiterleitungen und Browser-Unterressourcen sowie parallele Browserstarts benötigen eigene Schutzgrenzen.
+- **P2:** Keine internen Exception-Texte im Response und keine vollständigen Import-/Sammlungsdaten in Rohlogs; kontrollierte Fehlermeldungen und strukturierte, begrenzte Logs testen.
+- **P2/P3:** Dokumentierter Tomcat-Stand 11.0.24 liegt in offiziellen betroffenen Sicherheitsbereichen; gepatchten konsistenten Stand gezielt validieren. HTTP/2 ist standardmäßig deaktiviert, ein konkreter Angriff nicht nachgewiesen. jsoup 1.17.2 fällt in einen Advisory-Bereich, dessen Safelist-Nutzungspfad hier nicht gefunden wurde. Gemischte Selenium-Versionen und offenbar ungenutzte jsoup-/WebDriverManager-Abhängigkeiten gezielt prüfen.
+- **SQL-Prüfung:** Keine SQL-Injection in den bestehenden Repository-/HTTP-Pfaden gefunden; JPQL-Parameter sind gebunden und HTTP-Sortierung verwendet feste Comparators. Die derzeit ungenutzten `findAllSorted`-Service-Methoden vor künftiger Exposition mit einer Property-Allowlist versehen. Automatisierte Sicherheitstests bleiben offen.
+
 ### T03 – Atomare, wiederholungssichere Datenänderungen
 - Einkauf → Bibliothek in einer konsistenten Transaktion; erneute und parallele Kaufübernahme absichern.
 - Einzelbandänderung und abgeleitete Reihensummen gemeinsam sichern.
