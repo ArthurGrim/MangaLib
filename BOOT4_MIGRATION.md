@@ -1,8 +1,8 @@
-# MangaLib – Spring-Boot-4-Migrationsplan und validierter 4.0-Zwischenstand
+# MangaLib – Spring-Boot-4-Migrationsplan und validierter 4.1-Zwischenstand
 
-Stand: **10.10.2026**. Ausgangspunkt: **Spring Boot 3.5.16**. Aktueller Zwischenstand: **4.0.8**. Späteres Ziel: **4.1.1**.
+Stand: **10.10.2026**. Ausgangspunkt: **Spring Boot 3.5.16**. Validierte Zwischenstände: **4.0.8 → 4.1.1**. Aktuelle Version: **4.1.1**.
 
-Die Anwendung verwendet jetzt **4.0.8**. Der ursprüngliche Analyseauftrag und die früheren Testaufträge sind in Abschnitten 10 und 11 dokumentiert. Der aktuelle Auftrag ergänzt die 3.5.16-Baseline und validiert den Major-Wechsel (Abschnitt 12). **4.1.1 wurde nicht umgesetzt.** Abschnitte 2–9 beschreiben die ursprüngliche Analyse; insbesondere die 4.1-BOM-Werte sind keine Aussage über den aktuellen 4.0-Dependency-Graphen. AGENTS.md, ROADMAP.md und TESTING.md bleiben verbindlich.
+Die Anwendung verwendet jetzt **4.1.1**, lokal technisch validiert, ohne produktive Freigabe oder Bereitstellung. Der ursprüngliche Analyseauftrag und die früheren Testaufträge sind in Abschnitten 10 und 11 dokumentiert. Abschnitt 12 dokumentiert den abgeschlossenen Major-Wechsel auf 4.0.8; Abschnitt 13 den aktuellen Wechsel auf 4.1.1. Abschnitte 2–9 sind die ursprüngliche Analyse, keine Liste weiterhin ausstehender Änderungen. Maßgeblich für tatsächlich aufgelöste Versionen und ausgeführte Prüfungen ist Abschnitt 13. AGENTS.md, ROADMAP.md und TESTING.md bleiben verbindlich.
 
 ## 1. Ergebnis und Entscheidungsgrundlage
 
@@ -468,3 +468,80 @@ Transitives Jackson 2.21.5 bleibt unter anderem über WebDriverManager vorhanden
 Keine produktive Verbindung, Schemaänderung, Migration, Dateninitialisierung, fachliche Korrektur oder UI-Änderung; kein Git-Commit und kein Wechsel auf 4.1.1.
 
 Abschließender vollständiger Diff einschließlich der vier neuen Testdateien geprüft; `git diff --check` und deren `--no-index --check` ohne Whitespace-Fehler. Das erzeugte JAR bestätigt `Spring-Boot-Version: 4.0.8` und `Build-Jdk-Spec: 21`; der Anwendungscode hat Classfile-Version 65 (Java 21). Die Änderungen beschränken sich auf die elf oben genannten Build-/Konfigurations-/Test-/Dokumentationsdateien; lokale Validierungsartefakte liegen ausschließlich im Git-ignorierten Build-/Gradle-Bereich.
+
+## 13. Tatsächlicher Fortschritt: validierter 4.1.1-Zwischenstand
+
+### Zielversion, Release Notes und Änderungsumfang
+
+Am **10.10.2026** erneut verifiziert: **4.1.1** ist die offiziell ausgewiesene stabile Patchversion der 4.1-Reihe; veröffentlicht am 20.08.2026, 4.1.2-SNAPSHOT separat gelistet. Java 21 und Gradle 8.14.3 werden unterstützt. Quellen: [Veröffentlichung](https://spring.io/blog/2026/08/20/spring-boot-4-1-1-available-now/), [Systemanforderungen und stabile Versionen](https://docs.spring.io/spring-boot/system-requirements.html).
+
+Die [offiziellen 4.1-Release-Notes](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.1-Release-Notes) wurden gegen die tatsächliche Konfiguration und API-Nutzung geprüft:
+
+- Entfernte 4.0-Deprecations und Layertools verursachen keine Compile-/Build-Fehler. MangaLib verwendet bereits WebMVC-Starter und Jackson-3-APIs.
+- Änderungen für JPA-Bootstrap-Modi `deferred`/`lazy` treffen keine eigene Einstellung. Der neue optionale JDBC-Lazy-Verbindungsabruf ist nicht aktiviert; die bestehende geschützte DataSource bleibt unverändert. Keine zusätzliche DataSource oder Lockerung der Property-Allowlist.
+- Neue Jackson-Read-/Write-/Factory-Einstellungen und Handler-Bean-Unterstützung benötigen hier keine Konfigurationsänderung. Der tatsächliche MVC-Converter bleibt Jackson 3; NON_NULL und Datumsdarstellung bestehen die vorhandenen Verträge.
+- Tomcat-Verzeichnisbereinigung, Reactor-HTTP-Client-Defaults und Gradle-BuildInfo-Änderungen betreffen keine eigenen Erweiterungen dieser Anwendung. Keine zusätzlichen Actuator-Endpunkte freigeschaltet; kein produktiver Anwendungsstart zum Prüfen dieser Defaults.
+- Der ORM-/Spring-Data-Wechsel wurde durch Mapping-, Repository-, Persistenz-, Rollback- und MVC-Tests geprüft, nicht allein aus dem BOM als kompatibel angenommen.
+
+**Geänderte versionierte Dateien:** `build.gradle.kts` (ausschließlich Boot-Plugin 4.0.8 → 4.1.1), `BOOT4_MIGRATION.md`, `ROADMAP.md` und `TESTING.md` (aktueller Validierungsstand). Keine zusätzlichen Abhängigkeiten, manuellen Framework-Pins oder Änderungen an Wrapper, Anwendungscode, Entity-Mappings, Templates, JavaScript, Testfällen oder Assertions. `TestDatabaseGuard`, `GuardedTestDataSource`, ContextCustomizer und Testkonfiguration unverändert.
+
+### Tatsächlich aufgelöste Versionen
+
+Die Runtime-/TestRuntime-Dependency-Berichte enthalten keine unaufgelösten Module. Die Laufzeitbibliotheken wurden zusätzlich im erzeugten `build/libs/demo-0.0.1-SNAPSHOT.jar` kontrolliert; reine BOM-Sollwerte sind damit nicht die Grundlage dieser Tabelle.
+
+| Komponente | Validierte 4.0.8-Baseline | Validierter 4.1.1-Stand |
+|---|---|---|
+| Spring Boot Plugin / Runtime | 4.0.8 | 4.1.1 |
+| Spring Framework | 7.0.9 | 7.0.9 |
+| Spring Data JPA | 4.0.7 | 4.1.1 |
+| Hibernate ORM | 7.2.24.Final | 7.4.5.Final |
+| Jakarta Persistence | 3.2.0 | 3.2.0 |
+| MySQL Connector/J | 9.7.0 | 9.7.0 |
+| MVC Jackson Databind (`tools.jackson`) | 3.1.5 | 3.1.5 |
+| Transitives Jackson-2-Databind | 2.21.5 | 2.21.5; kein MVC-Fallback |
+| Thymeleaf / Thymeleaf-Spring6 | 3.1.5.RELEASE | 3.1.5.RELEASE |
+| Tomcat | 11.0.24 | 11.0.24 |
+| JUnit Jupiter / Platform | 6.0.3 | 6.0.3 |
+| Mockito | 5.20.0 | 5.23.0 |
+| Effektives Byte Buddy / Test-Agent | 1.17.8 | 1.18.11 |
+| Selenium API / Firefox-Modul | 4.37.0 | 4.43.0 |
+| Selenium Aggregator / Devtools v120, v121, v122, v85 | 4.18.1 | 4.18.1 |
+| jsoup / WebDriverManager | 1.17.2 / 5.7.0 | 1.17.2 / 5.7.0 |
+
+Java 21, Gradle 8.14.3 und Dependency-Management-Plugin 1.1.4 bleiben unverändert. Das JAR bestätigt `Spring-Boot-Version: 4.1.1`, `Build-Jdk-Spec: 21` und Classfile-Version 65 der Anwendung.
+
+### Gestufte Validierung und Datenintegrität
+
+Vor der Änderung wurde die bestehende erfolgreiche 91-Test-Baseline lokal gesichert. Zusätzlich wurden unter 4.0.8 zunächst die 44 datenbankfreien Schutztests und danach der rein lesende Integritäts-Fingerabdrucktest erfolgreich ausgeführt.
+
+| Prüfung unter 4.1.1 | Ergebnis |
+|---|---|
+| `compileJava compileTestJava --init-script .gradle/boot4-validation/deprecation.init.gradle --warning-mode all` | Erfolgreich; bekannte Temporal-Deprecations bestätigt. |
+| `dependencies --configuration runtimeClasspath` und `testRuntimeClasspath` | Erfolgreich; keine `FAILED`-Module. |
+| `test --tests de.mangalib.testsupport.TestDatabaseGuardTest` | **44 bestanden**, 0 Fehler. |
+| Alle neun geschützten Integrations-/Regressionsklassen gezielt | **47 bestanden**, 0 Fehler, einschließlich 29 MVC-Verträgen. |
+| `.\gradlew.bat --no-daemon clean test` | **91 bestanden, 0 Failures, 0 Errors, 0 Skipped**. Stufen nicht addieren. |
+| `assemble --dry-run`, anschließend `assemble` | Erfolgreich; Plan nur compileJava, processResources, classes, resolveMainClassName, bootJar, jar, assemble. Keine erneuten Tests, Datenbank- oder Scraping-Aufgaben. |
+| Rein lesender Integritäts-Fingerabdruck nach Suite und Build | **1 bestanden**; alle 16 Fingerabdruck-/Zählzeilen identisch zur frischen 4.0.8-Baseline. |
+
+Vorher-/Nachher-SHA-256 über sämtliche Zeilen der zehn Tabellen und die Schema-Metadaten:
+
+```text
+ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570
+```
+
+Unverändert: **78 Stammdaten** (Status 4, Verlage 62, Typen 4, Formate 3, Sammelbände 5), fünf leere Geschäftstabellen, 10 Tabellen, 75 Spalten, 24 Indexspalteneinträge, 12 Fremdschlüssel, 26 Schlüsselspalteneinträge. Die bereits vorhandenen Vorher-/Nachher-Prüfungen nach tatsächlichem Transaktions-Rollback bestanden ebenfalls. AUTO_INCREMENT-Zähler bleiben bewusst ausgenommen; mögliche Lücken nach Rollback werden nicht zurückgesetzt.
+
+Alle Datenbankprüfungen verwenden ausschließlich den vorhandenen geschützten Spring-Testkontext und EntityManager für `mangalib_test` / `mangalib_test_user`. Keine produktive Verbindung, Migration, Schemaänderung, Dateninitialisierung, Stammdatenänderung oder Scraper-Ausführung. Zugangsdaten ausschließlich aus der bereits vorhandenen Umgebungsvariable, nicht ausgegeben oder neu gespeichert.
+
+Die **29 MVC-/JSON-Vertragsfälle sind in Testmenge und Assertions gegenüber 4.0.8 unverändert** und alle bestanden. Abgesichert bleiben Preise mit Centbeträgen, IDs, Boolean-/Null-/Missing-Werte, ISO-Datumsangaben, Entity-Beziehungen ohne Elternzyklen, Statuscodes, Content-Types und der tatsächliche Jackson-3-MVC-Converter. Das ist ein semantischer Vergleich der vorhandenen Verträge, kein byteweiser Vergleich beliebiger JSON-Antworten. Der bestehende Centverlust der Monatsstatistik wird weiterhin als Baseline geprüft, nicht korrigiert.
+
+Die vollständigen 91-Test-Berichte bleiben unter `build/test-results/test/` und `build/reports/tests/test/index.html` erhalten. Baseline und Zielgraphen liegen lokal Git-ignoriert unter `.gradle/boot41-validation/baseline-4.0.8/` und `target-4.1.1/`. Die zusätzliche Abschlussmessung verwendet unter `post-run/` separate Berichte; ihr ignoriertes Init-Skript ändert ausschließlich Berichtspfade, keine Schutzregeln oder Datenbankkonfiguration.
+
+### Warnungen, offene Grenzen und Freigabe
+
+- Keine nachgewiesene Framework-Inkompatibilität und keine fehlgeschlagene Test-/Build-Stufe. Hibernate 7.4.5.Final akzeptiert die drei bestehenden LocalDate-Temporal-Mappings weiterhin. Die bekannten Compiler-Deprecations sowie `HHH90000033` bleiben; DATE-/Timestamp-Roundtrips und Schemavalidierung bestanden, daher keine Mapping-Änderung.
+- Bekannte OSIV-, Mockito-/dynamische-Agent-/Class-Sharing-Warnungen und erwartete Schutz-/HTTP-Negativtest-Warnungen bleiben. Kein neuer erforderlicher API-Umbau festgestellt.
+- Der bestehende Selenium-Versionsmix ist jetzt 4.18.1 / 4.43.0. Ohne freigegebenen Browserlauf ist seine Laufzeitkompatibilität **nicht nachgewiesen**; kein vorsorgliches Dependency-Upgrade außerhalb dieses Auftrags.
+- Nichttransaktionales Rendering prüft weiterhin leere Geschäftslisten. Befüllte Lazy-Beziehungen, historische Bestandsdaten, exakte Timestamp-Zeitzone/-Präzision, konkurrierende Käufe, HTTP-Atomarität außerhalb der Testtransaktion, Performance und manuelle UI-Abnahme bleiben offen. Die Rechteprüfung auf dem Datenbankserver bleibt administrativ separat.
+- **Technisch validierter 4.1.1-Zwischenstand**, keine produktive Freigabe oder Bereitstellung. Der vollständige Git-Diff wurde geprüft; ausschließlich die vier genannten Dateien geändert, `git diff --check` erfolgreich. Kein Git-Commit.

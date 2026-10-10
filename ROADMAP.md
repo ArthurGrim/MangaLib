@@ -1,7 +1,7 @@
 # MangaLib – Entwicklungsroadmap
 
 > **Status:** Planungsgrundlage, Stand 10.10.2026
-> **Geltungsbereich:** MangaLib (Java 21, Spring Boot 4.0.8, Spring Data JPA, MySQL, Thymeleaf, JavaScript, Gradle).
+> **Geltungsbereich:** MangaLib (Java 21, Spring Boot 4.1.1, Spring Data JPA, MySQL, Thymeleaf, JavaScript, Gradle).
 > **Verbindlichkeit:** Die Kategorien **Muss / Soll / Kann** geben die fachlichen Prioritäten des Projekteigentümers wieder. Technische Voraussetzungen dürfen in der Umsetzungsreihenfolge vorgezogen werden; eine fachliche Umpriorisierung erfolgt nur nach Rücksprache.
 
 ## 1. Grundsätze und Definition of Done
@@ -16,7 +16,7 @@
 - [x] Abhängigkeiten und Konfigurationsänderungen für den Migrationsplan statisch prüfen.
 - [x] 3.5.16-Baseline um Repository-/Rendering-/Integritätsprüfungen erweitern: 91 erfolgreiche Tests.
 - [x] Zwischenstand auf Spring Boot 4.0.8 validieren: 91 erfolgreiche Tests, Daten-/Schema-Vergleich und `assemble`.
-- [ ] Migration auf Spring Boot 4.1.x durchführen.
+- [x] Spring-Boot-4.1.1-Zwischenstand technisch validieren: 91 Tests, unveränderte MVC-/JSON-Verträge, Daten-/Schema-Vergleich und `assemble`; keine produktive Freigabe.
 - [ ] Regressionstests für zentrale MangaLib-Funktionen ausführen.
 - [ ] Regelmäßige Überprüfung von Framework- und Dependency-Updates etablieren.
 
@@ -42,7 +42,7 @@ Lesestatus, Preise, Statistiken und die Oberfläche. Die 34 Tests sind keine
 vollständige fachliche oder Spring-Boot-4-Kompatibilitätsabnahme.
 Der konkrete Plan einschließlich zusätzlicher Tests und Freigabekriterien steht
 in [BOOT4_MIGRATION.md](BOOT4_MIGRATION.md); recherchiertes Ziel ist Spring Boot
-4.1.1 (Stand 10.10.2026). Der zunächst beauftragte Zwischenstand **4.0.8** ist jetzt technisch validiert: **91 erfolgreiche Tests** sowohl in der erweiterten 3.5.16-Baseline als auch unter 4.0.8, einschließlich 29 MVC-/JSON-Verträgen. Vorhandene Testdaten und Schema-Metadaten unverändert; `assemble` erfolgreich. Die anfängliche HTTP-403-Sperre wurde nach Deaktivierung des VPN behoben. Befülltes Lazy-Rendering außerhalb einer Testtransaktion, weitere fachliche Abnahme sowie bekannte Temporal-/Selenium-Risiken bleiben offen. Details: [BOOT4_MIGRATION.md, Abschnitt 12](BOOT4_MIGRATION.md#12-tatsächlicher-fortschritt-validierter-408-zwischenstand). Java 21, Gradle 8.14.3 und Testschutz bleiben erhalten; 4.1.1 folgt erst in einem späteren Auftrag.
+4.1.1 (Stand 10.10.2026). Nach dem validierten Zwischenstand **4.0.8** ist jetzt auch **4.1.1 technisch validiert**: Codex führte eigenständig zunächst 44 datenbankfreie Schutztests, anschließend 47 geschützte Integrations-/Regressionstests und schließlich `clean test` mit **91 erfolgreichen Tests, 0 Fehlern und 0 übersprungenen Fällen** aus. Die 29 MVC-/JSON-Verträge blieben unverändert. `assemble --dry-run` und `assemble` erfolgreich. Der frische 4.0.8-Fingerabdruck und die Abschlussmessung unter 4.1.1 bestätigen identische Daten in allen zehn Tabellen und identische Schema-Metadaten; 78 Stammdaten erhalten, neue Testdaten zurückgerollt. Ausschließlich `mangalib_test` / `mangalib_test_user`, keine Migrationen, Scraper oder produktiven Starts. Befülltes Lazy-Rendering außerhalb einer Testtransaktion, weitere fachliche Abnahme sowie bekannte Temporal-/Selenium-Risiken bleiben offen. Tatsächlich aufgelöste Versionen, Prüfungen und Grenzen: [BOOT4_MIGRATION.md, Abschnitt 13](BOOT4_MIGRATION.md#13-tatsächlicher-fortschritt-validierter-411-zwischenstand). Java 21, Gradle 8.14.3 und Testschutz bleiben erhalten. Keine produktive Freigabe oder Bereitstellung.
 
 Wichtig:
 Datenbankstruktur und bestehende Bestandsdaten müssen während
@@ -233,7 +233,7 @@ Die folgenden Punkte sind technische Voraussetzungen oder Qualitätsprobleme, **
 - [x] Testlauf ohne Zugriff auf produktive Daten bestätigt (Codex, 10.10.2026, 34 Tests).
 - [x] Spring-Boot-3.5.16-Update technisch validiert.
 - [x] Spring-Boot-4.0.8-Zwischenstand mit 91 Tests und Daten-/Schema-Vergleich technisch validiert.
-- [x] Spring-Boot-4.1-Migrationsanalyse dokumentiert; Umsetzung ausstehend.
+- [x] Spring-Boot-4.1-Migrationsanalyse dokumentiert und 4.1.1 mit 91 Tests, Daten-/Schema-/JSON-Vergleich und Build technisch validiert.
 - [ ] Fachliche Regressionstests für zentrale Abläufe und UI abgeschlossen.
 - [ ] Technische Befunde und Feature-Tickets in ausführbare Codex-Aufgaben zerlegt.
 - [ ] Erste abgesicherte Fehlerbehebung umgesetzt.
