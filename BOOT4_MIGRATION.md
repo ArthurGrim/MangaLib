@@ -196,7 +196,7 @@ Die beiden deaktivierten/taggefilterten Scraperklassen sind nicht Bestandteil di
 
 ## 6. Zusätzliche Tests mit Prioritäten und Akzeptanzkriterien
 
-Alle fachlichen Tests zunächst gegen **3.5.16** etablieren und danach unverändert gegen den Zielstack ausführen. Nur neue Testdatensätze verwenden; bestehende Stammdaten nicht ändern. Die drei P0-Zeilen sind inzwischen implementiert (Abschnitt 10); P1/P2 bleiben geplante Arbeiten.
+Alle fachlichen Tests zunächst gegen **3.5.16** etablieren und danach gegen den Zielstack ausführen; fachliche Assertions unverändert erhalten, notwendige Framework-/Mapper-Testimports gezielt anpassen. Nur neue Testdatensätze verwenden; bestehende Stammdaten nicht ändern. Die drei P0-Zeilen sind implementiert (Abschnitt 10), die MVC-/JSON-Baseline ist ergänzt (Abschnitt 11). Weitere P1/P2-Arbeiten bleiben offen.
 
 | Priorität | Vorgeschlagene Dateien unter `src/test/java/de/mangalib/` | Mindestinhalt / Akzeptanz |
 |---|---|---|
@@ -317,3 +317,59 @@ Nachweis: `build/test-results/test/TEST-*.xml` und `build/reports/tests/test/ind
 - InnoDB wurde für die fünf beschriebenen Geschäftstabellen tatsächlich geprüft. Serverrechte, lokale Weiterleitungen und Gleichheit aller Schema-Metadaten mit Produktion wurden nicht administrativ auditiert. Die eingeschränkten Testrechte bleiben die unabhängige Schutzgrenze.
 - Die Vorher-/Nachher-Vergleiche benötigen eine während des Laufs exklusiv genutzte Testdatenbank. Gleichzeitige fremde Änderungen führen bewusst zu einem Fehler. AUTO_INCREMENT-Zähler können durch zurückgerollte Inserts steigen; sie sind keine vorhandenen Zeilenwerte und werden nicht zurückgesetzt.
 - Der vollständige Git-Diff einschließlich neuer Testdateien wurde auf diesen Testauftrag begrenzt geprüft; `git diff --check` meldete keine Whitespace-Fehler. Anwendungscode, Build-/Testkonfiguration, Abhängigkeiten und Scraper bleiben unverändert.
+
+## 11. Tatsächlicher Fortschritt: MVC-/JSON-Baseline unter 3.5.16
+
+Stand **10.10.2026**: `src/test/java/de/mangalib/MvcContractTest.java` enthält **29 erfolgreiche Testfälle**, einschließlich parametrisierter Fälle. Echte Controller, Services, Repositories, Thymeleaf und der konfigurierte MVC-Mapper laufen im geschützten `@SpringBootTest` mit `@AutoConfigureMockMvc`, ausschließlich Profil `test` und unverändertem TestDatabaseGuard. Keine neuen Abhängigkeiten, keine fachlichen Änderungen und weiterhin keine Boot-4-Migration. In diesem Auftrag wurden nur diese Dokumentation und die neue Testklasse geändert.
+
+### Abgesicherte Verträge
+
+| Bereich | Nachgewiesene Baseline |
+|---|---|
+| HTML | `/home`, `/einkaufsliste` und alle fünf `/statistik/st_*`-Ansichten: 200, `text/html`, View-Namen; eigene Daten mit Umlauten, relevante Popup-/Script-Verweise und Statistiklayout. `/resetFilters`: 302 mit Weiterleitung nach Home. MockMvc lädt keine externen Assets nach. |
+| Reihen abrufen | `/getMangaReiheData/{id}`: IDs/Index/Anzahl/Reread als JSON-Ganzzahlen, Preise und Anpassungen als deutsche Dezimalstrings, echte Booleans, AniList-URL; fehlende Reihe: leere 404-Antwort. |
+| Bände abrufen | `/getBand/{id}` und `/mangaReihe/{id}/bands`: flache Objekte/Listen, numerische Preise mit Centbeträgen, boolesche Lesewerte, URL-Strings und formatierte Preisstrings. Kein serialisiertes Elternobjekt. Fehlender Einzelband: leere 404-Antwort. |
+| Reihen schreiben | `/addMangaReihe`: Anlegen und Bearbeiten gemäß `popup_add_reihe.js:244` und `popup_edit_reihe.js:316`; Lookup-/Edit-IDs als Strings, Index/Anzahl als Ganzzahlen, Booleans, Preisstrings mit Punkt. Edit-Payload lässt Preise tatsächlich weg. Rückgabe: 200 JSON, numerische Entity-Preise, DATE als ISO-String, Timestamp als parsebarer ISO-Zeitstring mit Offset. Persistenz und Detail-ID nach Flush/Clear/Reload geprüft. |
+| Null/fehlende Angaben | Bei Anlage sind Index, URLs, Sammelbandauswahl, Reread und nullable Booleans sowohl explizit `null` als auch weglassbar. `NON_NULL` entfernt entsprechende JSON-Felder. Einzelbandantworten verwenden stattdessen leere Strings für fehlende URL/Index, `false` für Special und `0` für Reread. |
+| Beziehungen | Edit-Antwort enthält Details mit derselben ID; deren Eltern-/Sammelband-Backreferences und Lookup-Backreferences fehlen. Keine rekursive Elternserialisierung. Bei Anlage fehlt die inverse Detailreferenz im Antwortobjekt, obwohl die Details nach Reload existieren; dieses bestehende Verhalten ist ausdrücklich erfasst. |
+| Band schreiben | `/editBand` gemäß `popup_edit_baende.js:100`: ID/Bandnummer/Index/Preise/Reread als Strings, Booleans als Booleans; 204 ohne Body/Content-Type. Reload bestätigt Preise, Anpassung, Special, Reread und Lesestatus. |
+| Einkauf | `/addToEinkaufsliste` gemäß `einkaufsliste.js:270`: 200 JSON mit numerischen Preisen, booleschem Kaufstatus und ISO-Schalttagsdatum beziehungsweise ausgelassenem Datum. String-Lookup-IDs werden verarbeitet, Backreferences nicht ausgegeben, Details sind nach Reload vorhanden. `DELETE /items/{id}` nur für eigenes neues Fixture: leere 200-Antwort. |
+| Kauf | `/buyItemUpdate`: fehlendes Item 404 Text; eindeutig noch nicht vorhandene Testreihe 417 JSON mit Statusauswahl-Nachricht. `/buyItemCreate`: String-IDs wie im JavaScript werden zu Long konvertiert, 200 JSON mit Erfolgsnachricht; neue Reihe/Details und Kaufstatus nach Reload geprüft. Vorab wird ausgeschlossen, dass Index/Titel Bestandsreihen treffen. |
+| Statistik | `/statistik/bandKategorien`: exakt die sieben vom JavaScript gelesenen Schlüssel, ganzzahlige Werte. `/statistik/monatsdaten`: Monatsnummer als JSON-Stringschlüssel, Ganzzahlen für Bände und derzeit auch Geld; unbekannter Typ/fehlendes Jahr: 400. Geld-Centverlust ausdrücklich als bestehender Fehler charakterisiert. |
+| Fehler/Content-Type | Malformed JSON, fehlende Pflichtfelder und falsche ID-Typen: 400; falscher Request-Content-Type: 415. Vom Controller erzeugte Fehlertexte bleiben `text/plain`; erfolgreiche JSON-Antworten `application/json`, leere 204/404-Antworten ohne Content-Type. |
+
+Die Tests vergleichen JSON-Werte und Typen, keine Feldreihenfolge. Für Null-/Einkaufsvarianten wird der vorhandene Boot-3-ObjectMapper zur Payload-Erzeugung/Antwortanalyse verwendet. Beim späteren Upgrade sind dessen Databind-Imports und gegebenenfalls Tree-APIs sowie der AutoConfigureMockMvc-Import anzupassen; die fachlichen Assertions dürfen dadurch nicht aufgeweicht werden.
+
+### Isolation und tatsächliche Validierung
+
+- Alle Fixtures und HTTP-Schreibaktionen liegen in einer aktiven, für Rollback markierten Testtransaktion. Die untersuchten Services/Repositories verwenden keinen `REQUIRES_NEW`- oder asynchronen Schreibpfad. MockMvc ruft synchron im Testthread auf; jedes Ergebnis wird auf fehlenden Async-Start geprüft. Kein echter HTTP-Server wird gestartet.
+- Die vorhandenen Fixtures prüfen vor INSERT Schema `mangalib_test`, effektiven Benutzer `mangalib_test_user` und InnoDB. Vor **jedem** MVC-Fall erfassen `@BeforeTransaction` und nach tatsächlichem Rollback `@AfterTransaction` alle Spalten/Zeilen aller zehn Tabellen über den vorhandenen geschützten EntityManager. Identische Vorher-/Nachher-Werte bestätigen vollständigen Rollback und unveränderte Stammdaten, auch nach Kauf/Löschen.
+- Statische Mockito-Mocks beider Scraper werfen bei jedem unerwarteten Aufruf einen AssertionError; zusätzlich wird fehlende Interaktion geprüft. `/scrape` und `/autofillBandData` werden nicht aufgerufen. Kein Firefox/Selenium/externes Scraping.
+- Der bestehende BandService verwendet `URL.equals`, das DNS auslösen kann. Der Band-Edit-Test verwendet für neue URLs numerische Loopback-Adressen und gegenüber den Fixtures ein anderes Protokoll, sodass der Vergleich vor Hostauflösung endet. Es wird keine Loopback-Verbindung geöffnet. Gleiches-Protokoll-/DNS-Verhalten bleibt ungetestet; keine Produktionslogik wurde hierfür verändert.
+
+Codex führte zuerst 44 datenbankfreie Schutzfälle erfolgreich aus, danach die MVC-Tests und abschließend einen vollständigen Neuaufbau der Testsuite:
+
+```powershell
+.\gradlew.bat --no-daemon test --tests de.mangalib.testsupport.TestDatabaseGuardTest
+.\gradlew.bat --no-daemon test --tests de.mangalib.MvcContractTest
+.\gradlew.bat --no-daemon clean test
+```
+
+| Lauf | Bestanden | Failures / Errors | Skipped |
+|---|---:|---:|---:|
+| Datenbankfreie Schutztests | 44 | 0 | 0 |
+| Abschließender gezielter MVC-Lauf | 29 | 0 | 0 |
+| Vollständiges `clean test`: bisherige Baseline + MVC | **82 (53 + 29)** | **0** | **0** |
+
+XML-/HTML-Nachweise unter `build/test-results/test/` und `build/reports/tests/test/index.html`. Der erste MVC-Lauf hatte vier Fehler durch eine falsche Testannahme über vollständig leere Statistik-Unterseiten; tatsächlich existiert dort bereits Layout/Navigation. Nur die Testannahme wurde korrigiert. Die abschließenden Läufe einschließlich aller Rollback-Nachprüfungen sind erfolgreich. Bekannte OSIV-/Mockito-/Byte-Buddy-/JVM-Warnungen bleiben; zusätzliche erwartete MVC-Warnungen betreffen die getesteten 400/415-Fälle. Keine neuen Compilerwarnungen beobachtet.
+
+### Bestehende Probleme und offene Testlücken
+
+- **Nachgewiesener bestehender Fehler:** `EinkaufslisteService.java:145` verwendet `Number.longValue()`. Bei 14,98 EUR liefert `/statistik/monatsdaten?typ=geld` die Zahl 14. Der entsprechende Test heißt ausdrücklich `monthlyStatisticsKeepStringKeysAndExistingCentTruncation`; er beschreibt die Baseline, keine fachlich korrekte Geldberechnung. Die spätere separate Fehlerbehebung muss diesen Vertrag gezielt aktualisieren (Roadmap M04/T04).
+- **Beobachtetes Verhalten:** Detaildaten fehlen in Neuanlage-Antworten wegen nicht gesetzter inverser Referenzen, sind aber nach Reload vorhanden. Entity-/Backreference-Verträge unterscheiden sich deshalb von flachen GET-Antworten. Kein stillschweigender DTO-/Annotationsumbau.
+- **Statisch weiterhin erkennbare Risiken, nicht neu reproduziert:** null-sensitive Details-/Sammelbandzugriffe beim Reihenabruf und nullable Boolean-Vergleiche beim Bearbeiten; URL.equals-DNS im BandService. Diese Fehlerpfade sind keine freigegebenen Korrekturen dieses Auftrags.
+- Kaufübernahme in eine bereits vorhandene eigene Testreihe, Wiederholungs-/Parallelkauf, Fehler zwischen mehreren Service-Aufrufen, Bandanzahländerungen und sämtliche Such-/Sortier-/Filterkombinationen sind noch nicht vollständig geprüft. Erfolgreicher Rollback unter Testtransaktion belegt nicht die Atomarität des Produktions-HTTP-Pfads ohne diese umschließende Transaktion.
+- Tiefere Template-/DOM-Verträge, tatsächliche Browserinteraktionen, Lazy-Rendering außerhalb der Testtransaktion, exakte Timestamp-Präzision/Zeitzonen, repräsentative Altbestände und umfassende Repository-/Performance-Baselines bleiben offen. Die vier Statistik-Unterseiten besitzen weiterhin keine fachlichen Auswertungen.
+- Der Snapshot-Vergleich erfordert eine exklusiv genutzte Testdatenbank; AUTO_INCREMENT kann trotz Rollback steigen. Serverrechte bleiben administrativ zu bestätigen. Die 82 Fälle sind weiterhin keine Boot-4-Freigabe.
+
+Vollständiger Diff einschließlich neuer Testdatei geprüft; keine Anwendungscode-, Konfigurations-, Schema- oder Abhängigkeitsänderungen. Kein Git-Commit.
