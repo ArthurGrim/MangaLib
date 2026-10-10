@@ -126,3 +126,6 @@ dumps/
 # Bekannte versionierte Schema-/Stammdaten-Skripte sind keine privaten Dumps.
 !/SQLQuery.sql
 !/Inserts.sql
+
+# Lokale Installation der JavaScript-Testabhängigkeiten.
+/node_modules/
