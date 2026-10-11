@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
     showLoading();
 
     // Senden des Manga-Index an den Web Scraper
-    fetch("/scrape", {
+    mangaLibFetch("/scrape", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Zu sendende Daten:", mangaReiheData);
 
     // Daten senden mit Fetch-API
-    fetch("/addMangaReihe", {
+    mangaLibFetch("/addMangaReihe", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

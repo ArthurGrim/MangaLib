@@ -2,7 +2,7 @@
   "name": "mangalib-dom-tests",
   "private": true,
   "scripts": {
-    "test:dom": "node --test src/test/js/home.test.cjs"
+    "test:dom": "node --test src/test/js/*.test.cjs"
   },
   "engines": {
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"

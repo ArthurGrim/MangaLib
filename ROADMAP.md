@@ -6,6 +6,15 @@
 
 ## 1. Grundsätze und Definition of Done
 
+### Technologieoffene Weiterentwicklung
+
+- Die heutige technische Implementierung ist keine dauerhafte Vorgabe. Insbesondere Backend-Abläufe für Hinzufügen, Bearbeiten und Importieren von Reihen/Bänden sowie Autofill-/Scraper-Architektur dürfen durch effizientere, wartbarere, robustere und flexiblere Lösungen ersetzt werden.
+- Kernfunktionen und sämtliche vorhandenen Daten bleiben erhalten; Verbesserungen der Funktionalität sind ausdrücklich erwünscht. Bei größeren Änderungen zunächst technische Alternativen, Vor-/Nachteile und Auswirkungen bewerten und vor Umsetzung Rücksprache halten. Kein allgemeines Refactoring im aktuellen Sicherheitsauftrag.
+
+### UI-/UX-Modernisierung
+
+- Die ursprüngliche optische Orientierung an Manga-Passion ist keine dauerhafte Designvorgabe. Benutzerfreundlichkeit, Performance, Bedienbarkeit, Navigation und visuelle Gestaltung dürfen modernisiert werden; MangaLib soll wiedererkennbar bleiben, einzelne heutige Layoutdetails, CSS-Klassen oder Interaktionen sind nicht unveränderlich.
+- Vor größeren UI-Änderungen geeignete Vorschläge vorstellen. Künftige UI-Überarbeitungen berücksichtigen unterschiedliche Bildschirmgrößen; spätestens für Smartphone-Unterstützung ist ein konsequentes Responsive-Konzept nötig, unabhängig von der technischen LAN-Freigabe. Keine UI-/Responsive-Modernisierung im aktuellen Sicherheitsauftrag.
 
 ### Spring Boot und Dependency-Modernisierung
 
@@ -80,7 +89,7 @@ aller Updates vollständig erhalten bleiben.
 - **Expand → Migrate → Contract:** Wo erforderlich, zunächst neue Spalten/Tabellen ergänzen, Altdaten überführen und validieren, Anwendung anpassen und alte Strukturen erst nach expliziter Freigabe entfernen. Bei neuen Pflichtfeldern zunächst mit bestehenden Daten kompatible Defaults/Nullable-Phasen einplanen.
 - **Sicherung und Rückweg:** Vor jeder produktiven Migration ein aktuelles MySQL-Backup einschließlich Schema und Daten, einen geprüften Wiederherstellungsweg und einen Migrationsplan vorsehen. Destruktive Migrationen und Löschungen benötigen explizite Zustimmung.
 - **Realer Altbestand als Testfall:** Migrationen zunächst auf einer *isolierten Kopie* des aktuellen Datenbestands testen; bei sensiblen Daten möglichst anonymisieren. Vorher/nachher Zeilenzahlen, Fremdschlüssel, Summen, Lesestatus und relevante Stichproben vergleichen. Keine Tests, Scraper oder Experimente gegen die produktive Datenbank.
-- **Verhalten erhalten:** Bestehende Funktionen und das aktuelle UI-Design standardmäßig beibehalten. Neue Ansichten und Interaktionen stilistisch integrieren.
+- **Verhalten und Daten erhalten:** Bestehende Kernfunktionen und Bestandsdaten sichern. Technische und UI-Modernisierung nach den obigen Regeln ermöglichen; in begrenzten Aufgaben ohne ausdrücklichen Modernisierungsauftrag die vorhandene Oberfläche beibehalten.
 - **Guter Code:** Lesbare, wartbare Lösungen; komplexe Entscheidungen, Geschäftsregeln, SQL-Abfragen und nicht offensichtliche Abläufe mit sinnvollen Kommentaren/Javadoc erklären, ohne jede triviale Zeile zu kommentieren.
 - **Sicher ändern:** Änderungen in kleinen, prüfbaren Aufgaben und eigenen Git-Branches/Worktrees. Tests, Builds und Migrationen nur mit überprüfter Testkonfiguration. Keine automatische Übernahme in `main`, kein Produktiv-Deployment ohne Freigabe.
 - **Definition of Done je Feature:** Implementierung + passende Tests + geprüfte Auswirkungen auf Altdaten/Schema + Dokumentation + konsistentes UI + kurze Beschreibung der manuellen Nachprüfung.
@@ -112,7 +121,7 @@ aller Updates vollständig erhalten bleiben.
 - **Pie Charts – erste Reihe:** Typ, Format, Status.
 - **Pie Charts – zweite Reihe:** Herkunft, gelesen/ungelesen, vergriffen/nicht vergriffen.
 - **Weitere Auswertungen:** Verlage und Format in einer Darstellung ähnlich AniLists Studio-/Genre-Statistik; Days Read; Anteil an Spezialbänden; gelesene Bände pro Monat; Chart für Erscheinungsjahr und Herkunftsland.
-- Bestehende UI-Optik übernehmen und Diagramme konsistent gestalten.
+- Diagramme konsistent und als Teil von MangaLib gestalten; Verbesserungen der UI-/UX nach den obigen Modernisierungsregeln ermöglichen.
 - Fachlich festlegen, welche Größen sich auf *Reihen* und welche auf *Bände* beziehen; unbekannte Angaben separat behandeln statt zu raten.
 - **Akzeptanz:** Die Statistiken stimmen bei Testdatensätzen einschließlich Jahreswechsel, Centbeträgen, unbekannten Merkmalen und mehrfacher Diagrammbedienung.
 
@@ -155,12 +164,19 @@ aller Updates vollständig erhalten bleiben.
 
 ### K03 – Mehrere Profile
 - Datenzuordnung, Berechtigungen und Migrationsstrategie für bisherigen Einzelprofil-Bestand zuerst festlegen.
+- Bei Umsetzung gemeinsam mit K04 konzipieren und umsetzen: echte Anmeldung mit Authentifizierung und Autorisierung sowie serverseitige Trennung aller Datenzugriffe nach Benutzerberechtigung sind verpflichtend. Eine bloße Profiltrennung im Frontend genügt nicht.
 
 ### K04 – Anmeldung
 - Authentifizierung/Autorisierung passend zum späteren Betriebsmodell; nicht ohne Bedrohungs- und Berechtigungskonzept ergänzen.
+- Für den aktuellen lokalen Einzelbenutzerbetrieb ist kein Login erforderlich; bei Umsetzung von K03 ist K04 verbindlicher Bestandteil derselben Umsetzung. Die Kann-Kategorie beider Erweiterungen bleibt unverändert.
 
 ### K05 – Einstellungen
 - UI zur Verwaltung konfigurierbarer Optionen, insbesondere geschätzte Lesezeit pro Band; später gegebenenfalls profilspezifisch.
+
+### K06 – Browser-Integration für Manga-Passion (allerletzte optionale Erweiterung)
+- Beim Besuch einer Manga-Passion-Reihen-/Bandseite langfristig die direkte Übergabe an MangaLib über eine Browser-Erweiterung oder vergleichbare geeignete Lösung ermöglichen; Firefox, optional Chrome berücksichtigen.
+- Bevorzugt einen vorbereiteten Einkaufskorb-Eintrag mit Datenvorschau, Dublettenprüfung und ausdrücklicher Bestätigung anbieten. Sichere Kommunikation mit dem lokalen Backend ist zwingend; Berechtigungen und dedizierten Übergabevertrag vor Umsetzung bewerten, keine pauschale CORS-/CSRF-Ausnahme.
+- Erst nach sämtlichen übrigen Projektzielen einschließlich optionalem Smartphone-/LAN-Zugriff (Abschnitt 10). Keine Implementierung im aktuellen Auftrag.
 
 ## 5. Technische Grundlagen aus der initialen Codex-Analyse
 
@@ -184,7 +200,7 @@ Die folgenden Punkte sind technische Voraussetzungen oder Qualitätsprobleme, **
 Der interne, ausschließlich lokal aufbewahrte Sicherheitsbericht trennt belegte Codeprobleme von bedingten Risiken. Keine Tests, DB-Verbindungen oder Scraper wurden dafür ausgeführt; die 91 erfolgreichen Regressionstests sind keine Sicherheitsabnahme.
 
 - **P1 – S01 behoben:** Der dokumentierte Stored-XSS-Datenpfad in der dynamischen Bandanzeige wurde mit sicherer DOM-Erzeugung, Textausgabe und Ereignisbindung geschlossen; DOM-Regressionstests ergänzen die bestehende Suite. Übergreifende URL-Regeln, Zugriffsschutz und weitere T02-Anforderungen bleiben eigenständige Aufgaben.
-- **P1:** Lokalen Betrieb explizit absichern: Im Repository fehlen Loopback-Bindung, Authentifizierung sowie Host-/Origin-/CSRF-Prüfungen. Tatsächliche Netzwerkerreichbarkeit ist ungeprüft; gewöhnliche JSON-Preflight-Hürden sind kein Zugriffsschutz. Scraperstart über GET `/autofillBandData/{bandIndex}` als geschützte Aktion behandeln; gewollten LAN-Betrieb separat absichern.
+- **P1 – S02/S03:** Der ursprüngliche Befund fehlender Loopback-/Host-/Origin-/CSRF-Grenzen wird im freigegebenen lokalen Einzelbenutzerauftrag einschließlich Autofill-POST geschlossen (Umsetzungs-/Prüfstand unten). Anmeldung bleibt für diesen Betrieb nicht erforderlich; tatsächliche Listener-/Browserabnahme und späterer LAN-Betrieb sind gesondert zu prüfen.
 - **P1/P2:** Bandanzahl vor Speicher-Schleifen begrenzen, Importdaten als untrusted Client-Eingabe behandeln, serverseitige Feld-/Referenz-/URL-Regeln vervollständigen. Erlaubte Bestandswerte und negative Preisänderungen nicht pauschal verwerfen.
 - **P2:** `URL.equals()` im Bandupdate durch einen Vergleich ohne DNS-Nebenwirkung ersetzen; URL-Syntaxprüfung um feldbezogene Protokoll-/Hostregeln ergänzen. Allgemeines SSRF ist nicht bewiesen; Weiterleitungen und Browser-Unterressourcen sowie parallele Browserstarts benötigen eigene Schutzgrenzen.
 - **P2:** Keine internen Exception-Texte im Response und keine vollständigen Import-/Sammlungsdaten in Rohlogs; kontrollierte Fehlermeldungen und strukturierte, begrenzte Logs testen.
@@ -193,11 +209,11 @@ Der interne, ausschließlich lokal aufbewahrte Sicherheitsbericht trennt belegte
 
 #### T02 / Security S02/S03 – Betriebsmodell und Zugriffsschutz: Analyse und Plan
 
-**Stand 11.10.2026: ausschließlich statisch untersucht, noch nicht implementiert.** Die Security-Kennungen S02/S03 beziehen sich auf den internen lokalen Bericht, nicht auf die gleichnamigen fachlichen Soll-Tickets in Abschnitt 3. Der vertrauliche Bericht bleibt unverändert und unversioniert; hier stehen die öffentlich geeigneten Betriebsanforderungen und Umsetzungsschritte. Die historischen 91 Java-/Spring- und 33 DOM-Tests wurden in diesem Analyseauftrag nicht erneut ausgeführt.
+**Ausgangsanalyse und Plan vom 11.10.2026; aktueller Umsetzungs-/Prüfstand weiter unten.** Die Security-Kennungen S02/S03 beziehen sich auf den internen lokalen Bericht, nicht auf die gleichnamigen fachlichen Soll-Tickets in Abschnitt 3. Der vertrauliche Bericht bleibt unverändert und unversioniert; hier stehen die öffentlich geeigneten Betriebsanforderungen und Umsetzungsschritte. Die folgenden Bestandsbefunde und das Inventar beschreiben den Stand vor der Absicherung; insbesondere Autofill verwendet inzwischen POST.
 
-**Entscheidung des Projekteigentümers:** Primär ausschließlich lokale Einzelbenutzeranwendung auf dem eigenen Windows-PC (`localhost`/Loopback). Automatischer Start ohne VS Code ist ein verbindliches Abschlussziel (T07). Smartphone-/Heimnetzzugriff ist die letzte optionale Erweiterung mit niedrigster Priorität, nach den übrigen Projektzielen, der regulären Bereitstellung und dem optionalen GitHub-Release (Abschnitt 9). Kein öffentlicher Internetzugriff, keine Router-Portfreigaben und keine zusätzliche Serverinfrastruktur. Heute keine LAN-Anmeldung, Profile oder Proxy-Infrastruktur vorwegnehmen; die spätere Erweiterung darf nur bewusst und mit eigenen Schutzregeln aktiviert werden.
+**Entscheidung des Projekteigentümers:** Primär ausschließlich lokale Einzelbenutzeranwendung auf dem eigenen Windows-PC (`localhost`/Loopback). Automatischer Start ohne VS Code ist ein verbindliches Abschlussziel (T07). Smartphone-/Heimnetzzugriff folgt optional nach den übrigen Projektzielen, der regulären Bereitstellung und dem optionalen GitHub-Release (Abschnitt 9); nur K06 folgt noch später (Abschnitt 10). Kein öffentlicher Internetzugriff, keine Router-Portfreigaben und keine zusätzliche Serverinfrastruktur. Heute keine LAN-Anmeldung, Profile oder Proxy-Infrastruktur vorwegnehmen; die spätere Erweiterung darf nur bewusst und mit eigenen Schutzregeln aktiviert werden.
 
-**Tatsächlicher Repository-Stand und Nachweisgrenzen:**
+**Repository-Stand vor Umsetzung und ursprüngliche Nachweisgrenzen:**
 
 - **Belegt:** `src/main/resources/application.properties:1–11` enthält weder `server.address` noch `server.port`, TLS- oder Management-Port-Einstellungen. Der unveränderte Boot-Standard ist HTTP **8080**; Tomcat bindet ohne abweichende Einstellung an alle lokalen Adressen. Damit ist LAN-Erreichbarkeit konfigurationsabhängig möglich. Welche IPv4-/IPv6-Sockets tatsächlich offen sind, externe `SERVER_*`-/JVM-/Startparameter, Firewall und laufende Instanzen wurden nicht gemessen. Die Dokumentation `readme` nennt `http://localhost:8080`, erzwingt diese Begrenzung jedoch nicht. Quellen: [Boot-Serverproperties](https://docs.spring.io/spring-boot/appendix/application-properties/index.html), [Tomcat-Bind-Adresse](https://tomcat.apache.org/tomcat-11.0-doc/config/http.html).
 - **Belegt:** MySQL wird laut Konfiguration über `localhost:3306` angesprochen; das ist eine ausgehende DB-Verbindung und keine Beschränkung des HTTP-Servers. MySQL-Listener und Serverrechte bleiben administrativ zu prüfen, ohne in diesem Auftrag eine Verbindung aufzubauen.
@@ -217,7 +233,7 @@ Der interne, ausschließlich lokal aufbewahrte Sicherheitsbericht trennt belegte
 
 Zusätzlich sind statische Assets, Boots Fehlerverarbeitung und Actuator zu berücksichtigen. MVC behandelt `@GetMapping` auch für HEAD; daher gehört HEAD beim Band-Autofill ausdrücklich zur späteren Negativprüfung. Dies ist aus Mapping und Frameworkverhalten abgeleitet, nicht durch einen echten Scraperaufruf geprüft. OPTIONS darf ebenfalls keine Aktion starten. [Spring-MVC-Methodenverhalten](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html#ann-requestmapping-head-options).
 
-**Schlankes Zielkonzept für den lokalen Modus (Umsetzung erst im Folgeauftrag):**
+**Freigegebenes Zielkonzept für den lokalen Modus:**
 
 1. **Loopback und eindeutige Adresse:** Explizite IPv4-Loopback-Bindung und fester, konfigurierbarer Port; empfohlener Einstieg `http://localhost:8080/home`, unterstützte Alternative `http://127.0.0.1:8080/home`. IPv6 `::1` nicht pauschal als aktiv annehmen: Bindung und Namensauflösung testen, weitere Connectoren nur bei belegtem Bedarf. Keine Wildcard-Bindung im lokalen Betriebsmodus. Overrides, Portkonflikte und Management-Listener bei Start prüfen; bei widersprüchlicher lokaler Konfiguration verständlich abbrechen statt unbemerkt extern zu binden.
 2. **Host-Prüfung vor Daten-/Scraperarbeit:** Erlaubte HTTP-Authorities exakt aus expliziter lokaler Konfiguration bestimmen (Name/IP und Port), keine Teilstring-/Suffix- oder beliebige `*.localhost`-Freigabe. Unbekannte, mehrdeutige und ungültige Hosts ablehnen, ebenso nicht konfigurierte IPv6-Adressen. Die Liste nicht aus einem ungeprüften Host-/Origin-Header ableiten. Ohne freigegebenen Proxy keine `Forwarded`-/`X-Forwarded-*`-Header als vertrauenswürdige Quelle verwenden. Dies begrenzt DNS-Rebinding, ersetzt aber keine Identität lokaler Clients.
@@ -239,7 +255,33 @@ Zusätzlich sind statische Assets, Boots Fehlerverarbeitung und Actuator zu ber�
 
 **Manuelle Abnahme erst gesondert freigeben:** In einer sicher konfigurierten isolierten Umgebung alle lokalen HTML-/JSON-Lesepfade, Suche/Filter, Anlegen/Bearbeiten/Löschen/Kauf mit eigenen Testfixtures und mehrere Tabs prüfen; Schreibpfade außerhalb MockMvc benötigen vorher ein eigenes sicheres Isolationskonzept. Browserkonsole und Netzwerkpanel müssen Session-/Tokenfehler verständlich erklären. Autofill zunächst mit Double; ein echter Scraper-Smoke-Test ist ein eigener Auftrag. Listener/IPv4/IPv6 und Firewall nur lesend kontrollieren, LAN-Zugriff muss im lokalen Modus scheitern; fremde Host-/Origin-Fälle nur kontrolliert mit nebenwirkungsfreien Antworten prüfen. Keine produktiven Bestände für Sicherheitsproben verwenden. Der jetzige Auftrag hat weder Listener noch Browserantworten gemessen.
 
-**Noch zu entscheiden vor Implementierung:** Zustimmung zur schlanken Spring-Security-Abhängigkeit und anmeldungsfreien lokalen Vertrauensgrenze; ob neben `localhost` auch direkter IPv4-Aufruf benötigt wird und IPv6 ein Muss ist; ob CLI-/Integrationsclients überhaupt unterstützt werden sollen (kein genereller Origin-/Token-Bypass). Der automatische Start steht fest, die Wahl Anmeldung/Hochfahren und Aufgabenplanung/Dienst erfolgt in T07. Grobe Schätzung S02/S03 lokal: **2–4 Entwicklungstage** einschließlich gezielter Sicherheits-/Frontendtests und Abnahme, ohne Windows-Paketierung oder LAN-Erweiterung. Keine Sicherheitsmaßnahme ist durch dieses Planungsdokument bereits aktiviert.
+**Für Teil A entschieden (11.10.2026):** Die offizielle Boot-kompatible Spring-Security-Abhängigkeit ist freigegeben. Explizite anmeldungsfreie Filterkette ohne Standardbenutzer/Loginformular; ausschließlich Loopback-Bindung an `127.0.0.1`, unterstützte HTTP-Hosts `localhost` und `127.0.0.1` mit dem konfigurierten Port. IPv6 und externe API-/CLI-Clients sind derzeit nicht erforderlich. Keine neuen Profile oder LAN-Freigabe. Bei späterer Umsetzung von K03 ist K04 gemeinsam verpflichtend (siehe oben). Der automatische Start steht fest, die Wahl Anmeldung/Hochfahren und Aufgabenplanung/Dienst erfolgt in T07. Grobe Schätzung S02/S03 lokal: **2–4 Entwicklungstage** einschließlich gezielter Sicherheits-/Frontendtests und Abnahme, ohne Windows-Paketierung oder LAN-Erweiterung. Keine Sicherheitsmaßnahme ist durch dieses Planungsdokument bereits aktiviert.
+
+**Teil-A-Vorprüfung – Umsetzung angehalten (11.10.2026):** Der bestehende GET `/autofillBandData/{bandIndex}` (`MainController.java:532` → `BandService.java:550` → `BandScraper.java:24`) startet unmittelbar einen Scraper. Spring MVC unterstützt für GET-Mappings auch HEAD; der übliche CSRF-Matcher schützt GET/HEAD nicht. Ein gültiger lokaler Host beweist nicht die Herkunft des Aufrufs, und Browseranfragen können bei GET/HEAD ohne Origin-Header eintreffen. Deshalb reichen Loopback, Host-Prüfung und Ablehnung *vorhandener* fremder Origins für diesen Pfad nicht als vollständiger Schutz. Dies ist eine statisch belegte Schutzlücke des vorgesehenen Ansatzes, kein durchgeführter Browser-Angriff. Quellen: [Spring Security CSRF](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html), [Spring MVC HEAD/OPTIONS](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html#ann-requestmapping-head-options), [Fetch Origin-Header](https://fetch.spec.whatwg.org/#origin-header).
+
+Gemäß Abschnitt E wurde zunächst angehalten. Der Projekteigentümer hat anschließend die gemeinsame POST-Umstellung ausdrücklich freigegeben und die Stoppregel genau dafür aufgehoben. Schritt 3 wird daher gemeinsam mit Schritt 2 umgesetzt, ohne zeitweilige CSRF-Ausnahme für GET/HEAD. Die übrigen Sicherheits- und Testvorgaben bleiben erhalten.
+
+**S02/S03 Teil A einschließlich freigegebener Autofill-POST-Umstellung umgesetzt und technisch geprüft (11.10.2026):**
+
+- Explizite Bindung `127.0.0.1`, Standardport 8080. Frühe Prüfung effektiver Konfiguration verhindert Wildcard-/LAN-/Proxy-Overrides, abweichende Cookie-Regeln, separate Management-Ports und erweiterte Health-Ausgabe. Eine zusätzliche Prüfung der fertig konfigurierten Server-Factory verhindert abweichende Bind-Adresse, Port oder TLS-Aktivierung durch Factory-Customizer. Kein neuer Betriebsmodus oder Profil.
+- `LocalRequestFilter` prüft alle Requests einschließlich Views, JSON, Assets, Fehlerpfaden und Actuator vor Controller-/Servicearbeit. Nur `localhost`/`127.0.0.1` mit konfiguriertem Port; fehlende, mehrfache, manipulierte Hosts und Forwarded-/X-Forwarded-Header werden abgewiesen. Vorhandene Origins müssen exakt demselben lokalen Origin entsprechen; fremde, mehrfache und `null`-Origins sind gesperrt. Bei Schreibrequests widersprechende Referer-/Fetch-Metadata-Header ebenfalls abweisen; fehlende Browserheader ersetzen keinen CSRF-Token.
+- Offizieller Boot-Security-Starter mit expliziter anmeldungsfreier Filterkette, Session-CSRF ohne Endpoint-Ausnahmen, kein Login/HTTP-Basic/Logout und kein generierter Standardbenutzer. HttpOnly-/SameSite=Strict-Sessioncookie, ausschließlich Cookie-Tracking; im lokalen HTTP-Betrieb kein Secure-Flag. Actuator exponiert ausschließlich Health mit Status, keine Details/Probes/Discovery. Runtime-Auflösung und Boot-JAR bestätigen Spring Security **7.1.1**, Boot **4.1.1**; Java 21 und Gradle 8.14.3 unverändert.
+- `home.html`/`einkaufsliste.html` stellen maskierte CSRF-Tokens und Headername als Metatags bereit. `security.js` sendet Schreibrequests ausschließlich an den eigenen Origin und die tatsächlich geprüfte absolute URL, ohne Token in URLs/Logs oder Weiterleitungen. Alle zehn bisherigen Schreib-Fetch-Aufrufe und Band-Autofill verwenden die gemeinsame Hilfe. Fehlende Tokens/403 werden verständlich mit manuellem Neuladen behandelt; keine automatischen Schreib-/Kauf-Replays.
+- `/autofillBandData/{bandIndex}` und Client gemeinsam auf geschütztes POST umgestellt. GET und HEAD liefern für gültige lokale Requests **405 ohne Controller-/Service-/Scraperaufruf**, OPTIONS bleibt nebenwirkungsfrei; unzulässige Hosts/Origins werden bereits mit 403 abgewehrt. `/scrape` unterliegt denselben CSRF-/Host-/Origin-Grenzen. Autofill-Feldnamen, Preisstring, Bild-/Linkübernahme und die bestehende Oberfläche bleiben erhalten. Die 29 bestehenden MVC-/JSON-Vertragsfälle behalten sämtliche fachlichen Assertions; nur gültige lokale Request-/Tokendaten wurden ergänzt.
+
+| Tatsächlich ausgeführte Validierung | Ergebnis |
+|---|---|
+| Datenbankfreie `TestDatabaseGuardTest` | **44 bestanden**, unverändert. Vor Integrationstests ausgeführt. |
+| Neue `LocalSecurityPolicyTest` | **61 bestanden**, ohne Boot/JDBC/DNS/Browser; Authority, Origin, Referer/Fetch-Metadata, Overrides und Factory-Grenzen. |
+| Neue geschützte `LocalSecurityMvcTest`, bestehende MVC-/Rendering-Fälle | **27 + 29 + 3 bestanden**; Sessionbindung einschließlich fremder/falscher Tokens, Ablehnung vor Controllerarbeit, Scraper ausschließlich statisch ersetzt. |
+| Finale vollständige Suite `clean test` | **179 bestanden = 91 bestehende + 88 neue**, 0 Failures, 0 Errors, 0 Skipped; Teil-/Wiederholungsläufe nicht addieren. |
+| `pnpm run test:dom` | **65 bestanden = 33 bestehende + 32 neue**, keine Fehler; echte Formular-DOMs und Dialog-/Kauf-/Löschlistener mit Fetch-Spies, ohne Browser/Netzwerk. |
+| `assemble --dry-run`, anschließend `assemble` | Erfolgreich; Aufgabenplan nur Kompilierung/Ressourcen/Main-Class/bootJar/jar, keine erneuten Tests oder Scraper. |
+| Rein lesender Daten-/Schema-Fingerabdruck vor/nach Suite und Build | Identische 16 Hash-/Zählzeilen über zehn Tabellen und Schema-Metadaten; **78 Stammdaten erhalten**, fünf Geschäftstabellen unverändert leer. Rollback-/Datenerhaltungstests bestanden. |
+
+Der SHA-256-Fingerabdruck bleibt `ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570`. AUTO_INCREMENT-Zähler können durch zurückgerollte Fixtures steigen und werden weiterhin nicht zurückgesetzt. Ausschließlich `mangalib_test`/`mangalib_test_user` über den bestehenden Guard; keine produktive Verbindung, Migration, Schemaänderung, Dateninitialisierung oder echte Scraper-/Browserausführung. Testschutzdateien, Testprofil, Datenmodell und Geschäftsregeln unverändert. Berichte der 179-Test-Suite bleiben unter `build/test-results/test` und `build/reports/tests/test`; lokale Vorher-/Nachher-/Dependency-Artefakte liegen Git-ignoriert unter `.gradle/security-validation`. Sichere Reproduktion und Grenzen: [TESTING.md](TESTING.md), [DOM-Tests](src/test/js/README.md).
+
+**Offene Abnahme und Grenzen:** Kein echter HTTP-Listener oder Browser wurde gestartet. Tatsächliche Loopback-Erreichbarkeit, Cookie-Übertragung, mehrere Tabs, Sessionablauf/Neustart, alle UI-Abläufe und Bilddarstellung sind später in isolierter Umgebung manuell zu prüfen. Lokale untrusted Programme und eigenes XSS werden durch anmeldungsfreien CSRF-Schutz nicht ausgeschlossen; andere Entwicklungslistener, Serverrechte und Windows-Konfiguration bleiben separat zu kontrollieren. Kein LAN-/IPv6-/Internetbetrieb freigegeben. Bestehende Temporal-/OSIV-/Mockito-/JVM-Warnungen sowie erwartete 405-Negativtest-Warnungen bleiben; allgemeine Eingabe-/URL-/Scraperlimits, Dependency-Befunde, Logging und fachliche Fehler gehören weiterhin zu separaten Aufgaben. Umsetzung ohne fachliche/UI-Modernisierung und ohne Commit/Push; Abnahme des Projekteigentümers ausstehend.
 
 ### T03 – Atomare, wiederholungssichere Datenänderungen
 - Einkauf → Bibliothek in einer konsistenten Transaktion; erneute und parallele Kaufübernahme absichern.
@@ -305,7 +347,7 @@ Die **endgültige Betriebsform bleibt offen**. Aufgabenplanung bei Anmeldung ist
 - Neue Nutzer richten **ihre eigene leere MySQL-Datenbank** und eingeschränkte eigene Zugangsdaten ein. Initiale Struktur/Stammdaten reproduzierbar und getrennt von späteren versionierten Migrationen bereitstellen; leere Erstinstallation gegen Bestandsupdate eindeutig unterscheiden. Keine Sammlung, Zugänge oder Backups des Projekteigentümers übernehmen, keine Produktivdaten zum Pakettest verwenden.
 - Reproduzierbare Build-/Release-Anleitung, feste Versionsnamen, geprüfte Artefakte/Prüfsummen und GitHub-Release-Pakete planen; Veröffentlichung separat freigeben. Lizenzierung des Projekts, Drittanbieter-/Browser-/Treiber-Abhängigkeiten und Importquellen vor öffentlicher Verteilung klären. Private Auditberichte/Logs müssen vom Paket ausgeschlossen bleiben.
 - Docker Compose oder ein anderes Paket nur bei nachgewiesenem Installationsnutzen separat evaluieren, nicht als Voraussetzung für den Windows-Einzelbenutzerbetrieb. Datenvolumes, sichere Bindung, eigene Secrets, Restore und nicht destruktive Updates wären Pflicht; heute keine Docker-Dateien oder zusätzlichen Dienste anlegen.
-- Smartphone-/LAN-Erweiterung folgt erst als letzter optionaler Punkt in Abschnitt 9; kein Internetbetrieb und keine zusätzliche Serverinfrastruktur vorsehen.
+- Smartphone-/LAN-Erweiterung folgt erst nach diesen Zielen in Abschnitt 9; Browser-Integration K06 folgt danach als allerletzte optionale Erweiterung in Abschnitt 10. Kein Internetbetrieb und keine zusätzliche Serverinfrastruktur vorsehen.
 
 ## 6. Empfohlene Ausführungsreihenfolge
 
@@ -317,8 +359,8 @@ Die **endgültige Betriebsform bleibt offen**. Aufgabenplanung bei Anmeldung ist
 | 3 | Datenmodell und Lesehistorie | M05, S03, Vorbereitung M03/M04; Migration bestehender Datensätze |
 | 4 | Statistik | T04 (statistikrelevante Fehler), M03, M04 |
 | 5 | Verwaltung und Komfort | S01, K01, K02, K05 nach Bedarf |
-| 6 | Profile und Zugriff | K03, K04 nach separater Architekturentscheidung |
-| 7 | Bereitstellung und Betrieb (abschließende Phase) | T07 nach wesentlichen Funktions-, Sicherheits- und Datenintegritätsarbeiten: zuerst verbindlicher Windows-Betrieb, danach optional GitHub-Release, zuletzt optional Smartphone/LAN (Abschnitt 9); T06 vorher als Betriebsgrundlage |
+| 6 | Profile und Zugriff | K03 und K04 gemeinsam nach separater Architekturentscheidung |
+| 7 | Bereitstellung und Betrieb (abschließende Phase) | T07 nach wesentlichen Funktions-, Sicherheits- und Datenintegritätsarbeiten: zuerst verbindlicher Windows-Betrieb, danach optional GitHub-Release, danach optional Smartphone/LAN (Abschnitt 9), allerzuletzt optional K06 (Abschnitt 10); T06 vorher als Betriebsgrundlage |
 
 **Umsetzungsregel:** Jedes Ticket wird vor der Implementierung mit konkreten Akzeptanzkriterien, betroffenen Dateien, Datenmigration, Tests und gegebenenfalls offenen Fachentscheidungen geplant. Die Tabelle ist eine Arbeitsreihenfolge, keine Zusage, alle Punkte automatisch umzusetzen.
 
@@ -333,7 +375,7 @@ Die **endgültige Betriebsform bleibt offen**. Aufgabenplanung bei Anmeldung ist
 - Wie erfolgt die Zuordnung eines importierten Einzelbandes zu einer vorhandenen Reihe?
 - Wie werden Monatsausgaben fachlich abgegrenzt: Erscheinungsdatum oder Kaufdatum?
 - Welche Daten dürfen für Entwickler-/Migrationstests in eine isolierte Kopie übernommen werden?
-- Security S02/S03: Ist eine schlanke Spring-Security-Abhängigkeit mit zunächst anmeldungsfreiem lokalem Betrieb freigegeben? Welche lokalen Adressen/IPv6-Varianten und gegebenenfalls CLI-Clients müssen unterstützt werden? Lokaler Einzelbenutzerbetrieb selbst ist bereits entschieden.
+- Security S02/S03: Lokaler Betrieb und gemeinsame Autofill-POST-Umstellung sind freigegeben. Manuelle Browser-/Listenerabnahme in isolierter Umgebung bleibt offen; IPv6, externe Clients, Anmeldung und LAN werden derzeit nicht umgesetzt.
 - T06: Welche Aufbewahrungsfrist und Speicherobergrenze sollen lokale Diagnose-Logs haben? Ist später fachliches Audit-Logging erforderlich?
 - T07: Soll Autostart bei Anmeldung genügen oder bereits vor Anmeldung beim Hochfahren erfolgen? Betriebskonto, Secretablage und Aufgabenplanung/Dienst erst anhand dieser Entscheidung festlegen.
 
@@ -349,15 +391,19 @@ Die **endgültige Betriebsform bleibt offen**. Aufgabenplanung bei Anmeldung ist
 - [x] Spring-Boot-4.1-Migrationsanalyse dokumentiert und 4.1.1 mit 91 Tests, Daten-/Schema-/JSON-Vergleich und Build technisch validiert.
 - [ ] Fachliche Regressionstests für zentrale Abläufe und UI abgeschlossen.
 - [ ] Technische Befunde und Feature-Tickets in ausführbare Codex-Aufgaben zerlegt.
-- [ ] Erste abgesicherte Fehlerbehebung umgesetzt.
+- [x] Erste abgesicherte Fehlerbehebung umgesetzt (S01; S02/S03 Teil A zusätzlich technisch geprüft, manuelle Abnahme offen).
 
-## 9. Abschlussziele und letzte optionale Erweiterung
+## 9. Abschlussziele und optionale Smartphone-/LAN-Erweiterung
 
 Diese Reihenfolge ergänzt Phase 7; die fachlichen Muss-/Soll-/Kann-Prioritäten bleiben unverändert.
 
 1. **Verbindlich: reguläre Windows-Bereitstellung und automatischer Betrieb (T07).** Nach wesentlichen Projektzielen lokale Einzelbenutzeranwendung ohne VS Code/Gradle bedienen; sichere Konfiguration, Diagnose, Updates und überprüfte Backup-/Wiederherstellung gewährleisten.
 2. **Optional danach: GitHub-Release für Selbstbetrieb (T07).** Andere Nutzer verwenden eigene Datenbanken/Secrets; dokumentierte sichere Installation, Release-/Lizenzprüfung und Updates, keine privaten Bestände oder Sicherheitsberichte veröffentlichen. Keine Hosting-Infrastruktur voraussetzen.
-3. **Letzter Roadmap-Punkt, niedrigste optionale Priorität: Smartphone-/LAN-Zugriff im eigenen Heimnetz.** Erst nach den übrigen Projektzielen, regulärer Bereitstellung und dem optionalen GitHub-Release gesondert entscheiden und beauftragen. Die optionalen Ziele sind keine Pflichtvoraussetzung für den lokalen Betrieb; bei Verzicht auf einen GitHub-Release ist dessen Überspringen ausdrücklich zu entscheiden. Dann explizites LAN-Opt-in mit begrenzter Bind-Adresse/Firewall, Anmeldung und Zugriffskontrolle auch für lesende Daten-/Statistik-/Scraperpfade, HTTPS direkt in der Anwendung mit geklärtem Zertifikatsvertrauen auf dem Smartphone sowie fortbestehender Host-/Origin-/CSRF-Abwehr planen. Ein gemeinsamer Eigentümerzugang genügt gegebenenfalls; Mehrbenutzerprofile nicht ungefragt voraussetzen. Lokaler Default und Datenmodell bleiben erhalten; keine vorsorgliche LAN-Komplexität heute. Abnahme später: lokaler Modus bleibt aus dem LAN unerreichbar, LAN-Modus nur von freigegebenen Geräten/mit gültiger Sitzung, sichere Anmeldung/Abmeldung, Smartphone-Fetch-/Tokenabläufe, gesperrte Managementdiagnose und unbeeinträchtigte lokale Funktionen. **Kein öffentlicher Internetzugriff, keine Router-Portfreigaben, keine zusätzliche Serverinfrastruktur.**
+3. **Optional nach Bereitstellung/Release, vor K06: Smartphone-/LAN-Zugriff im eigenen Heimnetz.** Erst nach den übrigen Projektzielen, regulärer Bereitstellung und dem optionalen GitHub-Release gesondert entscheiden und beauftragen. Die optionalen Ziele sind keine Pflichtvoraussetzung für den lokalen Betrieb; bei Verzicht auf einen GitHub-Release ist dessen Überspringen ausdrücklich zu entscheiden. Dann explizites LAN-Opt-in mit begrenzter Bind-Adresse/Firewall, Anmeldung und Zugriffskontrolle auch für lesende Daten-/Statistik-/Scraperpfade, HTTPS direkt in der Anwendung mit geklärtem Zertifikatsvertrauen auf dem Smartphone sowie fortbestehender Host-/Origin-/CSRF-Abwehr planen. Ein gemeinsamer Eigentümerzugang genügt gegebenenfalls; Mehrbenutzerprofile nicht ungefragt voraussetzen. Lokaler Default und Datenmodell bleiben erhalten; keine vorsorgliche LAN-Komplexität heute. Abnahme später: lokaler Modus bleibt aus dem LAN unerreichbar, LAN-Modus nur von freigegebenen Geräten/mit gültiger Sitzung, sichere Anmeldung/Abmeldung, Smartphone-Fetch-/Tokenabläufe, gesperrte Managementdiagnose und unbeeinträchtigte lokale Funktionen. **Kein öffentlicher Internetzugriff, keine Router-Portfreigaben, keine zusätzliche Serverinfrastruktur.**
+
+## 10. Allerletzte optionale Erweiterung: Browser-Integration (K06)
+
+Nach sämtlichen zuvor vorgesehenen Projektzielen einschließlich der optionalen Smartphone-/LAN-Erweiterung folgt K06 als letzter optionaler Roadmap-Punkt. Entfallen frühere optionale Ziele, deren Überspringen ausdrücklich festhalten. Zunächst Firefox-Erweiterung und alternative Übergabelösungen, optional Chrome, technisch und sicherheitlich bewerten. Manga-Passion-Reihen-/Banddaten nur als untrusted Vorschlag übernehmen: vorbereiteter Einkaufskorb-Eintrag, Datenvorschau, Dublettenprüfung und ausdrückliche Bestätigung. Sichere lokale Backend-Kommunikation mit geeigneten Berechtigungen und einem geprüften Übergabevertrag ist Voraussetzung; bestehende Host-/Origin-/CSRF-Regeln nicht pauschal öffnen. Keine Implementierung im aktuellen Auftrag.
 
 ---
 

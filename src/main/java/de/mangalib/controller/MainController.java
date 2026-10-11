@@ -529,7 +529,7 @@ public class MainController {
         }
     }
 
-    @GetMapping("/autofillBandData/{bandIndex}")
+    @PostMapping("/autofillBandData/{bandIndex}")
     public ResponseEntity<Map<String, String>> autofillBandData(@PathVariable String bandIndex) {
         Map<String, String> autofillData = bandService.autofillBandData(bandIndex);
         return ResponseEntity.ok(autofillData);

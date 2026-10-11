@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const itemId = event.currentTarget.getAttribute("data-id");
       console.log("Deleting item with id:", itemId);
 
-      fetch(`/items/${itemId}`, {
+      mangaLibFetch(`/items/${itemId}`, {
         method: "DELETE",
       })
         .then((response) => {
@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Zu sendende Daten:", mangaReiheData);
 
     // Daten senden mit Fetch-API
-    fetch("/addToEinkaufsliste", {
+    mangaLibFetch("/addToEinkaufsliste", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -345,7 +345,7 @@ document.addEventListener("DOMContentLoaded", function () {
     showLoading();
 
     // Senden des Manga-Index an den Web Scraper
-    fetch("/scrape", {
+    mangaLibFetch("/scrape", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -432,7 +432,7 @@ document.addEventListener("DOMContentLoaded", function () {
   buyButtons.forEach((button) => {
     button.addEventListener("click", function () {
       const itemId = this.getAttribute("data-id");
-      fetch(`/buyItemUpdate`, {
+      mangaLibFetch(`/buyItemUpdate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -449,7 +449,7 @@ document.addEventListener("DOMContentLoaded", function () {
             askUserForNewMangaReiheStatus(itemId)
               .then((selectedStatus) => {
                 // Senden der Daten an den Server nach erfolgreicher Statusauswahl
-                return fetch("/buyItemCreate", {
+                return mangaLibFetch("/buyItemCreate", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",

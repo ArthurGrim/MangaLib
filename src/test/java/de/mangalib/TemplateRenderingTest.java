@@ -36,7 +36,7 @@ class TemplateRenderingTest {
         var before = TestDatabaseSnapshot.capture(em);
         try (var manga = mockStatic(MangaScraper.class, invocation -> { throw new AssertionError("Scraping gesperrt."); });
              var band = mockStatic(BandScraper.class, invocation -> { throw new AssertionError("Scraping gesperrt."); })) {
-            mvc.perform(get(path)).andExpect(request().asyncNotStarted())
+            mvc.perform(get("http://localhost:8080" + path).header("Host", "localhost:8080")).andExpect(request().asyncNotStarted())
                     .andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith("text/html"))
                     .andExpect(view().name(path.substring(1))).andExpect(content().string(org.hamcrest.Matchers.containsString("MangaLib")));
             manga.verifyNoInteractions();

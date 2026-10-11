@@ -88,4 +88,44 @@ Gradle kann beim ersten Lauf Dependencies herunterladen. Das ist vom gesperrten 
 
 `check` und `build` können ebenfalls Tests starten. `bootRun` startet hingegen die normale Anwendung und verwendet diese ausschließlich im Test-Classpath liegende Schutzschicht **nicht**. Es ist kein Befehl zur Testvalidierung.
 
+## Lokale Zugriffssicherheit S02/S03
+
+Die explizite Security-Filterkette ist auch in Tests aktiv. `LocalSecurityPolicyTest`
+prüft Authority-/Origin-Regeln, Konfigurationsüberschreibungen und die konfigurierte
+Server-Factory rein datenbankfrei. Zuerst wie oben die 44 `TestDatabaseGuardTest`-Fälle
+ausführen, danach diese Policy-Tests. Anschließend die geschützten MVC-/Regressionstests
+und `clean test` nach Prüfung des Aufgabenplans; DOM-Tests separat mit `pnpm run test:dom`.
+
+MockMvc-Requests benötigen einen expliziten lokalen Host samt konfiguriertem Port
+(Standard `localhost:8080`) und denselben Servlet-Server-Port. Schreibrequests brauchen
+einen gültigen CSRF-Token; niemals `addFilters=false` einsetzen. Die bestehenden
+MVC-Vertragsfälle verwenden Spring Securitys Test-Postprocessor für gültige Tokens;
+`LocalSecurityMvcTest` prüft dagegen echte, über `/home` gerenderte Tokens mit derselben
+Session, falsche Tokens und fremde Sessions. Beide Scraper werden dort statisch ersetzt,
+alle Daten-/Schema-Fingerabdrücke vor/nach jedem Fall verglichen. Positive Scraperfälle
+führen ausschließlich diese Doubles aus und schreiben keine Fixtures. Die bisherigen
+transaktionalen MVC-/Persistenztests behalten Rollback und ihre Assertions.
+
+Für den normalen lokalen Betrieb gelten `http://localhost:8080/home` oder
+`http://127.0.0.1:8080/home`. Ein anderer gültiger `server.port` gilt gleichermaßen
+für Host und Origin; `server.address` bleibt zwingend `127.0.0.1`. Unsichere Overrides,
+Proxy-Header-Verarbeitung, separate Management-Ports und erweiterte Health-Ausgabe
+führen zum Startabbruch. Die fertig angepasste Server-Factory wird zusätzlich auf
+Loopback-Adresse, erwarteten Port und deaktiviertes TLS geprüft. Vorhandene Origin-
+Header müssen zur Request-Authority passen; widersprechende Referer-/Sec-Fetch-Site-
+Header verhindern Schreibaktionen, fehlende Header ersetzen niemals den CSRF-Token.
+Kein Login oder Standardbenutzer, kein LAN-/IPv6-Betrieb.
+Die Session bleibt per HttpOnly-/SameSite=Strict-Cookie erhalten, ohne URL-Rewriting;
+Secure wird im aktuellen HTTP-Betrieb nicht gesetzt. `localhost` und `127.0.0.1` sind
+verschiedene Origins/Sessions: innerhalb einer geöffneten Seite dieselbe Adresse verwenden.
+Fehlender/abgelaufener Token oder 403 erfordert manuelles Neuladen und erneute bewusste
+Aktion; kein automatischer Kauf-/Schreib-Replay. Alte Autofill-GET-/HEAD-Aufrufe liefern
+405, OPTIONS startet keinen Scraper; Autofill und `/scrape` benötigen POST mit Session-CSRF.
+
+Diese Prüfungen starten keinen echten HTTP-Listener. Tatsächliche Cookie-Übertragung,
+Browsernavigation, mehrere Tabs/Neustart und Loopback-Erreichbarkeit müssen später
+in einer gesondert freigegebenen isolierten Umgebung manuell geprüft werden. Ein lokales
+untrusted Programm oder eigenes XSS wird durch den anmeldungsfreien CSRF-Schutz nicht
+abgewehrt. Kein produktiver Start zur Testvalidierung.
+
 Bei einem Schutzfehler nicht die Schutzregeln lockern: widersprüchliche `SPRING_*`-/JPA-/DataSource-Einstellungen entfernen beziehungsweise das freigegebene Testziel wiederherstellen. Passwörter und vollständige Environment-Dumps gehören weder in Logs noch in Git.

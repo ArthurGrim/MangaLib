@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="de_DE" xmlns:th="http://www.thymeleaf.org">
   <head>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <meta charset="UTF-8" />
     <title>MangaLib Home</title>
     <link
@@ -974,6 +976,7 @@
       </div>
     </div>
 
+    <script src="/js/security.js"></script>
     <script src="/js/scrollToTop.js"></script>
     <script src="/js/popup_add_reihe.js"></script>
     <script src="/js/popup_edit_reihe.js"></script>

@@ -108,7 +108,7 @@ function saveBand() {
     reread: reread.value,
   };
 
-  fetch("/editBand", {
+  mangaLibFetch("/editBand", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -170,7 +170,7 @@ function autofillBandData() {
   // Anzeigen des Lade-Labels
   showLoading();
 
-  fetch(`/autofillBandData/${bandIndex}`)
+  mangaLibFetch(`/autofillBandData/${bandIndex}`, { method: "POST" })
     .then((response) => response.json())
     .then((data) => {
       console.log("Autofilled data:", data); // Log hinzugefügt

@@ -26,6 +26,7 @@ import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mockStatic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 /** HTTP-/JSON-Baseline: echte Controller, Services, Templates und Mapper unter dem Test-DB-Guard. */
 @SpringBootTest
@@ -422,7 +424,13 @@ class MvcContractTest {
     private MvcResult request(RequestBuilder builder, int status, MediaType type) throws Exception {
         assertTrue(TestTransaction.isActive());
         assertTrue(TestTransaction.isFlaggedForRollback());
-        var result = mvc.perform(builder).andReturn();
+        // Neue lokale Requestgrenze erfüllen; sämtliche bisherigen fachlichen Assertions bleiben bestehen.
+        var local = (MockHttpServletRequestBuilder) builder;
+        local.header("Host", "localhost:8080").with(request -> {
+            request.setServerPort(8080);
+            return request;
+        }).with(csrf().asHeader());
+        var result = mvc.perform(local).andReturn();
         assertFalse(result.getRequest().isAsyncStarted(), "Keine asynchronen Schreibpfade im Test.");
         assertTrue(TestTransaction.isActive());
         assertEquals(status, result.getResponse().getStatus());
