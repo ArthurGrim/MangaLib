@@ -11,8 +11,11 @@
       href="../static/css/home.css"
     />
     <link rel="icon" type="image/x-icon" href="/svg/favicon.ico" />
+    <link th:if="${manualTestEnvironment == true}" rel="stylesheet" href="/manual-test/banner.css" />
+    <script th:if="${manualTestEnvironment == true}" src="/manual-test/banner.js" defer></script>
   </head>
   <body>
+    <div th:if="${manualTestEnvironment == true}" class="manual-test-banner" role="status">MANUELLE TESTUMGEBUNG — ausschließlich synthetische Daten und Scraper</div>
     <!-- Header für die Seite zur Navigation zwischen den Seiten -->
     <header class="header">
       <nav class="header_headerInner">

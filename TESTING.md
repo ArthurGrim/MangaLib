@@ -129,3 +129,23 @@ untrusted Programm oder eigenes XSS wird durch den anmeldungsfreien CSRF-Schutz 
 abgewehrt. Kein produktiver Start zur Testvalidierung.
 
 Bei einem Schutzfehler nicht die Schutzregeln lockern: widersprüchliche `SPRING_*`-/JPA-/DataSource-Einstellungen entfernen beziehungsweise das freigegebene Testziel wiederherstellen. Passwörter und vollständige Environment-Dumps gehören weder in Logs noch in Git.
+
+## Getrennte manuelle Browserumgebung
+
+Die freigegebene Vorbereitung verwendet ein eigenes Abnahme-JAR und `manual-test`-Profil,
+`mangalib_manual_test` / `mangalib_manual_test_user`, `MANGALIB_MANUAL_DB_PASSWORD` und
+`127.0.0.1:18080`. Sie verwendet **nicht** die JUnit-Guard-Registrierung. Diese Dateien
+und das automatisierte Testprofil bleiben unverändert. Manuelle HTTP-Aktionen committen
+in der dritten Datenbank und dürfen niemals gegen `mangalib_test` ausgeführt werden.
+
+`manualSafetyTest` führt ausschließlich datenbankfreie Negativprüfungen, JDBC-Mocks,
+Archivkontrollen und `--validate-only`-Unterprozesse mit synthetischem Passwort aus.
+`scripts/Test-ManualScripts.ps1` prüft synthetische SQL-Texte ohne SQL-Ausführung.
+`scripts/Start-ManualTest.ps1 -ValidateOnly` öffnet weder DB-Verbindung noch Listener;
+ohne diesen Schalter startet das Skript die Anwendung und benötigt weitere Freigabe.
+Historischer Vorbereitungsstand: Konten, Schemaexport/-import, Fixtures und realer
+Kontext-/Browserstart waren zunächst offen. Der Eigentümer hat Einrichtung und
+Browserabnahme am 11.10.2026 durchgeführt; dies sind manuelle Beobachtungen,
+keine erneute Codex-Integrationstestausführung. Die anschließende Fehlernachbereitung
+verwendet ausschließlich DB-freie Mock-/Template-/DOM-Tests; sämtliche Guards bleiben aktiv.
+Einrichtung, genaue Rechte/Befehle und Checkliste: [MANUAL_TESTING.md](MANUAL_TESTING.md).

@@ -24,6 +24,9 @@ import java.util.regex.Pattern;
 public class BandService {
 
     @Autowired
+    private ScraperGateway scraperGateway;
+
+    @Autowired
     private BandRepository bandRepository;
 
     @Autowired
@@ -548,7 +551,7 @@ public class BandService {
 
     // Wenn der MP Autofill Button gedrückt wird
     public Map<String, String> autofillBandData(String bandIndex) {
-        Map<String, String> scrapedData = BandScraper.scrapeBandData(bandIndex);
+        Map<String, String> scrapedData = scraperGateway.scrapeVolume(bandIndex);
         Map<String, String> relevantData = new HashMap<>();
 
         if (scrapedData.containsKey("BildUrl")) {

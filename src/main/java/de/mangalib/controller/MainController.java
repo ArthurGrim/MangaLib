@@ -14,7 +14,8 @@ import de.mangalib.service.TypService;
 import de.mangalib.service.BandService;
 import de.mangalib.service.FormatService;
 import de.mangalib.service.MangaReiheService;
-import de.mangalib.service.MangaScraper;
+import de.mangalib.service.ScraperGateway;
+import de.mangalib.service.ScraperRequestRejectedException;
 import de.mangalib.service.SammelbandService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,9 @@ import java.util.stream.Collectors;
 
 @Controller
 public class MainController {
+
+    @Autowired
+    private ScraperGateway scraperGateway;
 
     @Autowired
     private StatusService statusService;
@@ -293,7 +297,7 @@ public class MainController {
     public ResponseEntity<Map<String, Object>> scrapeManga(@RequestBody Map<String, String> request) {
         try {
             String mangaIndex = request.get("mangaIndex");
-            Map<String, String> mangaData = MangaScraper.scrapeMangaData(mangaIndex);
+            Map<String, String> mangaData = scraperGateway.scrapeSeries(mangaIndex);
             // Umwandlung der Namen in IDs
             Long verlagId = verlagService.findVerlagIdByName(mangaData.get("Deutsche Ausgabe Verlag"));
             Long typId;
@@ -322,6 +326,9 @@ public class MainController {
             response.put("formatId", formatId);
 
             return ResponseEntity.ok(response);
+        } catch (ScraperRequestRejectedException e) {
+            // Der ausschließlich manuelle Advice verarbeitet erwartete Double-Ablehnungen.
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

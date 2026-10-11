@@ -419,10 +419,11 @@ public class MangaReiheService {
             mangaReihe.setAnzahlBaende(anzahlBaende);
             mangaReihe.setPreisProBand(mangaReihe.getPreisProBand());
         }
-        if (!mangaReihe.getIstVergriffen().equals(istVergriffen)) {
+        // NULL bleibt ein unbekannter Wert und wird nicht pauschal als false gespeichert.
+        if (!Objects.equals(mangaReihe.getIstVergriffen(), istVergriffen)) {
             mangaReihe.setIstVergriffen(istVergriffen);
         }
-        if (!mangaReihe.getIstEbayPreis().equals(istEbayPreis)) {
+        if (!Objects.equals(mangaReihe.getIstEbayPreis(), istEbayPreis)) {
             mangaReihe.setIstEbayPreis(istEbayPreis);
         }
         if (preisProBand.compareTo(BigDecimal.ZERO) != 0) {

@@ -1,0 +1,21 @@
+/* Ausschließlich im manuellen Artefakt: eigener Platz statt Überlagerung des Headers. */
+:root { --manual-banner-height: 4rem; }
+.manual-test-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff3cd;
+  color: #000;
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+  z-index: 100;
+}
+body { padding-top: var(--manual-banner-height); }
+.header, .sidebar { top: var(--manual-banner-height); }
+.popup-container, .popup-edit-band-container, .ask-for-status-popup {
+  top: var(--manual-banner-height);
+  height: calc(100% - var(--manual-banner-height));
+}

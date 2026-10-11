@@ -126,6 +126,8 @@ dumps/
 # Bekannte versionierte Schema-/Stammdaten-Skripte sind keine privaten Dumps.
 !/SQLQuery.sql
 !/Inserts.sql
+# Ausschließlich geprüfte synthetische manuelle Fixtures, keine lokalen Schemaexports.
+!/src/manualTest/setup/fixtures.sql
 
 # Lokale Installation der JavaScript-Testabhängigkeiten.
 /node_modules/

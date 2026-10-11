@@ -171,7 +171,10 @@ function autofillBandData() {
   showLoading();
 
   mangaLibFetch(`/autofillBandData/${bandIndex}`, { method: "POST" })
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) throw new Error("Autofill-Anfrage abgewiesen");
+      return response.json();
+    })
     .then((data) => {
       console.log("Autofilled data:", data); // Log hinzugefügt
       document.getElementById("bild_url").value = data.BildUrl; // Schlüssel angepasst

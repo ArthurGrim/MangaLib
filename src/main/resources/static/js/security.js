@@ -2,7 +2,9 @@
 async function mangaLibFetch(path, options = {}) {
   const fail = (message) => {
     alert(message);
-    throw new Error(message);
+    const error = new Error(message);
+    error.mangaLibNoticeShown = true;
+    throw error;
   };
   const url = new URL(path, window.location.href);
   if (url.origin !== window.location.origin || url.username || url.password) {

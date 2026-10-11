@@ -30,7 +30,7 @@ async function setup(t, { template, scripts = [], token = true, status = 200, re
   w.XMLHttpRequest = w.WebSocket = class { constructor() { throw new Error('Netzwerk gesperrt.'); } };
   w.fetch = async (url, options) => {
     calls.push({ url, options });
-    return { status, ok: status >= 200 && status < 300, json: async () => response };
+    return { status, ok: status >= 200 && status < 300, headers: new Headers({ 'Content-Type': 'application/json' }), json: async () => response };
   };
   w.setTimeout = () => 0;
   for (const [name, value] of [['_csrf', 'test-masked-token'], ['_csrf_header', 'X-CSRF-TOKEN']]) {
@@ -254,6 +254,35 @@ test('Autofill-403 verändert keine Eingaben und beendet den Ladezustand ohne Wi
   assert.equal(e.document.querySelector('.loading-label').style.display, 'none');
   assert.match(e.alerts[0], /Seite neu laden/);
 });
+
+for (const [template, script, suffix] of [
+  ['home.html', 'popup_add_reihe.js', ''], ['home.html', 'popup_edit_reihe.js', '-edit'],
+  ['einkaufsliste.html', 'einkaufsliste.js', ''], ['home.html', 'popup_edit_baende.js', null]
+]) {
+  test(`400/JSON-Ablehnung verändert keine Autofill-Felder in ${script}`, async t => {
+    const e = await setup(t, { template, scripts: [script], status: 400, response: { error: 'synthetic private detail' } });
+    if (suffix === null) {
+      e.document.getElementById('band_index').value = '900005';
+      for (const id of ['bild_url', 'preis', 'mp_url']) e.document.getElementById(id).value = 'unverändert';
+      e.w.autofillBandData();
+      await settle();
+      for (const id of ['bild_url', 'preis', 'mp_url']) assert.equal(e.document.getElementById(id).value, 'unverändert');
+    } else {
+      fillForm(e, suffix);
+      e.document.getElementById('manga_index' + suffix).value = '900005';
+      const ids = ['titel', 'anzahl_baende', 'status', 'verlag', 'typ', 'format'].map(id => id + suffix);
+      const before = ids.map(id => e.document.getElementById(id).value);
+      e.document.querySelector('.mp-autofill-button' + suffix).click();
+      await settle();
+      assert.deepEqual(ids.map(id => e.document.getElementById(id).value), before);
+    }
+    assert.equal(e.calls.length, 1); assert.equal(e.calls[0].options.method, 'POST');
+    assert.equal(e.calls[0].options.headers.get('X-CSRF-TOKEN'), 'test-masked-token');
+    assert.equal(e.document.querySelector('.loading-label').style.display, 'none');
+    assert.equal(e.document.querySelector('.error-label').style.display, 'block');
+    assert.equal(e.alerts.length, 0); // kein ungeprüfter Servertext, bestehender Fehlerindikator
+  });
+}
 
 // Ergänzende Inventur, keine Ersatzprüfung für die oben ausgeführten DOM-/Fetch-Fälle.
 test('Alle vorhandenen schreibenden Fetch-Aufrufe verwenden die gemeinsame Hilfe', () => {

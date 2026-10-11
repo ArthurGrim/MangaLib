@@ -29,6 +29,18 @@ document.addEventListener("DOMContentLoaded", function () {
   console.log("Skript geladen");
 
   let scrapedData = {};
+  // Eine Checkbox kann NULL nicht darstellen. Unberührte unbekannte Werte erhalten;
+  // erst eine bewusste Änderung legt true/false fest (auch bei Zurückschalten).
+  let initialFlags = {};
+  let initialOptionalUrls = {};
+  const changedFlags = new Set();
+  for (const [field, id] of [["istVergriffen", "istvergriffen-edit"], ["istEbayPreis", "istebaypreis-edit"]]) {
+    document.getElementById(id).addEventListener("change", () => changedFlags.add(field));
+  }
+  function editedBoolean(field, id) {
+    return initialFlags[field] === null && !changedFlags.has(field)
+      ? null : document.getElementById(id).checked;
+  }
 
   // Referenzen auf Elemente
   const editpopupContainer = document.getElementById("editPopupContainer");
@@ -93,6 +105,9 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch(`/getMangaReiheData/${mangaReiheId}`)
       .then((response) => response.json())
       .then((data) => {
+        initialFlags = { istVergriffen: data.istVergriffen ?? null, istEbayPreis: data.istEbayPreis ?? null };
+        initialOptionalUrls = { anilistUrl: data.anilistUrl ?? null, coverUrl: data.coverUrl ?? null };
+        changedFlags.clear();
         console.log("Empfangene Daten:", data);
         // Setzen der Werte in die Formularfelder
         document.getElementById("id-edit").textContent = data.id;
@@ -182,7 +197,10 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       body: JSON.stringify({ mangaIndex: mangaIndex }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) throw new Error("Autofill-Anfrage abgewiesen");
+        return response.json();
+      })
       .then((data) => {
         console.log("Gescrapte Daten", data);
         // Daten in die Eingabefelder und Selects einfügen
@@ -247,8 +265,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const coverUrl = document.querySelector("#coverUrl-edit").value.trim();
     const istGelesen = document.querySelector("#istgelesen-edit").checked;
     const reread = document.querySelector("#reread-edit").value.trim();
-    const istVergriffen = document.querySelector("#istvergriffen-edit").checked;
-    const istEbayPreis = document.querySelector("#istebaypreis-edit").checked;
+    const istVergriffen = editedBoolean("istVergriffen", "istvergriffen-edit");
+    const istEbayPreis = editedBoolean("istEbayPreis", "istebaypreis-edit");
     const istSammelband = document.querySelector("#istsammelband-edit").checked;
     const sammelbandTypId = document.querySelector(
       "#sammelband_typ-edit"
@@ -324,8 +342,11 @@ document.addEventListener("DOMContentLoaded", function () {
       istGelesen,
       istVergriffen,
       istEbayPreis,
-      anilistUrl,
-      coverUrl,
+      // Unbearbeitete optionale URL-Felder dürfen NULL nicht beiläufig in Leertext verwandeln.
+      anilistUrl: anilistUrl === (initialOptionalUrls.anilistUrl ?? "").trim()
+        ? initialOptionalUrls.anilistUrl ?? null : anilistUrl,
+      coverUrl: coverUrl === (initialOptionalUrls.coverUrl ?? "").trim()
+        ? initialOptionalUrls.coverUrl ?? null : coverUrl,
       sammelbandTypId: istSammelband ? sammelbandTypId : null,
       reread: reread ? parseInt(reread, 10) : 0,
       scrapedData: scrapedData,
@@ -343,18 +364,27 @@ document.addEventListener("DOMContentLoaded", function () {
       body: JSON.stringify(mangaReiheData),
     })
       .then((response) => {
-        console.log("Serverantwort erhalten");
+        // Fehlertexte/HTML und interne Serverdetails niemals als JSON oder UI-Meldung ausgeben.
+        if (!response.ok) throw new Error("Speichern fehlgeschlagen");
+        const contentType = response.headers.get("Content-Type") || "";
+        if (!/^application\/(?:json|[\w.+-]+\+json)(?:\s*;|$)/i.test(contentType)) {
+          throw new Error("Unerwartetes Antwortformat");
+        }
         return response.json();
       })
       .then((data) => {
-        console.log("Antwort vom Server:", data); // Erfolgsmeldung oder Datenverarbeitung
+        if (!data || typeof data !== "object" || Array.isArray(data)) {
+          throw new Error("Unerwartete Speicherantwort");
+        }
         // Schließen des Popups
         document.querySelector("#editPopupContainer").style.display = "none";
         resetPopupFields();
         window.location.reload();
       })
       .catch((error) => {
-        console.error("Error:", error);
+        if (!error?.mangaLibNoticeShown) {
+          alert("Die Änderung konnte nicht bestätigt werden. Bitte Eingaben beibehalten und den gespeicherten Stand nach manuellem Neuladen prüfen. Die Anfrage wird nicht automatisch wiederholt.");
+        }
       });
   });
 

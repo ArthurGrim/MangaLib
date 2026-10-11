@@ -37,3 +37,13 @@ Ersatz für diese ausgeführten DOM-/Ereignisprüfungen.
 
 Diese Suite läuft separat von Gradle. Für sämtliche Java-/Datenbanktests gelten
 weiterhin unverändert die Schutzregeln aus `TESTING.md` im Projektverzeichnis.
+
+`manual-acceptance.test.cjs` ergänzt den echten Bearbeitungsdialog um NULL-/Boolean-
+und URL-Felderhalt sowie kontrollierte Speicherfehler (400/Text, 403, falsches JSON-
+Format und Netzwerkfehler), ohne Replay. Die Banner-Tests prüfen DOM, CSS-Regeln
+und Höhenanpassung mit synthetischer Geometrie; jsdom berechnet kein echtes Layout.
+Vier weitere Fälle in `security.test.cjs` sichern unveränderte Autofill-Felder bei
+400/JSON-Ablehnung auf allen bestehenden Reihen-/Band-Dialogpfaden ab.
+Die Auswahl der Banner-Assets im normalen/manuellen Modell wird zusätzlich durch
+`manualSafetyTest` mit Thymeleaf geprüft. Überdeckung, Zoom und Dialogpositionen
+muss der Eigentümer im echten Browser nachprüfen.

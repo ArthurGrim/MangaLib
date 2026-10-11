@@ -352,7 +352,10 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       body: JSON.stringify({ mangaIndex: mangaIndex }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) throw new Error("Autofill-Anfrage abgewiesen");
+        return response.json();
+      })
       .then((data) => {
         // Daten in die Eingabefelder und Selects einfügen
         document.querySelector("#verlag").value = data["verlagId"];
