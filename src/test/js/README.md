@@ -47,3 +47,10 @@ Vier weitere Fälle in `security.test.cjs` sichern unveränderte Autofill-Felder
 Die Auswahl der Banner-Assets im normalen/manuellen Modell wird zusätzlich durch
 `manualSafetyTest` mit Thymeleaf geprüft. Überdeckung, Zoom und Dialogpositionen
 muss der Eigentümer im echten Browser nachprüfen.
+
+`write-feedback.test.cjs` ergänzt 65 datenbankfreie Fälle für reale Schreibdialoge,
+Status-/Format-/Netzwerkfehler, sichere Inline-Meldungen, Werterhalt und Klicksperren
+sowie Kauf-417/Cancel, lokale manuelle Cover und Lazy Loading. Stand 11.10.2026:
+158 DOM-Tests bestanden. Response-Doubles ersetzen HTTP; jsdom führt weder echte
+Navigation/Reloads noch eine Browserabnahme aus. Details und Grenzen: TESTING.md
+und MANUAL_TESTING.md, Abschnitt 12. Keine neue Dependency notwendig.

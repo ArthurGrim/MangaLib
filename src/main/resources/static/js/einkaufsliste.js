@@ -17,20 +17,11 @@ document.addEventListener("DOMContentLoaded", function () {
       const itemId = event.currentTarget.getAttribute("data-id");
       console.log("Deleting item with id:", itemId);
 
-      mangaLibFetch(`/items/${itemId}`, {
-        method: "DELETE",
-      })
-        .then((response) => {
-          if (response.ok) {
-            // Datensatz erfolgreich gelöscht
-            console.log("Item erfolgreich gelöscht");
-            window.location.reload();
-          } else {
-            // Fehler beim Löschen des Datensatzes
-            console.error("Fehler beim Löschen des Items");
-          }
-        })
-        .catch((error) => console.error("Fehler:", error));
+      MangaLibFeedback.request(`/items/${itemId}`, { method: "DELETE" },
+        document.querySelector("main"), { button, empty: 200 })
+        .then(() => window.location.reload())
+        .catch(() => {});
+
     });
   });
 
@@ -168,6 +159,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Event-Handler für den Speichern-Button
   saveButton.addEventListener("click", function (event) {
     event.preventDefault(); // Verhindert das Standardverhalten des Formulars
+    MangaLibFeedback.clear(document.getElementById("popupContainer"));
     console.log("Save-Button geklickt");
 
     // Eingabefelder und Selects auslesen
@@ -196,49 +188,49 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Validierung der Werte
     if (mangaIndex && !isNum(mangaIndex)) {
-      alert("MangaIndex muss eine positive ganze Zahl sein.");
+      MangaLibFeedback.show(document.getElementById("popupContainer"), "MangaIndex muss eine positive ganze Zahl sein.");
       return;
     }
     if (!verlagId) {
-      alert("Bitte wählen Sie einen Verlag aus.");
+      MangaLibFeedback.show(document.getElementById("popupContainer"), "Bitte wählen Sie einen Verlag aus.");
       return;
     }
     if (!typId) {
-      alert("Bitte wählen Sie einen Typ aus.");
+      MangaLibFeedback.show(document.getElementById("popupContainer"), "Bitte wählen Sie einen Typ aus.");
       return;
     }
     if (!formatId) {
-      alert("Bitte wählen Sie ein Format aus.");
+      MangaLibFeedback.show(document.getElementById("popupContainer"), "Bitte wählen Sie ein Format aus.");
       return;
     }
     if (!titel) {
-      alert("Bitte geben Sie einen Titel ein.");
+      MangaLibFeedback.show(document.getElementById("popupContainer"), "Bitte geben Sie einen Titel ein.");
       return;
     }
     if (!isNum(anzahlBaende)) {
-      alert("Anzahl der Bände muss eine positive ganze Zahl sein.");
+      MangaLibFeedback.show(document.getElementById("popupContainer"), "Anzahl der Bände muss eine positive ganze Zahl sein.");
       return;
     }
     if (!/^\d+(\.\d{1,2})?$/.test(preisProBand)) {
-      alert(
+      MangaLibFeedback.show(document.getElementById("popupContainer"),
         "Preis pro Band muss eine Zahl mit maximal zwei Dezimalstellen sein."
       );
       return;
     }
     if (istEbayPreis && !/^[-+]?\d+(\.\d+)?$/.test(gesamtpreisAenderung)) {
-      alert(
+      MangaLibFeedback.show(document.getElementById("popupContainer"),
         "Der eBay-Preis muss eine gültige Dezimalzahl sein (Vorzeichen relevant)."
       );
       return;
     }
 
     if (anilistUrl && !anilistUrl.match(/^https?:\/\/.+$/)) {
-      alert("Bitte geben Sie eine gültige AniList-URL ein.");
+      MangaLibFeedback.show(document.getElementById("popupContainer"), "Bitte geben Sie eine gültige AniList-URL ein.");
       return;
     }
 
     if (!tag || !monat || !jahr) {
-      alert("Bitte geben Sie ein gültiges Erscheinungsdatum ein.");
+      MangaLibFeedback.show(document.getElementById("popupContainer"), "Bitte geben Sie ein gültiges Erscheinungsdatum ein.");
       return;
     }
 
@@ -288,17 +280,13 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Zu sendende Daten:", mangaReiheData);
 
     // Daten senden mit Fetch-API
-    mangaLibFetch("/addToEinkaufsliste", {
+    MangaLibFeedback.request("/addToEinkaufsliste", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(mangaReiheData),
-    })
-      .then((response) => {
-        console.log("Serverantwort erhalten");
-        return response.json();
-      })
+    }, document.getElementById("popupContainer"))
       .then((data) => {
         console.log("Antwort vom Server:", data); // Erfolgsmeldung oder Datenverarbeitung
         // Schließen des Popups
@@ -306,24 +294,22 @@ document.addEventListener("DOMContentLoaded", function () {
         resetPopupFields();
         window.location.reload();
       })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+      .catch(() => {}); // Die gemeinsame Hilfe zeigt die sichere Dialogmeldung.
   });
 
   const autofillButton = document.querySelector(".mp-autofill-button");
   const mangaIndexInput = document.querySelector("#manga_index");
 
   function showLoading() {
-    document.querySelector(".loading-label").style.display = "block";
+    document.getElementById("popupContainer").querySelector(".loading-label").style.display = "block";
   }
 
   function hideLoading() {
-    document.querySelector(".loading-label").style.display = "none";
+    document.getElementById("popupContainer").querySelector(".loading-label").style.display = "none";
   }
 
   function showError() {
-    const errorLabel = document.querySelector(".error-label");
+    const errorLabel = document.getElementById("popupContainer").querySelector(".error-label");
     errorLabel.style.display = "block";
 
     setTimeout(() => {
@@ -337,25 +323,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Validierung des Manga-Index
     if (!mangaIndex || isNaN(mangaIndex)) {
-      alert("Bitte geben Sie einen gültigen Manga-Index ein.");
+      MangaLibFeedback.show(document.getElementById("popupContainer"), "Bitte geben Sie einen gültigen Manga-Index ein.");
       return;
     }
 
+    MangaLibFeedback.clear(document.getElementById("popupContainer"));
     // Anzeigen des Lade-Labels
     showLoading();
 
     // Senden des Manga-Index an den Web Scraper
-    mangaLibFetch("/scrape", {
+    MangaLibFeedback.request("/scrape", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ mangaIndex: mangaIndex }),
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("Autofill-Anfrage abgewiesen");
-        return response.json();
-      })
+    }, document.getElementById("popupContainer"), { persist: false })
       .then((data) => {
         // Daten in die Eingabefelder und Selects einfügen
         document.querySelector("#verlag").value = data["verlagId"];
@@ -425,70 +408,50 @@ document.addEventListener("DOMContentLoaded", function () {
       .catch((error) => {
         hideLoading();
         showError();
-        console.error("Fehler beim Abrufen der Manga-Daten:", error);
+        // Keine Rohfehler oder Antwortbodys anzeigen.
       });
   });
 
   const buyButtons = document.querySelectorAll(".buy-button");
+  let purchaseInProgress = false;
 
   // Aktionen beim Klicken des Kauf-Buttons
   buyButtons.forEach((button) => {
     button.addEventListener("click", function () {
+      // Der gemeinsame Statusdialog darf nicht gleichzeitig zwei Positionen zugeordnet sein.
+      if (purchaseInProgress) return;
+      purchaseInProgress = true;
       const itemId = this.getAttribute("data-id");
-      mangaLibFetch(`/buyItemUpdate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ itemId: itemId }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Data", data);
+      const feedback = document.querySelector("main");
+      MangaLibFeedback.request("/buyItemUpdate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: itemId })
+      }, feedback, { button, allow417: true,
+        validate: data => ["Reihe aktualisiert", "Bitte Status für neue Reihe auswählen"].includes(data.message) })
+        .then(async data => {
           if (data.message === "Reihe aktualisiert") {
-            console.log("Reihe wurde geupdated");
+            button.disabled = true;
             window.location.reload();
-          } else if (data.message === "Bitte Status für neue Reihe auswählen") {
-            askUserForNewMangaReiheStatus(itemId)
-              .then((selectedStatus) => {
-                // Senden der Daten an den Server nach erfolgreicher Statusauswahl
-                return mangaLibFetch("/buyItemCreate", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    itemId: itemId,
-                    statusId: selectedStatus,
-                  }),
-                });
-              })
-              .then((response) => response.json())
-              .then((data) => {
-                if (
-                  data.message === "Neue MangaReihe erfolgreich gespeichert"
-                ) {
-                  console.log(data);
-                  window.location.reload();
-                }
-              })
-              .catch((error) => {
-                console.log("Error:", error);
-              });
-          } else {
-            console.error("Unexpected response from server");
+            return;
           }
+          button.disabled = true;
+          const completed = await askUserForNewMangaReiheStatus(itemId, button);
+          if (completed) window.location.reload();
         })
-        .catch((error) => console.error("Error:", error));
+        .catch(() => {})
+        .finally(() => { purchaseInProgress = false; });
+
     });
   });
 
   //PopUp wenn es sich um eine neue Reihe handelt und der User den Status eingeben soll.
-  function askUserForNewMangaReiheStatus(itemId) {
-    return new Promise((resolve, reject) => {
+  function askUserForNewMangaReiheStatus(itemId, buyButton) {
+    return new Promise((resolve) => {
       console.log("PopUp zur Auswahl des Status anzeigen.");
       var statusPopup = document.querySelector(".ask-for-status-popup");
       statusPopup.style.visibility = "visible";
+      MangaLibFeedback.clear(statusPopup);
+      let attempted = false;
 
       var confirmButton = document.getElementById("confirmStatus");
       var cancelButton = document.getElementById("cancelStatus");
@@ -505,20 +468,29 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       // Event Handler für den Confirm-Button
-      function onConfirm() {
+      async function onConfirm() {
         var selectedStatus = document.getElementById("status").value;
         if (selectedStatus) {
-          cleanUp();
-          resolve(selectedStatus);
+          attempted = true;
+          try {
+            await MangaLibFeedback.request("/buyItemCreate", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ itemId: itemId, statusId: selectedStatus })
+            }, statusPopup, { button: confirmButton,
+              validate: result => result.message === "Neue MangaReihe erfolgreich gespeichert" });
+            cleanUp();
+            resolve(true);
+          } catch { /* Fehlermeldung, Werte und Dialog bleiben erhalten. */ }
         } else {
-          alert("Bitte wählen Sie einen Status aus.");
+          MangaLibFeedback.show(statusPopup, "Bitte wählen Sie einen Status aus.");
         }
       }
 
       // Event Handler für den Cancel-Button
       function onCancel() {
         cleanUp();
-        reject(new Error("Statusauswahl abgebrochen"));
+        if (!attempted) buyButton.disabled = false;
+        resolve(false);
       }
 
       confirmButton.addEventListener("click", onConfirm);

@@ -26,10 +26,17 @@ class ManualBannerTemplateTest {
         assertFalse(normal.contains("MANUELLE TESTUMGEBUNG"));
         assertFalse(normal.contains("/manual-test/banner."));
         assertFalse(normal.contains("class=\"manual-test-banner\""));
+        if (name.equals("home") || name.equals("einkaufsliste")) {
+            assertTrue(normal.contains("data-cover-placeholder=\"/svg/filler_img2.png\""));
+            assertFalse(normal.contains("/manual-test/cover.svg"));
+        }
         context.setVariable("manualTestEnvironment", new ManualBannerAdvice().manualTestEnvironment());
         String manual = engine.process(fragment, context);
         assertTrue(manual.contains("MANUELLE TESTUMGEBUNG")); assertTrue(manual.contains("class=\"manual-test-banner\""));
         assertTrue(manual.contains("/manual-test/banner.css")); assertTrue(manual.contains("/manual-test/banner.js"));
         assertTrue(manual.contains("defer")); assertTrue(manual.contains("role=\"status\""));
+        if (name.equals("home") || name.equals("einkaufsliste")) {
+            assertTrue(manual.contains("data-cover-placeholder=\"/manual-test/cover.svg\""));
+        }
     }
 }

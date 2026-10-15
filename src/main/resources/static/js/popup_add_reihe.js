@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Event-Handler, um das Pop-up anzuzeigen
   addButton.addEventListener("click", function () {
     console.log("Add-Button geklickt");
+    MangaLibFeedback.clear(popupContainer);
     popupContainer.style.display = "flex";
   });
 
@@ -25,15 +26,15 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   function showLoading() {
-    document.querySelector('.loading-label').style.display = 'block';
+    popupContainer.querySelector(".loading-label").style.display = 'block';
   }
   
   function hideLoading() {
-    document.querySelector('.loading-label').style.display = 'none';
+    popupContainer.querySelector(".loading-label").style.display = 'none';
   }
   
   function showError() {
-    const errorLabel = document.querySelector('.error-label');
+    const errorLabel = popupContainer.querySelector(".error-label");
     errorLabel.style.display = 'block';
     setTimeout(() => {
       errorLabel.style.display = 'none';
@@ -46,25 +47,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Validierung des Manga-Index
     if (!mangaIndex || isNaN(mangaIndex)) {
-      alert("Bitte geben Sie einen gültigen Manga-Index ein.");
+      MangaLibFeedback.show(popupContainer, "Bitte geben Sie einen gültigen Manga-Index ein.");
       return;
     }
 
+    MangaLibFeedback.clear(popupContainer);
     // Anzeigen des Lade-Labels
     showLoading();
 
     // Senden des Manga-Index an den Web Scraper
-    mangaLibFetch("/scrape", {
+    MangaLibFeedback.request("/scrape", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ mangaIndex: mangaIndex }),
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("Autofill-Anfrage abgewiesen");
-        return response.json();
-      })
+    }, popupContainer, { persist: false })
       .then((data) => {
         // Daten in die Eingabefelder und Selects einfügen
         document.querySelector("#verlag").value = data["verlagId"];
@@ -94,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .catch((error) => {
         hideLoading();
         showError();
-        console.error("Fehler beim Abrufen der Manga-Daten:", error);
+        // Keine Rohfehler oder Antwortbodys anzeigen.
       });
   });
 
@@ -147,6 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Event-Handler für den Speichern-Button
   saveButton.addEventListener("click", function (event) {
     event.preventDefault(); // Verhindert das Standardverhalten des Formulars
+    MangaLibFeedback.clear(popupContainer);
     console.log("Save-Button geklickt");
 
     // Eingabefelder und Selects auslesen
@@ -175,52 +174,52 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Validierung der Werte
     if (mangaIndex && !isNum(mangaIndex)) {
-      alert("MangaIndex muss eine positive ganze Zahl sein.");
+      MangaLibFeedback.show(popupContainer, "MangaIndex muss eine positive ganze Zahl sein.");
       return;
     }
     if (!statusId) {
-      alert("Bitte wählen Sie einen Status aus.");
+      MangaLibFeedback.show(popupContainer, "Bitte wählen Sie einen Status aus.");
       return;
     }
     if (!verlagId) {
-      alert("Bitte wählen Sie einen Verlag aus.");
+      MangaLibFeedback.show(popupContainer, "Bitte wählen Sie einen Verlag aus.");
       return;
     }
     if (!typId) {
-      alert("Bitte wählen Sie einen Typ aus.");
+      MangaLibFeedback.show(popupContainer, "Bitte wählen Sie einen Typ aus.");
       return;
     }
     if (!formatId) {
-      alert("Bitte wählen Sie ein Format aus.");
+      MangaLibFeedback.show(popupContainer, "Bitte wählen Sie ein Format aus.");
       return;
     }
     if (!titel) {
-      alert("Bitte geben Sie einen Titel ein.");
+      MangaLibFeedback.show(popupContainer, "Bitte geben Sie einen Titel ein.");
       return;
     }
     if (!isNum(anzahlBaende)) {
-      alert("Anzahl der Bände muss eine positive ganze Zahl sein.");
+      MangaLibFeedback.show(popupContainer, "Anzahl der Bände muss eine positive ganze Zahl sein.");
       return;
     }
     if (!/^\d+(\.\d{1,2})?$/.test(preisProBand)) {
-      alert(
+      MangaLibFeedback.show(popupContainer,
         "Preis pro Band muss eine Zahl mit maximal zwei Dezimalstellen sein."
       );
       return;
     }
     if (istEbayPreis && !/^[-+]?\d+(\.\d+)?$/.test(gesamtpreisAenderung)) {
-      alert(
+      MangaLibFeedback.show(popupContainer,
         "Der eBay-Preis muss eine gültige Dezimalzahl sein (Vorzeichen relevant)."
       );
       return;
     }
 
     if (anilistUrl && !anilistUrl.match(/^https?:\/\/.+$/)) {
-      alert("Bitte geben Sie eine gültige AniList-URL ein.");
+      MangaLibFeedback.show(popupContainer, "Bitte geben Sie eine gültige AniList-URL ein.");
       return;
     }
     if (reread && !isNum(reread)) {
-      alert("Reread muss eine positive ganze Zahl sein.");
+      MangaLibFeedback.show(popupContainer, "Reread muss eine positive ganze Zahl sein.");
       return;
     }
 
@@ -267,17 +266,13 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Zu sendende Daten:", mangaReiheData);
 
     // Daten senden mit Fetch-API
-    mangaLibFetch("/addMangaReihe", {
+    MangaLibFeedback.request("/addMangaReihe", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(mangaReiheData),
-    })
-      .then((response) => {
-        console.log("Serverantwort erhalten");
-        return response.json();
-      })
+    }, popupContainer)
       .then((data) => {
         console.log("Antwort vom Server:", data); // Erfolgsmeldung oder Datenverarbeitung
         // Schließen des Popups
@@ -285,9 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
         resetPopupFields();
         window.location.reload();
       })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+      .catch(() => {}); // Die gemeinsame Hilfe zeigt die sichere Dialogmeldung.
   });
 
   function resetPopupFields() {

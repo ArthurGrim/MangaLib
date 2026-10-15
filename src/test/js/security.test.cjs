@@ -30,7 +30,9 @@ async function setup(t, { template, scripts = [], token = true, status = 200, re
   w.XMLHttpRequest = w.WebSocket = class { constructor() { throw new Error('Netzwerk gesperrt.'); } };
   w.fetch = async (url, options) => {
     calls.push({ url, options });
-    return { status, ok: status >= 200 && status < 300, headers: new Headers({ 'Content-Type': 'application/json' }), json: async () => response };
+    const actualStatus = String(url).endsWith('/buyItemCreate') && status === 417 ? 200 : status;
+    const actualResponse = actualStatus !== status ? { message: 'Neue MangaReihe erfolgreich gespeichert' } : response;
+    return { status: actualStatus, ok: actualStatus >= 200 && actualStatus < 300, headers: new Headers({ 'Content-Type': 'application/json' }), json: async () => actualResponse };
   };
   w.setTimeout = () => 0;
   for (const [name, value] of [['_csrf', 'test-masked-token'], ['_csrf_header', 'X-CSRF-TOKEN']]) {
@@ -73,7 +75,7 @@ for (const url of ['https://evil.invalid/write', '//evil.invalid/write', 'http:/
     const e = await setup(t);
     await assert.rejects(e.w.mangaLibFetch(url, { method: 'POST' }));
     assert.equal(e.calls.length, 0);
-    assert.equal(e.alerts.length, 1);
+    assert.equal(e.alerts.length, 0);
   });
 }
 
@@ -85,16 +87,16 @@ test('Leserequest erhält keinen CSRF-Header', async t => {
 
 test('Fehlende Tokens verhindern Requests und erklären manuelles Neuladen', async t => {
   const e = await setup(t, { token: false });
-  await assert.rejects(e.w.mangaLibFetch('/buyItemUpdate', { method: 'POST' }));
+  await assert.rejects(e.w.mangaLibFetch('/buyItemUpdate', { method: 'POST' }), /Seite neu laden/);
   assert.equal(e.calls.length, 0);
-  assert.match(e.alerts[0], /Seite neu laden/);
+  assert.equal(e.alerts.length, 0);
 });
 
 test('403 führt zu verständlicher Meldung ohne automatisches Kauf-Replay', async t => {
   const e = await setup(t, { status: 403 });
-  await assert.rejects(e.w.mangaLibFetch('/buyItemUpdate', { method: 'POST' }));
+  await assert.rejects(e.w.mangaLibFetch('/buyItemUpdate', { method: 'POST' }), /Seite neu laden/);
   assert.equal(e.calls.length, 1);
-  assert.match(e.alerts[0], /Seite neu laden/);
+  assert.equal(e.alerts.length, 0);
 });
 
 test('Netzwerkfehler wird ohne Retry weitergereicht', async t => {
@@ -165,7 +167,8 @@ for (const [template, script, suffix, button] of [
     assert.equal(e.calls[0].url, 'http://localhost:8080/scrape');
     assert.equal(e.calls[0].options.headers.get('X-CSRF-TOKEN'), 'test-masked-token');
     assert.deepEqual(JSON.parse(e.calls[0].options.body), { mangaIndex: '123' });
-    assert.match(e.alerts[0], /Seite neu laden/);
+    assert.match(e.document.querySelector('.write-feedback:not([hidden])').textContent, /Seite neu/);
+    assert.equal(e.alerts.length, 0);
   });
 }
 
@@ -181,7 +184,8 @@ for (const [button, method, route] of [['.delete-button', 'DELETE', '/items/42']
     assert.equal(e.calls[0].url, 'http://localhost:8080' + route);
     assert.equal(e.calls[0].options.method, method);
     assert.equal(e.calls[0].options.headers.get('X-CSRF-TOKEN'), 'test-masked-token');
-    assert.match(e.alerts[0], /Seite neu laden/);
+    assert.match(e.document.querySelector('.write-feedback:not([hidden])').textContent, /Seite neu/);
+    assert.equal(e.alerts.length, 0);
   });
 }
 
@@ -240,7 +244,7 @@ test('Autofill führt den echten Dialogcode mit POST aus und übernimmt die bish
   assert.equal(e.document.getElementById('editBandCoverImage').getAttribute('src'), 'https://example.invalid/cover.jpg');
   assert.equal(e.document.getElementById('preis').value, '6,99');
   assert.equal(e.document.getElementById('mp_url').value, 'https://www.manga-passion.de/volumes/123');
-  assert.equal(e.document.querySelector('.loading-label').style.display, 'none');
+  assert.equal(e.document.querySelector('#editBaendePopupContainer .loading-label-band-edit').style.display, 'none');
 });
 
 test('Autofill-403 verändert keine Eingaben und beendet den Ladezustand ohne Wiederholung', async t => {
@@ -251,8 +255,9 @@ test('Autofill-403 verändert keine Eingaben und beendet den Ladezustand ohne Wi
   await settle();
   assert.equal(e.calls.length, 1);
   assert.equal(e.document.getElementById('preis').value, '5,99');
-  assert.equal(e.document.querySelector('.loading-label').style.display, 'none');
-  assert.match(e.alerts[0], /Seite neu laden/);
+  assert.equal(e.document.querySelector('#editBaendePopupContainer .loading-label-band-edit').style.display, 'none');
+  assert.match(e.document.querySelector('.write-feedback:not([hidden])').textContent, /Seite neu/);
+  assert.equal(e.alerts.length, 0);
 });
 
 for (const [template, script, suffix] of [
@@ -278,8 +283,9 @@ for (const [template, script, suffix] of [
     }
     assert.equal(e.calls.length, 1); assert.equal(e.calls[0].options.method, 'POST');
     assert.equal(e.calls[0].options.headers.get('X-CSRF-TOKEN'), 'test-masked-token');
-    assert.equal(e.document.querySelector('.loading-label').style.display, 'none');
-    assert.equal(e.document.querySelector('.error-label').style.display, 'block');
+    const scope = e.document.getElementById(suffix === null ? 'editBaendePopupContainer' : suffix ? 'editPopupContainer' : 'popupContainer');
+    assert.equal(scope.querySelector('[class^=loading-label]').style.display, 'none');
+    assert.equal(scope.querySelector('.error-label').style.display, 'block');
     assert.equal(e.alerts.length, 0); // kein ungeprüfter Servertext, bestehender Fehlerindikator
   });
 }
@@ -288,6 +294,6 @@ for (const [template, script, suffix] of [
 test('Alle vorhandenen schreibenden Fetch-Aufrufe verwenden die gemeinsame Hilfe', () => {
   for (const file of ['popup_add_reihe.js', 'popup_edit_reihe.js', 'popup_edit_baende.js', 'einkaufsliste.js']) {
     assert.doesNotMatch(source(file), /(?<![\w])fetch\([^;]*?method:\s*["'](?:POST|DELETE|PUT|PATCH)/s);
-    assert.match(source(file), /mangaLibFetch\(/);
+    assert.match(source(file), /MangaLibFeedback\.request\(/);
   }
 });

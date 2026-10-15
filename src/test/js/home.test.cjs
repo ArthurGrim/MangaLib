@@ -45,6 +45,7 @@ function setup(t, { intersectionObserver = true } = {}) {
             unobserve(image) { this.unobserved = image; }
         };
     }
+    vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../main/resources/static/js/security.js'), 'utf8'), dom.getInternalVMContext());
     vm.runInContext(homeSource, dom.getInternalVMContext(), { filename: 'home.js' });
     t.after(() => {
         window.close();

@@ -79,7 +79,7 @@ test('Neue Dialogöffnung verwirft die NULL-Änderungsmarkierung des vorherigen 
 for (const config of [
   { name: '400 Textantwort', status: 400, type: 'text/plain', parses: 0 },
   { name: '500 Textantwort', status: 500, type: 'text/plain', parses: 0 },
-  { name: '403 abgelaufene Session', status: 403, type: 'text/html', parses: 0, csrf: true },
+  { name: '403 Sicherheitsablehnung', status: 403, type: 'text/html', parses: 0, csrf: true },
   { name: '200 HTML-Antwort', type: 'text/html', parses: 0 },
   { name: '200 ungültiges JSON', result: 'malformed', parses: 1 },
   { name: '200 leerer JSON-Wert', result: null, parses: 1 },
@@ -87,9 +87,11 @@ for (const config of [
 ]) {
   test(`Speichern behandelt ${config.name} kontrolliert ohne Replay`, async t => {
     const e = await edit(t, config); await e.save();
-    assert.equal(e.calls.length, 2); assert.equal(e.parsed.length, config.parses); assert.equal(e.alerts.length, 1);
-    assert.match(e.alerts[0], config.csrf ? /Seite neu laden/ : /nicht bestätigt/);
-    assert.doesNotMatch(e.alerts[0], /private|NullPointer|SQLException|JSON.parse/);
+    assert.equal(e.calls.length, 2); assert.equal(e.parsed.length, config.parses); assert.equal(e.alerts.length, 0);
+    const feedback = e.d.querySelector('#editPopupContainer .write-feedback');
+    assert.equal(feedback.hidden, false);
+    assert.match(feedback.textContent, config.csrf ? /Seite neu/ : config.status === 400 ? /ungültig/ : config.status === 500 ? /Fehler aufgetreten/ : /nicht eindeutig bestätigt/);
+    assert.doesNotMatch(feedback.textContent, /private|NullPointer|SQLException|JSON.parse/);
     assert.equal(e.d.getElementById('editPopupContainer').style.display, 'flex');
     assert.equal(e.d.getElementById('titel-edit').value, 'Neuer Titel');
   });
