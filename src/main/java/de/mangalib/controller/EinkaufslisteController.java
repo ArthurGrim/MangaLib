@@ -191,6 +191,7 @@ public class EinkaufslisteController {
             if (!reihen.isEmpty()) {
                 // Update der vorhandenen Reihe
                 MangaReihe reihe = reihen.get(0);
+                WriteValidation.require(reihe.getMangaDetails() != null);
 
                 mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
                         reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
@@ -210,6 +211,7 @@ public class EinkaufslisteController {
             if (!reihenMitGleichemTitel.isEmpty()) {
                 // Update der gefundenen Reihe
                 MangaReihe reihe = reihenMitGleichemTitel.get(0);
+                WriteValidation.require(reihe.getMangaDetails() != null);
 
                 mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
                         reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
