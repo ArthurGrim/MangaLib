@@ -1,5 +1,8 @@
 package de.mangalib.service;
 
+import de.mangalib.validation.WriteValidation;
+import de.mangalib.validation.WriteRequests;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import de.mangalib.entity.Band;
@@ -201,6 +204,8 @@ public class BandService {
      */
     public void createAndSaveBaende(MangaReihe mangaReihe, Integer anzahlBaende, BigDecimal preisProBand,
             BigDecimal gesamtpreisAenderung, Map<String, String> scrapedData) {
+        WriteValidation.volumes(anzahlBaende);
+        scrapedData = WriteValidation.scrapedData(scrapedData);
         System.out.println("createAndSaveBaende Aenderung Gesamtpreis: " + gesamtpreisAenderung);
         for (int i = 1; i <= anzahlBaende; i++) {
             Band band = new Band();
@@ -317,6 +322,8 @@ public class BandService {
     public void updateOrCreateBaende(MangaReihe mangaReihe, Integer anzahlBaende, BigDecimal preisProBand,
             BigDecimal gesamtpreisAenderung,
             Map<String, String> scrapedData, boolean anzahlBaendeChanged) {
+        WriteValidation.volumes(anzahlBaende);
+        scrapedData = WriteValidation.scrapedData(scrapedData);
         List<Band> existierendeBaende = bandRepository.findByMangaReiheId(mangaReihe.getId());
         int existierendeAnzahl = existierendeBaende.size();
         System.out.println("Anzahl existierender Bände: " + existierendeAnzahl);
@@ -451,6 +458,7 @@ public class BandService {
      * @param bandData Der zu aktualisierende Band.
      */
     public void updateBand(Band bandData) {
+        WriteValidation.reread(bandData.getReread());
         Optional<Band> optionalBand = bandRepository.findById(bandData.getId());
         if (optionalBand.isPresent()) {
             Band band = optionalBand.get();
@@ -475,10 +483,10 @@ public class BandService {
                 band.setAenderungPreis(bandData.getAenderungPreis());
                 System.out.println("AenderungPreis: " + bandData.getAenderungPreis());
             }
-            if (bandData.getBildUrl() != null && !bandData.getBildUrl().equals(band.getBildUrl())) {
+            if (bandData.getBildUrl() != null && !WriteValidation.sameUrl(bandData.getBildUrl(), band.getBildUrl())) {
                 band.setBildUrl(bandData.getBildUrl());
             }
-            if (bandData.getMpUrl() != null && !bandData.getMpUrl().equals(band.getMpUrl())) {
+            if (bandData.getMpUrl() != null && !WriteValidation.sameUrl(bandData.getMpUrl(), band.getMpUrl())) {
                 band.setMpUrl(bandData.getMpUrl());
             }
             if (bandData.isIstGelesen() != band.isIstGelesen()) {
@@ -551,7 +559,8 @@ public class BandService {
 
     // Wenn der MP Autofill Button gedrückt wird
     public Map<String, String> autofillBandData(String bandIndex) {
-        Map<String, String> scrapedData = scraperGateway.scrapeVolume(bandIndex);
+        WriteRequests.positiveInt(bandIndex);
+        Map<String, String> scrapedData = WriteValidation.scrapedData(scraperGateway.scrapeVolume(bandIndex));
         Map<String, String> relevantData = new HashMap<>();
 
         if (scrapedData.containsKey("BildUrl")) {

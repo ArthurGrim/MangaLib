@@ -23,7 +23,7 @@ function createBandElement(band) {
 
     const cover = document.createElement("img");
     cover.className = "lazy";
-    cover.src = "/svg/filler_img2.png";
+    cover.src = mangaLibCoverPlaceholder();
     cover.alt = "Band Bild";
     const coverUrl = getSafeBandUrl(band.bildUrl);
     if (coverUrl) {
@@ -76,17 +76,14 @@ function initializeLazyLoading() {
                 if (entry.isIntersecting) {
                     let lazyImage = entry.target;
                     // Auch unmittelbar benachbarte, serverseitig gerenderte Lazy-Cover prüfen.
-                    lazyImage.src = getSafeBandUrl(lazyImage.dataset.src) || "/svg/filler_img2.png";
+                    mangaLibSetCover(lazyImage, getSafeBandUrl(lazyImage.dataset.src));
 
 
                     lazyImage.onload = function() {
                         lazyImage.classList.remove("lazy");
                     };
 
-                    lazyImage.onerror = function() {
-                        lazyImage.classList.remove("lazy");
-                        console.error("Fehler beim Laden des Bildes:", lazyImage.dataset.src);
-                    };
+                    lazyImage.addEventListener("error", () => lazyImage.classList.remove("lazy"), { once: true });
 
                     lazyImageObserver.unobserve(lazyImage);
                 }
@@ -108,7 +105,7 @@ function initializeLazyLoading() {
                 let scrollTop = window.pageYOffset;
                 lazyImages.forEach(function(img) {
                     if (img.offsetTop < (window.innerHeight + scrollTop)) {
-                        img.src = getSafeBandUrl(img.dataset.src) || "/svg/filler_img2.png";
+                        mangaLibSetCover(img, getSafeBandUrl(img.dataset.src));
                         img.classList.remove('lazy');
                     }
                 });
@@ -120,6 +117,7 @@ function initializeLazyLoading() {
             }, 20);
         }
 
+        lazyLoad();
         document.addEventListener("scroll", lazyLoad);
         window.addEventListener("resize", lazyLoad);
         window.addEventListener("orientationChange", lazyLoad);
@@ -152,33 +150,6 @@ function toggleBands(mangaReiheId) {
     }
 }
 
-// Funktion zur Initialisierung des MutationObserver
-function initializeObserver() {
-    const targetNode = document.getElementById('bands-container');
-    if (!targetNode) {
-        console.error("Target node for MutationObserver not found");
-        return;
-    }
-
-    const config = { childList: true, subtree: true };
-
-    const callback = function(mutationsList, observer) {
-        for (const mutation of mutationsList) {
-            if (mutation.type === 'childList') {
-                console.log('A child node has been added or removed.');
-                initializeLazyLoading();
-            }
-        }
-    };
-
-    const observer = new MutationObserver(callback);
-    observer.observe(targetNode, config);
-}
-
 document.addEventListener("DOMContentLoaded", function() {
-    // Initialisierung beim Laden der Seite
     initializeLazyLoading();
-
-    // Initialisierung des MutationObserver
-    initializeObserver();
 });

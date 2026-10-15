@@ -1,5 +1,7 @@
 package de.mangalib.service;
 
+import de.mangalib.validation.WriteValidation;
+
 import de.mangalib.entity.EinkaufslisteItem;
 import de.mangalib.entity.EinkaufslisteItemDetails;
 import de.mangalib.entity.Sammelband;
@@ -171,14 +173,24 @@ public class EinkaufslisteService {
     public EinkaufslisteItem saveEinkaufslisteItem(Integer mangaIndex, Long verlagId, Long typId, Long formatId,
             String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
             String anilistUrl, Long sammelbandTypId, Double gesamtpreisAenderung, LocalDate erscheinungsdatum, Map<String, String> scrapedData) {
+        WriteValidation.volumes(anzahlBaende);
+        WriteValidation.require(preisProBand != null && Double.isFinite(preisProBand));
+        WriteValidation.require(gesamtpreisAenderung == null || Double.isFinite(gesamtpreisAenderung));
+        WriteValidation.money(BigDecimal.valueOf(preisProBand));
+        WriteValidation.money(gesamtpreisAenderung == null ? BigDecimal.ZERO : BigDecimal.valueOf(gesamtpreisAenderung));
+        WriteValidation.money(BigDecimal.valueOf(preisProBand).multiply(BigDecimal.valueOf(anzahlBaende))
+                .add(gesamtpreisAenderung == null ? BigDecimal.ZERO : BigDecimal.valueOf(gesamtpreisAenderung)));
+        scrapedData = WriteValidation.scrapedData(scrapedData);
         // Erstellen der MangaReihe
         EinkaufslisteItem einkaufslisteItem = new EinkaufslisteItem();
         einkaufslisteItem.setMangaIndex(mangaIndex);
         // Setzen der abhängigen Objekte wie Status, Verlag, Typ, Format basierend auf
         // deren IDs
-        einkaufslisteItem.setVerlagId(verlagService.getVerlagById(verlagId).orElse(null));
-        einkaufslisteItem.setTypId(typService.getTypById(typId).orElse(null));
-        einkaufslisteItem.setFormatId(formatService.getFormatById(formatId).orElse(null));
+        einkaufslisteItem.setVerlagId(verlagService.getVerlagById(verlagId).orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz.")));
+        einkaufslisteItem.setTypId(typService.getTypById(typId).orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz.")));
+        einkaufslisteItem.setFormatId(formatService.getFormatById(formatId).orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz.")));
+        Sammelband sammelband = sammelbandTypId == null ? null : sammelbaendeService.findById(sammelbandTypId)
+                .orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz."));
         // Setzen der anderen Attribute
         einkaufslisteItem.setTitel(titel);
         einkaufslisteItem.setAnzahlBaende(anzahlBaende);
@@ -209,7 +221,6 @@ public class EinkaufslisteService {
         if (anilistUrl != null)
         einkaufslistenItemDetails.setAnilistUrl(anilistUrl);
         if (sammelbandTypId != null) {
-            Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId).orElse(null);
             einkaufslistenItemDetails.setSammelbaendeId(sammelband);
             System.out.println(einkaufslistenItemDetails.getSammelbaendeId().getId());
         }

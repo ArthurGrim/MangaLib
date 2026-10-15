@@ -1,0 +1,11 @@
+.write-feedback {
+  color: #ffb4b4;
+  background: #39282d;
+  border: 1px solid #b05b65;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 8px 0;
+  white-space: normal;
+}
+.write-feedback:focus { outline: 2px solid #ffb4b4; }
+.write-feedback[hidden] { display: none; }

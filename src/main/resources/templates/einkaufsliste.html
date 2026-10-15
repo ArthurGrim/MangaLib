@@ -10,11 +10,13 @@
       th:href="@{/css/einkaufsliste.css}"
       href="../static/css/einkaufsliste.css"
     />
+    <link rel="stylesheet" href="/css/write-feedback.css" />
+    <link rel="stylesheet" href="/css/content-layout.css" />
     <link th:if="${manualTestEnvironment == true}" rel="stylesheet" href="/manual-test/banner.css" />
     <script th:if="${manualTestEnvironment == true}" src="/manual-test/banner.js" defer></script>
   </head>
   <link rel="icon" type="image/x-icon" href="/svg/favicon.ico" />
-  <body>
+  <body th:attr="data-cover-placeholder=${manualTestEnvironment == true ? '/manual-test/cover.svg' : '/svg/filler_img2.png'}">
     <div th:if="${manualTestEnvironment == true}" class="manual-test-banner" role="status">MANUELLE TESTUMGEBUNG — ausschließlich synthetische Daten und Scraper</div>
     <!-- Header für die Seite zur Navigation zwischen den Seiten -->
     <header class="header">
@@ -102,7 +104,7 @@
             <label
               id="preis-gesamt"
               class="preis-gesamt"
-              th:text="'Gesamtpreis: ' + ${totalPriceByMonth[items.key]}"
+              th:text="'Gesamtpreis: ' + ${#strings.replace(totalPriceByMonth[items.key], '-', '−')}"
             ></label>
           </div>
 
@@ -167,13 +169,13 @@
                   </div>
                   <div
                     class="manga-reihe-preis"
-                    th:text="${#numbers.formatDecimal(item.preis, 2, 'COMMA', 2, 'POINT')} + ' €'"
+                    th:text="${#strings.replace(#numbers.formatDecimal(item.preis, 1, 'POINT', 2, 'COMMA'), '-', '−')} + ' €'"
                   >
                     Preis
                   </div>
                   <div
                     class="manga-reihe-gesamtpreis"
-                    th:text="${#numbers.formatDecimal(item.gesamtpreis, 2, 'COMMA', 2, 'POINT')} + ' €'"
+                    th:text="${#strings.replace(#numbers.formatDecimal(item.gesamtpreis, 1, 'POINT', 2, 'COMMA'), '-', '−')} + ' €'"
                   >
                     Gesamtpreis
                   </div>

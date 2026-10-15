@@ -102,7 +102,8 @@ public class MangaDetailsService {
             details.setAnilistUrl(anilistUrl);
         }
         if (sammelbandTypId != null) {
-            Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId).orElse(null);
+            Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId)
+                    .orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz."));
             details.setSammelbaende(sammelband);
             System.out.println("SammelbandID: " + details.getSammelbaende().getId());
         } else {

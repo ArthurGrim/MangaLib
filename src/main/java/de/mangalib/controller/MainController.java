@@ -1,5 +1,7 @@
 package de.mangalib.controller;
 
+import de.mangalib.validation.WriteRequests;
+import de.mangalib.validation.WriteValidation;
 import de.mangalib.entity.Status;
 import de.mangalib.entity.Verlag;
 import de.mangalib.entity.Typ;
@@ -32,8 +34,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.time.Year;
 import java.util.ArrayList;
@@ -234,74 +234,37 @@ public class MainController {
     @ResponseBody // Damit der Rückgabewert als Response Body gesendet wird
     public ResponseEntity<?> addMangaReihe(@RequestBody Map<String, Object> requestData) {
         try {
-            System.out.println("Start des Extrahierens der übermittelten Werte");
-            // Extrahieren der Daten aus dem requestData-Map
-            Long mangaReiheId = requestData.get("mangaReiheId") != null
-                    ? Long.valueOf(((String) requestData.get("mangaReiheId")))
-                    : null;
-            System.out.println("Die Id der Reihe ist: " + mangaReiheId);
-            Integer mangaIndex = requestData.get("mangaIndex") != null ? (Integer) requestData.get("mangaIndex") : null;
-            System.out.println("Der Index der Manga Reihe ist: " + mangaIndex);
-            Long statusId = Long.valueOf((String) requestData.get("statusId"));
-            Long verlagId = Long.valueOf((String) requestData.get("verlagId"));
-            Long typId = Long.valueOf((String) requestData.get("typId"));
-            Long formatId = Long.valueOf((String) requestData.get("formatId"));
-            String titel = (String) requestData.get("titel");
-            Integer anzahlBaende = (Integer) requestData.get("anzahlBaende");
-            BigDecimal preisProBand = requestData.containsKey("preisProBand")
-                    ? new BigDecimal((String) requestData.get("preisProBand"))
-                    : BigDecimal.ZERO;
-            Boolean istGelesen = (Boolean) requestData.get("istGelesen");
-            Integer reread = (Integer) requestData.get("reread") != null ? (Integer) requestData.get("reread") : 0;
-            Boolean istVergriffen = (Boolean) requestData.get("istVergriffen");
-            Boolean istEbayPreis = (Boolean) requestData.get("istEbayPreis");
-            String anilistUrl = (String) requestData.get("anilistUrl");
-            String coverUrl = (String) requestData.get("coverUrl");
-            Long sammelbandTypId = requestData.get("sammelbandTypId") != null
-                    ? Long.valueOf((String) requestData.get("sammelbandTypId"))
-                    : null;
-            BigDecimal gesamtpreisAenderung = requestData.containsKey("gesamtpreisAenderung")
-                    ? new BigDecimal((String) requestData.get("gesamtpreisAenderung"))
-                    : BigDecimal.ZERO;
-            @SuppressWarnings("unchecked")
-            Map<String, String> scrapedData = (Map<String, String>) requestData.get("scrapedData");
-            Boolean istEdit = Boolean.valueOf(scrapedData.get("istEdit"));
-            System.out.println("Ist Edit? " + istEdit);
-            System.out.println("Extrahieren der übermittelten Werte abgeschlossen");
-
-            // Verwendung der saveMangaReihe-Methode aus dem Service
-            MangaReihe savedMangaReihe;
-            if (!istEdit) {
-                System.out.println("Eine neue Reihe wird hinzugefügt");
-                savedMangaReihe = mangaReiheService.saveMangaReihe(mangaIndex, statusId, verlagId, typId,
-                        formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
-                        sammelbandTypId, gesamtpreisAenderung, istGelesen, scrapedData);
+            var input = WriteRequests.Series.from(requestData);
+            MangaReihe saved;
+            if (!input.edit()) {
+                saved = mangaReiheService.saveMangaReihe(input.index(), input.status(), input.publisher(),
+                        input.type(), input.format(), input.title(), input.volumes(), input.price(),
+                        input.outOfPrint(), input.adjustedPrice(), input.anilist(), input.omnibus(),
+                        input.adjustment(), input.read(), input.reread(), input.scraped());
             } else {
-                System.out.println("Die Reihe wird aktualisiert");
-                savedMangaReihe = mangaReiheService
-                        .updateMangaReihe(mangaReiheId, mangaIndex, statusId, verlagId, typId,
-                                formatId, titel, anzahlBaende, preisProBand, istVergriffen, istEbayPreis, anilistUrl,
-                                coverUrl,
-                                sammelbandTypId, gesamtpreisAenderung, istGelesen, reread, scrapedData)
-                        .orElse(null);
+                saved = mangaReiheService.updateMangaReihe(input.id(), input.index(), input.status(),
+                        input.publisher(), input.type(), input.format(), input.title(), input.volumes(),
+                        input.price(), input.outOfPrint(), input.adjustedPrice(), input.anilist(), input.cover(),
+                        input.omnibus(), input.adjustment(), input.read(), input.reread(), input.scraped()).orElse(null);
             }
-            return ResponseEntity.ok(savedMangaReihe);
+            return ResponseEntity.ok(saved);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
         } catch (Exception e) {
-            System.out.println("Fehler");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Fehler bei der Verarbeitung der Anfrage: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Anfrage konnte nicht verarbeitet werden.");
         }
     }
 
     @PostMapping("/scrape")
-    public ResponseEntity<Map<String, Object>> scrapeManga(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> scrapeManga(@RequestBody Map<String, Object> request) {
         try {
-            String mangaIndex = request.get("mangaIndex");
-            Map<String, String> mangaData = scraperGateway.scrapeSeries(mangaIndex);
+            String mangaIndex = WriteRequests.string(request, "mangaIndex", true);
+            WriteRequests.positiveInt(mangaIndex);
+            Map<String, String> mangaData = WriteValidation.scrapedData(scraperGateway.scrapeSeries(mangaIndex));
             // Umwandlung der Namen in IDs
-            Long verlagId = verlagService.findVerlagIdByName(mangaData.get("Deutsche Ausgabe Verlag"));
+            Long verlagId = mangaData.get("Deutsche Ausgabe Verlag") == null ? null
+                    : verlagService.findVerlagIdByName(mangaData.get("Deutsche Ausgabe Verlag"));
             Long typId;
-            System.out.println("Erhaltene Manga-Daten: " + mangaData);
             String herkunft = mangaData.get("Erstveröffentlichung Herkunft");
             String typ = mangaData.get("Erstveröffentlichung Typ");
 
@@ -310,13 +273,14 @@ public class MainController {
                     && !"Artbook & Sonstiges".equals(typ)) {
                 typId = typService.findTypIdByBezeichnung("Webtoon");
             } else {
-                typId = typService.findTypIdByBezeichnung(mangaData.get("Erstveröffentlichung Typ"));
+                typId = typ == null ? null : typService.findTypIdByBezeichnung(typ);
             }
             Long formatId;
-            if (mangaData.get("Deutsche Ausgabe Format").equals("Print")) {
+            if ("Print".equals(mangaData.get("Deutsche Ausgabe Format"))) {
                 formatId = formatService.findFormatIdByBezeichnung("Softcover");
             } else {
-                formatId = formatService.findFormatIdByBezeichnung(mangaData.get("Deutsche Ausgabe Format"));
+                formatId = mangaData.get("Deutsche Ausgabe Format") == null ? null
+                        : formatService.findFormatIdByBezeichnung(mangaData.get("Deutsche Ausgabe Format"));
             }
 
             // Erstellen einer neuen Map, die sowohl Strings als auch Longs enthält
@@ -329,8 +293,9 @@ public class MainController {
         } catch (ScraperRequestRejectedException e) {
             // Der ausschließlich manuelle Advice verarbeitet erwartete Double-Ablehnungen.
             throw e;
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Ungültige Eingabe."));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -456,90 +421,29 @@ public class MainController {
     @PostMapping(value = "/editBand", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Void> updateBand(@RequestBody Map<String, Object> bandData) {
         try {
-            // Wandeln der Map in ein Band Objekt um
-            Band band = new Band();
-            band.setId(Long.parseLong((String) bandData.get("id")));
-            band.setBandNr(Integer.parseInt((String) bandData.get("bandNr")));
-
-            // Überprüfen und setzen von bandIndex, wenn vorhanden
-            String bandIndexString = (String) bandData.get("bandIndex");
-            if (bandIndexString != null && !bandIndexString.isEmpty()) {
-                band.setBandIndex(Integer.parseInt(bandIndexString));
-            } else {
-                band.setBandIndex(null);
-            }
-
-            // Überprüfen und setzen von preis, wenn vorhanden
-            String preisString = (String) bandData.get("preis");
-            if (preisString != null && !preisString.isEmpty()) {
-                band.setPreis(new BigDecimal(preisString));
-            } else {
-                band.setPreis(null);
-            }
-
-            // Überprüfen und setzen von aenderungPreis, wenn vorhanden
-            String aenderungPreisString = (String) bandData.get("aenderungPreis");
-            if (aenderungPreisString != null && !aenderungPreisString.isEmpty()) {
-                band.setAenderungPreis(new BigDecimal(aenderungPreisString));
-            } else {
-                band.setAenderungPreis(null);
-            }
-
-            // Überprüfen und setzen von bildUrl und mpUrl, wenn vorhanden
-            try {
-                String bildUrlString = (String) bandData.get("bildUrl");
-                if (bildUrlString != null && !bildUrlString.isEmpty()) {
-                    URI bildUri = new URI(bildUrlString);
-                    URL bildUrl = bildUri.toURL();
-                    band.setBildUrl(bildUrl);
-                }
-
-                String mpUrlString = (String) bandData.get("mpUrl");
-                if (mpUrlString != null && !mpUrlString.isEmpty()) {
-                    URI mpUri = new URI(mpUrlString);
-                    URL mpUrl = mpUri.toURL();
-                    band.setMpUrl(mpUrl);
-                }
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            }
-
-            // Überprüfen und setzen von bandIndex, wenn vorhanden
-            String bandReread = (String) bandData.get("reread");
-            if (bandReread != null && !bandReread.isEmpty()) {
-                band.setReread(Integer.parseInt(bandReread));
-            } else {
-                band.setReread(0);
-            }
-
-            // Überprüfen und setzen von bandIndex, wenn vorhanden
-            String bandRereadString = (String) bandData.get("reread");
-            if (bandRereadString != null && !bandRereadString.isEmpty()) {
-                band.setReread(Integer.parseInt(bandRereadString));
-            } else {
-                band.setReread(0);
-            }
-
-            band.setIstGelesen((Boolean) bandData.get("istGelesen"));
-            band.setIstSpecial((Boolean) bandData.get("istSpecial"));
-
-            // Loggen der umgewandelten Band-Daten
-            System.out.println("Umgewandelte Band-Daten: " + band);
-
-            // Update des Bands
+            Band band = WriteRequests.band(bandData);
             bandService.updateBand(band);
-
             return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.internalServerError().build();
         }
     }
 
     @PostMapping("/autofillBandData/{bandIndex}")
     public ResponseEntity<Map<String, String>> autofillBandData(@PathVariable String bandIndex) {
-        Map<String, String> autofillData = bandService.autofillBandData(bandIndex);
-        return ResponseEntity.ok(autofillData);
+        try {
+            WriteRequests.positiveInt(bandIndex);
+            Map<String, String> autofillData = WriteValidation.scrapedData(bandService.autofillBandData(bandIndex));
+            return ResponseEntity.ok(autofillData);
+        } catch (ScraperRequestRejectedException e) {
+            throw e;
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Ungültige Eingabe."));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
 }

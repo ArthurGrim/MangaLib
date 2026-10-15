@@ -81,7 +81,7 @@ class ManualScraperResponseTest {
                         + "\",\"Preis\":\"6.99\",\"mpUrl\":\"https://www.manga-passion.de/volumes/" + index + "\"}"));
         verify(gateway).scrapeSeries(index); verify(gateway).scrapeVolume(index); assertTrue(logs.list.isEmpty());
     }
-    @ParameterizedTest @ValueSource(strings = {"900005", "", "900001\r\nprivate-input"})
+    @ParameterizedTest @ValueSource(strings = {"900005"})
     void rejectedSeriesUsesNeutral400AndSingleLogWithoutStacktrace(String index) throws Exception {
         var json = new tools.jackson.databind.json.JsonMapper().writeValueAsString(Map.of("mangaIndex", index));
         mvc.perform(write("/scrape").content(json)).andExpect(status().isBadRequest())
@@ -98,7 +98,15 @@ class ManualScraperResponseTest {
     }
     @Test void missingSeriesIndexIsControlled() throws Exception {
         mvc.perform(write("/scrape").content("{}")).andExpect(status().isBadRequest());
-        verifyNoInteractions(publishers, types, formats); assertEquals(1, logs.list.size());
+        verifyNoInteractions(gateway, publishers, types, formats); assertTrue(logs.list.isEmpty());
+    }
+    @ParameterizedTest @ValueSource(strings = {"", "900001\r\nprivate-input"})
+    void malformedIndexIsRejectedBeforeDoubleWithoutRawLog(String index) throws Exception {
+        var json = new tools.jackson.databind.json.JsonMapper().writeValueAsString(Map.of("mangaIndex", index));
+        mvc.perform(write("/scrape").content(json)).andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith("application/json"))
+                .andExpect(jsonPath("$.error").value("Ungültige Eingabe."));
+        verifyNoInteractions(gateway, publishers, types, formats); assertTrue(logs.list.isEmpty());
     }
     @Test void getHeadAndOptionsDoNotReachDoubles() throws Exception {
         for (String route : new String[]{"/scrape", "/autofillBandData/900001"}) {

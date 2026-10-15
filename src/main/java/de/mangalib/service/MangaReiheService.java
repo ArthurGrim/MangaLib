@@ -1,5 +1,7 @@
 package de.mangalib.service;
 
+import de.mangalib.validation.WriteValidation;
+
 import de.mangalib.repository.MangaReiheRepository;
 import de.mangalib.repository.StatusRepository;
 import de.mangalib.entity.Band;
@@ -138,6 +140,24 @@ public class MangaReiheService {
             BigDecimal gesamtpreisAenderung,
             Boolean istGelesen,
             Map<String, String> scrapedData) {
+        // Bestehende Aufrufer (z. B. Kaufübernahme) behalten ihren bisherigen unbekannten Reread.
+        return saveMangaReihe(mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
+                preisProBand, istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId,
+                gesamtpreisAenderung, istGelesen, null, scrapedData);
+    }
+
+    /** Speichert den validierten Reihen-Reread vor dem ersten Details-INSERT.
+     * Band-Rereads und die bestehende Lesestatusableitung werden hier nicht verändert.
+     * @param reread Reihen-Reread von 0 bis 10.000; null erhält die bisherige Service-Semantik.
+     */
+    @Transactional
+    public MangaReihe saveMangaReihe(Integer mangaIndex, Long statusId, Long verlagId, Long typId,
+            Long formatId, String titel, Integer anzahlBaende, BigDecimal preisProBand,
+            Boolean istVergriffen, Boolean istEbayPreis, String anilistUrl, Long sammelbandTypId,
+            BigDecimal gesamtpreisAenderung, Boolean istGelesen, Integer reread, Map<String, String> scrapedData) {
+        WriteValidation.volumes(anzahlBaende);
+        WriteValidation.reread(reread);
+        scrapedData = WriteValidation.scrapedData(scrapedData);
         System.out.println("SaveMangaReihe gestartet");
 
         // --- Stammdaten-Entities laden (damit die Relationen gesetzt werden können)
@@ -185,6 +205,9 @@ public class MangaReiheService {
                 sammelbandTypId,
                 istGelesen,
                 scrapedData);
+        if (reread != null) {
+            details.setReread(reread);
+        }
         mangaDetailsRepository.save(details);
         System.out.println("Details gesetzt");
 
@@ -307,6 +330,9 @@ public class MangaReiheService {
             Long typId, Long formatId, String titel, Integer anzahlBaende, BigDecimal preisProBand,
             Boolean istVergriffen, Boolean istEbayPreis, String anilistUrl, String coverUrl, Long sammelbandTypId,
             BigDecimal gesamtpreisAenderung, Boolean istGelesen, Integer reread, Map<String, String> scrapedData) {
+        WriteValidation.volumes(anzahlBaende);
+        WriteValidation.reread(reread);
+        scrapedData = WriteValidation.scrapedData(scrapedData);
         System.out.println("----------------------updateMangaReihe gestartet----------------------");
 
         Optional<MangaReihe> mangaReiheOptional = findById(mangaReiheId);
@@ -401,16 +427,20 @@ public class MangaReiheService {
             mangaReihe.setMangaIndex(mangaIndex);
         }
         if (!mangaReihe.getStatus().getStatusId().equals(statusId)) {
-            mangaReihe.setStatus(statusService.getStatusById(statusId).orElse(null));
+            mangaReihe.setStatus(statusService.getStatusById(statusId)
+                    .orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz.")));
         }
         if (!mangaReihe.getVerlag().getVerlagId().equals(verlagId)) {
-            mangaReihe.setVerlag(verlagService.getVerlagById(verlagId).orElse(null));
+            mangaReihe.setVerlag(verlagService.getVerlagById(verlagId)
+                    .orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz.")));
         }
         if (!mangaReihe.getTyp().getTypId().equals(typId)) {
-            mangaReihe.setTyp(typService.getTypById(typId).orElse(null));
+            mangaReihe.setTyp(typService.getTypById(typId)
+                    .orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz.")));
         }
         if (!mangaReihe.getFormat().getFormatId().equals(formatId)) {
-            mangaReihe.setFormat(formatService.getFormatById(formatId).orElse(null));
+            mangaReihe.setFormat(formatService.getFormatById(formatId)
+                    .orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz.")));
         }
         if (!mangaReihe.getTitel().equals(titel)) {
             mangaReihe.setTitel(titel);
@@ -981,9 +1011,7 @@ public class MangaReiheService {
      * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
      */
     public List<MangaReihe> findAllSorted(String sortAttribute) {
-        if (sortAttribute == null || sortAttribute.trim().isEmpty()) {
-            throw new IllegalArgumentException("Sortierattribut darf nicht leer sein");
-        }
+        validateSortAttribute(sortAttribute);
         return mangaReiheRepository.findAll(Sort.by(sortAttribute));
     }
 
@@ -996,13 +1024,22 @@ public class MangaReiheService {
      * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
      */
     public List<MangaReihe> findAllSorted(String sortAttribute, Sort.Direction direction) {
-        if (sortAttribute == null || sortAttribute.trim().isEmpty()) {
-            throw new IllegalArgumentException("Sortierattribut darf nicht leer sein");
-        }
+        validateSortAttribute(sortAttribute);
         if (direction == null) {
             throw new IllegalArgumentException("Sortierrichtung darf nicht null sein");
         }
         return mangaReiheRepository.findAll(Sort.by(direction, sortAttribute));
+    }
+
+    // Nur skalare Entity-Attribute; weder freie Pfade noch SQL-Ausdrücke.
+    public static final Set<String> SORT_ATTRIBUTES = Set.of("id", "mangaIndex", "titel", "anzahlBaende",
+            "preisProBand", "gesamtpreis", "aenderungGesamtpreis", "erstelltAm", "aktualisiertAm",
+            "istEbayPreis", "istVergriffen");
+
+    private static void validateSortAttribute(String attribute) {
+        if (attribute == null || !SORT_ATTRIBUTES.contains(attribute)) {
+            throw new IllegalArgumentException("Unzulässiges Sortierattribut.");
+        }
     }
 
     // ------------------------------Statistiken--------------------------------

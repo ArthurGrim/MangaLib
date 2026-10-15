@@ -18,6 +18,8 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
+import de.mangalib.validation.WriteRequests;
+import de.mangalib.validation.WriteValidation;
 import de.mangalib.entity.EinkaufslisteItem;
 import de.mangalib.entity.EinkaufslisteItemDetails;
 import de.mangalib.entity.Format;
@@ -143,59 +145,16 @@ public class EinkaufslisteController {
     @ResponseBody // Damit der Rückgabewert als Response Body gesendet wird
     public ResponseEntity<?> addToEinkaufsliste(@RequestBody Map<String, Object> requestData) {
         try {
-            System.out.println("Start des Extrahierens der übermittelten Werte");
-            // Extrahieren der Daten aus dem requestData-Map
-            Long mangaReiheId = requestData.get("mangaReiheId") != null
-                    ? Long.valueOf(((String) requestData.get("mangaReiheId")))
-                    : null;
-            System.out.println("Die Id der Reihe ist: " + mangaReiheId);
-            Integer mangaIndex = (Integer) requestData.get("mangaIndex");
-            System.out.println("Der Index der Manga Reihe ist: " + mangaIndex);
-            Long verlagId = Long.valueOf((String) requestData.get("verlagId"));
-            Long typId = Long.valueOf((String) requestData.get("typId"));
-            Long formatId = Long.valueOf((String) requestData.get("formatId"));
-            String titel = (String) requestData.get("titel");
-            Integer anzahlBaende = (Integer) requestData.get("anzahlBaende");
-            Double preisProBand = Double.valueOf((String) requestData.get("preisProBand"));
-            Boolean istVergriffen = (Boolean) requestData.get("istVergriffen");
-            Boolean istEbayPreis = (Boolean) requestData.get("istEbayPreis");
-            String anilistUrl = (String) requestData.get("anilistUrl");
-            Long sammelbandTypId = requestData.get("sammelbandTypId") != null
-                    ? Long.valueOf((String) requestData.get("sammelbandTypId"))
-                    : null;
-            Double gesamtpreisAenderung = Double.valueOf((String) requestData.get("gesamtpreisAenderung"));
-
-            @SuppressWarnings("unchecked")
-            Map<String, String> scrapedData = (Map<String, String>) requestData.get("scrapedData");
-
-            System.out.println("Extrahieren der übermittelten Werte abgeschlossen");
-
-            // Extrahieren und Umwandeln des erscheinungsdatums
-            String erscheinungsdatumString = (String) requestData.get("erscheinungsdatum");
-            LocalDate erscheinungsdatum = erscheinungsdatumString != null ? LocalDate.parse(erscheinungsdatumString)
-                    : null;
-
-            // Verwendung der saveEinkaufslisteItem-Methode aus dem Service
-            EinkaufslisteItem savedEinkaufslisteItem = einkaufslisteService.saveEinkaufslisteItem(
-                    mangaIndex,
-                    verlagId,
-                    typId,
-                    formatId,
-                    titel,
-                    anzahlBaende,
-                    preisProBand,
-                    istVergriffen,
-                    istEbayPreis,
-                    anilistUrl,
-                    sammelbandTypId,
-                    gesamtpreisAenderung,
-                    erscheinungsdatum,
-                    scrapedData);
-            return ResponseEntity.ok(savedEinkaufslisteItem);
+            var input = WriteRequests.Shopping.from(requestData);
+            EinkaufslisteItem saved = einkaufslisteService.saveEinkaufslisteItem(input.index(), input.publisher(),
+                    input.type(), input.format(), input.title(), input.volumes(), input.price().doubleValue(),
+                    input.outOfPrint(), input.adjustedPrice(), input.anilist(), input.omnibus(),
+                    input.adjustment().doubleValue(), input.date(), input.scraped());
+            return ResponseEntity.ok(saved);
+        } catch (IllegalArgumentException | java.time.DateTimeException e) {
+            return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
         } catch (Exception e) {
-            System.out.println("Fehler");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Fehler bei der Verarbeitung der Anfrage: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Anfrage konnte nicht verarbeitet werden.");
         }
     }
 
@@ -211,73 +170,90 @@ public class EinkaufslisteController {
 
     // Controller-Methode zum finden und updaten von MangaReihen
     @PostMapping("/buyItemUpdate")
-    public ResponseEntity<?> buyItemUpdate(@RequestBody Map<String, String> itemId) {
-        System.out.println(
-                "------------------------------ Methode buyItemUpdate gestartet ----------------------------------");
-        // Item aus der Einkaufsliste holen
-        Optional<EinkaufslisteItem> itemOptional = einkaufslisteService
-                .findItemById(Long.valueOf(itemId.get("itemId")));
-        if (!itemOptional.isPresent()) {
-            System.out.println("Keine Reihe mit der ID gefunden");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
+    public ResponseEntity<?> buyItemUpdate(@RequestBody Map<String, Object> itemId) {
+        try {
+            Long id = WriteRequests.purchaseId(itemId, "itemId");
+            if (id <= 0) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
+            Map<String, String> purchaseData = Map.of("itemId", id.toString());
+            // Item aus der Einkaufsliste holen
+            Optional<EinkaufslisteItem> itemOptional = einkaufslisteService
+                    .findItemById(id);
+            if (!itemOptional.isPresent()) {
+                System.out.println("Keine Reihe mit der ID gefunden");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
+            }
+            EinkaufslisteItem item = itemOptional.get();
+
+            // Versuchen, eine MangaReihe anhand des MangaIndex zu finden
+            List<MangaReihe> reihen = mangaReiheService
+                    .findByMangaIndex(item.getMangaIndex() != null ? item.getMangaIndex() : 0);
+            System.out.println(reihen.isEmpty());
+            if (!reihen.isEmpty()) {
+                // Update der vorhandenen Reihe
+                MangaReihe reihe = reihen.get(0);
+
+                mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
+                        reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
+                        reihe.getTitel(), combinedVolumeCount(reihe.getAnzahlBaende(), item.getAnzahlBaende()), item.getPreis(),
+                        reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
+                        reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
+                        item.getAenderungGesamtpreis(), false, reihe.getMangaDetails().getReread(), purchaseData);
+
+                einkaufslisteService.updateGekauft(item.getId(), true);
+
+                return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
+
+            }
+
+            // Suche anhand des vollen Titels
+            List<MangaReihe> reihenMitGleichemTitel = mangaReiheService.findByFullTitel(item.getTitel());
+            if (!reihenMitGleichemTitel.isEmpty()) {
+                // Update der gefundenen Reihe
+                MangaReihe reihe = reihenMitGleichemTitel.get(0);
+
+                mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
+                        reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
+                        reihe.getTitel(), combinedVolumeCount(reihe.getAnzahlBaende(), item.getAnzahlBaende()), item.getPreis(),
+                        reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
+                        reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
+                        item.getAenderungGesamtpreis(), false, reihe.getMangaDetails().getReread(), purchaseData);
+
+                einkaufslisteService.updateGekauft(item.getId(), true);
+
+                return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
+
+            }
+
+            System.out.println("Die Reihe existiert noch nicht");
+            // Ansonsten Aufforderung zur Auswahl des Status für eine neue Reihe
+            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+                    .body(Collections.singletonMap("message", "Bitte Status für neue Reihe auswählen"));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Anfrage konnte nicht verarbeitet werden.");
         }
-        EinkaufslisteItem item = itemOptional.get();
+    }
 
-        // Versuchen, eine MangaReihe anhand des MangaIndex zu finden
-        List<MangaReihe> reihen = mangaReiheService
-                .findByMangaIndex(item.getMangaIndex() != null ? item.getMangaIndex() : 0);
-        System.out.println(reihen.isEmpty());
-        if (!reihen.isEmpty()) {
-            // Update der vorhandenen Reihe
-            MangaReihe reihe = reihen.get(0);
-
-            mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
-                    reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
-                    reihe.getTitel(), reihe.getAnzahlBaende() + item.getAnzahlBaende(), item.getPreis(),
-                    reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
-                    reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
-                    item.getAenderungGesamtpreis(), false, reihe.getMangaDetails().getReread(), itemId);
-
-            einkaufslisteService.updateGekauft(item.getId(), true);
-
-            return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
-
-        }
-
-        // Suche anhand des vollen Titels
-        List<MangaReihe> reihenMitGleichemTitel = mangaReiheService.findByFullTitel(item.getTitel());
-        if (!reihenMitGleichemTitel.isEmpty()) {
-            // Update der gefundenen Reihe
-            MangaReihe reihe = reihenMitGleichemTitel.get(0);
-
-            mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
-                    reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
-                    reihe.getTitel(), reihe.getAnzahlBaende() + item.getAnzahlBaende(), item.getPreis(),
-                    reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
-                    reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
-                    item.getAenderungGesamtpreis(), false, reihe.getMangaDetails().getReread(), itemId);
-
-            einkaufslisteService.updateGekauft(item.getId(), true);
-
-            return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
-
-        }
-
-        System.out.println("Die Reihe existiert noch nicht");
-        // Ansonsten Aufforderung zur Auswahl des Status für eine neue Reihe
-        return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
-                .body(Collections.singletonMap("message", "Bitte Status für neue Reihe auswählen"));
-
+    private static int combinedVolumeCount(Integer existing, Integer added) {
+        WriteValidation.volumes(existing);
+        WriteValidation.volumes(added);
+        int total = Math.addExact(existing, added);
+        WriteValidation.volumes(total);
+        return total;
     }
 
     // Controller-Methode zum erzeugen von MangaReihen
     @PostMapping("/buyItemCreate")
-    public ResponseEntity<?> buyItemCreate(@RequestBody Map<String, Long> requestBody) {
+    public ResponseEntity<?> buyItemCreate(@RequestBody Map<String, Object> requestBody) {
         System.out.println(
                 "------------------------------ Methode buyItemCreate gestartet ----------------------------------");
         try {
-            Long itemId = requestBody.get("itemId");
-            Long statusId = requestBody.get("statusId");
+            Long itemId = WriteRequests.purchaseId(requestBody, "itemId");
+            Long statusId = WriteRequests.purchaseId(requestBody, "statusId");
+            WriteValidation.require(statusId > 0);
+            if (itemId <= 0) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
 
             // Item aus der Einkaufsliste holen
             Optional<EinkaufslisteItem> itemOptional = einkaufslisteService.findItemById(itemId);
@@ -301,6 +277,7 @@ public class EinkaufslisteController {
             Long formatId = item.getFormatId().getFormatId(); // Annahme: formatId ist verfügbar
             String titel = item.getTitel();
             Integer anzahlBaende = item.getAnzahlBaende();
+            WriteValidation.volumes(anzahlBaende);
             BigDecimal preisProBand = item.getPreis();
             Boolean istVergriffen = item.getIstVergriffen();
             Boolean istEbayPreis = item.getIstEbayPreis();
@@ -339,10 +316,10 @@ public class EinkaufslisteController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Fehler beim Speichern der neuen MangaReihe");
             }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
         } catch (Exception e) {
-            System.out.println("Fehler");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Fehler bei der Verarbeitung der Anfrage: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Anfrage konnte nicht verarbeitet werden.");
         }
     }
 }

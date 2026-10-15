@@ -112,8 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Setzen der Werte in die Formularfelder
         document.getElementById("id-edit").textContent = data.id;
         console.log("ID: " + data["id"]);
-        document.getElementById("editCoverImage").src =
-          data["bildUrl"] || "/svg/filler_img2.png";
+        mangaLibSetCover(document.getElementById("editCoverImage"), data["bildUrl"]);
         document.getElementById("editTitleLabel").textContent = data.titel;
         document.getElementById("manga_index-edit").value =
           data.mangaIndex ?? "";
@@ -148,6 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         updateVisibility();
         // Pop-up anzeigen
+        MangaLibFeedback.clear(editpopupContainer);
         document.getElementById("editPopupContainer").style.display = "flex";
       })
       .catch((error) => {
@@ -158,15 +158,15 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function showLoading() {
-    document.querySelector(".loading-label").style.display = "block";
+    editpopupContainer.querySelector(".loading-label-edit").style.display = "block";
   }
 
   function hideLoading() {
-    document.querySelector(".loading-label").style.display = "none";
+    editpopupContainer.querySelector(".loading-label-edit").style.display = "none";
   }
 
   function showError() {
-    const errorLabel = document.querySelector(".error-label");
+    const errorLabel = editpopupContainer.querySelector(".error-label");
     errorLabel.style.display = "block";
 
     setTimeout(() => {
@@ -181,26 +181,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Validierung des Manga-Index
     if (!mangaIndex || isNaN(mangaIndex)) {
-      alert("Bitte geben Sie einen gültigen Manga-Index ein.");
+      MangaLibFeedback.show(editpopupContainer, "Bitte geben Sie einen gültigen Manga-Index ein.");
       return;
     }
     console.log("Der MangaIndex ist", mangaIndex);
 
+    MangaLibFeedback.clear(editpopupContainer);
     // Anzeigen des Lade-Labels
     showLoading();
 
     // Senden des Manga-Index an den Web Scraper
-    mangaLibFetch("/scrape", {
+    MangaLibFeedback.request("/scrape", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ mangaIndex: mangaIndex }),
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("Autofill-Anfrage abgewiesen");
-        return response.json();
-      })
+    }, editpopupContainer, { persist: false })
       .then((data) => {
         console.log("Gescrapte Daten", data);
         // Daten in die Eingabefelder und Selects einfügen
@@ -215,7 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
           .trim();
         document.querySelector("#preis_pro_band-edit").value =
           data["Band 1 Preis"];
-        document.querySelector("#editCoverImage").src = data["Band 1 Bild Url"];
+        mangaLibSetCover(document.querySelector("#editCoverImage"), data["Band 1 Bild Url"]);
 
         // Verstecken des Lade-Labels
         hideLoading();
@@ -233,7 +230,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .catch((error) => {
         hideLoading();
         showError();
-        console.error("Fehler beim Abrufen der Manga-Daten:", error);
+        // Keine Rohfehler oder Antwortbodys anzeigen.
       });
   });
 
@@ -245,6 +242,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Event-Handler für den Speichern-Button
   saveButton.addEventListener("click", function (event) {
     event.preventDefault(); // Verhindert das Standardverhalten des Formulars
+    MangaLibFeedback.clear(editpopupContainer);
     console.log("Save-Button geklickt");
 
     // Eingabefelder und Selects auslesen
@@ -274,41 +272,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Validierung der Werte
     if (!statusId) {
-      alert("Bitte wählen Sie einen Status aus.");
+      MangaLibFeedback.show(editpopupContainer, "Bitte wählen Sie einen Status aus.");
       return;
     }
     if (!verlagId) {
-      alert("Bitte wählen Sie einen Verlag aus.");
+      MangaLibFeedback.show(editpopupContainer, "Bitte wählen Sie einen Verlag aus.");
       return;
     }
     if (!typId) {
-      alert("Bitte wählen Sie einen Typ aus.");
+      MangaLibFeedback.show(editpopupContainer, "Bitte wählen Sie einen Typ aus.");
       return;
     }
     if (!formatId) {
-      alert("Bitte wählen Sie ein Format aus.");
+      MangaLibFeedback.show(editpopupContainer, "Bitte wählen Sie ein Format aus.");
       return;
     }
     if (!titel) {
-      alert("Bitte geben Sie einen Titel ein.");
+      MangaLibFeedback.show(editpopupContainer, "Bitte geben Sie einen Titel ein.");
       return;
     }
     if (!isNum(anzahlBaende)) {
-      alert("Anzahl der Bände muss eine positive ganze Zahl sein.");
+      MangaLibFeedback.show(editpopupContainer, "Anzahl der Bände muss eine positive ganze Zahl sein.");
       return;
     }
     if (anilistUrl && !anilistUrl.match(/^https?:\/\/.+$/)) {
-      alert("Bitte geben Sie eine gültige AniList-URL ein.");
+      MangaLibFeedback.show(editpopupContainer, "Bitte geben Sie eine gültige AniList-URL ein.");
       return;
     }
 
     if (coverUrl && !coverUrl.match(/^https?:\/\/.+$/)) {
-      alert("Bitte geben Sie eine gültige Cover-URL ein.");
+      MangaLibFeedback.show(editpopupContainer, "Bitte geben Sie eine gültige Cover-URL ein.");
       return;
     }
 
     if (reread && !isNum(reread)) {
-      alert("Reread muss eine positive ganze Zahl sein.");
+      MangaLibFeedback.show(editpopupContainer, "Reread muss eine positive ganze Zahl sein.");
       return;
     }
 
@@ -356,36 +354,20 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Zu sendende Daten:", mangaReiheData);
 
     // Daten senden mit Fetch-API
-    mangaLibFetch("/addMangaReihe", {
+    MangaLibFeedback.request("/addMangaReihe", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(mangaReiheData),
-    })
-      .then((response) => {
-        // Fehlertexte/HTML und interne Serverdetails niemals als JSON oder UI-Meldung ausgeben.
-        if (!response.ok) throw new Error("Speichern fehlgeschlagen");
-        const contentType = response.headers.get("Content-Type") || "";
-        if (!/^application\/(?:json|[\w.+-]+\+json)(?:\s*;|$)/i.test(contentType)) {
-          throw new Error("Unerwartetes Antwortformat");
-        }
-        return response.json();
-      })
+    }, editpopupContainer)
       .then((data) => {
-        if (!data || typeof data !== "object" || Array.isArray(data)) {
-          throw new Error("Unerwartete Speicherantwort");
-        }
         // Schließen des Popups
         document.querySelector("#editPopupContainer").style.display = "none";
         resetPopupFields();
         window.location.reload();
       })
-      .catch((error) => {
-        if (!error?.mangaLibNoticeShown) {
-          alert("Die Änderung konnte nicht bestätigt werden. Bitte Eingaben beibehalten und den gespeicherten Stand nach manuellem Neuladen prüfen. Die Anfrage wird nicht automatisch wiederholt.");
-        }
-      });
+      .catch(() => {}); // Die gemeinsame Hilfe zeigt die sichere Dialogmeldung.
   });
 
   function resetPopupFields() {

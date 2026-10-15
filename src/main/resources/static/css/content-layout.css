@@ -1,0 +1,82 @@
+/* Text darf Grid-/Flex-Minimalbreiten nicht über den verfügbaren Platz hinaus vergrößern. */
+.manga-reihen-header, .mangaReihe-container {
+  grid-template-columns: 100px repeat(4, minmax(0, 1fr)) minmax(0, 3fr) repeat(3, minmax(0, 1fr)) repeat(4, 30px);
+}
+.band-container {
+  grid-template-columns: 100px minmax(0, 5fr) minmax(0, 2.3fr) repeat(3, 30px);
+}
+.reihe {
+  grid-template-columns: 30px minmax(0, .5fr) repeat(3, minmax(0, 1fr)) minmax(0, 2fr) repeat(3, minmax(0, 1fr)) 30px;
+}
+.monats-header { grid-template-columns: 100px minmax(0, 3fr) repeat(2, minmax(0, 1fr)); }
+.mangaReihe-container > *, .manga-reihen-header > *, .band-container > *,
+.reihe > *, .reihe-header > *, .monats-header > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.titel p, .band-container p, .manga-reihe-titel, .title-label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Cover und Save haben eigene Spalten; auch lange ungetrennte Titel bleiben dazwischen. */
+.popup-header {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr) max-content;
+  gap: 12px;
+  align-items: start;
+}
+.cover-bild-edit { margin-right: 0; min-width: 0; }
+.title-label, .save-button-edit { margin-top: 0; }
+.popup, .popup-edit, .popup-edit-band, .ask-panel {
+  min-width: 0;
+  max-width: min(600px, calc(100vw - 24px));
+  max-height: calc(100dvh - 32px - var(--manual-banner-height, 0px));
+  overflow-y: auto;
+}
+.input-group { min-width: 0; }
+.input-group input[type="text"], .input-group input[type="number"], .input-group select {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+  /* Schmalen Inhalt nicht hinter der absolut positionierten Seitenleiste platzieren. */
+  body .sidebar {
+    position: static;
+    width: auto;
+    margin: 90px 12px 0;
+    padding: 0;
+  }
+  .filter-main { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .manga-reihen-container, .monats-container { margin: 16px 12px; padding: 0; }
+  .header_headerInner { flex-wrap: wrap; gap: 8px; }
+  .main-menu { position: static; transform: none; margin: 0; }
+  .searchbar { margin: 0 12px; min-width: 0; }
+  .searchbar input[type="text"] { min-width: 0; width: 140px; }
+}
+@media (max-width: 768px) {
+  .manga-reihen-header, .mangaReihe-container {
+    grid-template-columns: 50px repeat(4, minmax(0, 1fr)) minmax(0, 3fr) repeat(3, minmax(0, 1fr)) repeat(4, 20px);
+    gap: 3px;
+  }
+  .band-container {
+    grid-template-columns: 50px minmax(0, 5fr) minmax(0, 2fr) repeat(3, 20px);
+    margin-left: 12px;
+  }
+  .reihe { grid-template-columns: 24px minmax(0, .5fr) repeat(3, minmax(0, 1fr)) minmax(0, 2fr) repeat(3, minmax(0, 1fr)) 24px; }
+}
+@media (max-width: 480px) {
+  .popup-header { grid-template-columns: 64px minmax(0, 1fr); padding: 12px; }
+  .cover-bild-edit img { max-width: 64px; }
+  .popup-header .save-button-edit { grid-column: 1 / -1; justify-self: end; }
+  .popup .save-button { flex: 0 0 auto; }
+  .form-row-3, #editBaendePopupContainer .form-row, #editBaendePopupContainer .form-row-1,
+  #editBaendePopupContainer .form-row-3, #editBaendePopupContainer .form-row-4,
+  #editPopupContainer .form-row-4, .sub-group-1, .sub-group-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .checkbox-group { min-width: 0; }
+}

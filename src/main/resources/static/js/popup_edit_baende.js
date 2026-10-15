@@ -1,23 +1,10 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const closeButton = document.getElementById("editBandCloseButton");
-
-  if (closeButton) {
-    closeButton.addEventListener("click", () => {
-      document.getElementById("editBaendePopupContainer").style.display =
-        "none";
-    });
-  } else {
-    console.error("Close button for edit band popup not found");
-  }
-});
-
 function editBand(bandId) {
   console.log("Editing band with ID:", bandId);
   fetch(`/getBand/${bandId}`) // Korrigieren Sie den Pfad hier
     .then((response) => response.json())
     .then((data) => {
       console.log("Fetched data for band:", data);
-      document.getElementById("editBandCoverImage").src = data.bildUrl;
+      mangaLibSetCover(document.getElementById("editBandCoverImage"), data.bildUrl);
       document.getElementById("manga_reihe_id").textContent = data.id;
       document.getElementById("band_nr").textContent = data.bandNr;
       document.getElementById("band_index").value = data.bandIndex;
@@ -40,6 +27,7 @@ function editBand(bandId) {
       );
       titleLabel.textContent = `${data.titel} Band ${data.bandNr}`;
 
+      MangaLibFeedback.clear(document.getElementById("editBaendePopupContainer"));
       document.getElementById("editBaendePopupContainer").style.display =
         "flex";
     })
@@ -47,6 +35,7 @@ function editBand(bandId) {
 }
 
 function saveBand() {
+  MangaLibFeedback.clear(document.getElementById("editBaendePopupContainer"));
   const bandIdElement = document.getElementById("manga_reihe_id");
   const bandNrElement = document.getElementById("band_nr");
   const bandIndexElement = document.getElementById("band_index");
@@ -60,7 +49,7 @@ function saveBand() {
 
   // Validierung
   if (!bandNrElement.textContent.trim()) {
-    alert("Band Nr darf nicht leer sein.");
+    MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Band Nr darf nicht leer sein.");
     return;
   }
 
@@ -68,7 +57,7 @@ function saveBand() {
     !preisElement.value.trim() ||
     isNaN(parseFloat(preisElement.value.replace(",", ".")))
   ) {
-    alert("Preis muss eine gültige Zahl sein.");
+    MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Preis muss eine gültige Zahl sein.");
     return;
   }
 
@@ -76,7 +65,7 @@ function saveBand() {
     bildUrlElement.value.trim() &&
     !bildUrlElement.value.match(/^https?:\/\/.+$/)
   ) {
-    alert("Bitte geben Sie eine gültige Bild-URL ein.");
+    MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Bitte geben Sie eine gültige Bild-URL ein.");
     return;
   }
 
@@ -84,7 +73,7 @@ function saveBand() {
     mpUrlElement.value.trim() &&
     !mpUrlElement.value.match(/^https?:\/\/.+$/)
   ) {
-    alert("Bitte geben Sie eine gültige MP-URL ein.");
+    MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Bitte geben Sie eine gültige MP-URL ein.");
     return;
   }
 
@@ -108,23 +97,14 @@ function saveBand() {
     reread: reread.value,
   };
 
-  mangaLibFetch("/editBand", {
+  MangaLibFeedback.request("/editBand", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
     body: JSON.stringify(bandData),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok " + response.statusText);
-      }
-      if (response.status === 204) {
-        return null; // No content to parse
-      }
-      return response.json();
-    })
+  }, document.getElementById("editBaendePopupContainer"), { empty: 204 })
     .then((data) => {
       if (data) {
         console.log("Success:", data);
@@ -135,21 +115,19 @@ function saveBand() {
       // Seite neu laden
       window.location.reload();
     })
-    .catch((error) => {
-      console.error("Error updating band:", error);
-    });
+    .catch(() => {}); // Eingaben und Dialog bleiben erhalten.
 }
 
 function showLoading() {
-  document.querySelector(".loading-label").style.display = "block";
+  document.getElementById("editBaendePopupContainer").querySelector(".loading-label-band-edit").style.display = "block";
 }
 
 function hideLoading() {
-  document.querySelector(".loading-label").style.display = "none";
+  document.getElementById("editBaendePopupContainer").querySelector(".loading-label-band-edit").style.display = "none";
 }
 
 function showError() {
-  const errorLabel = document.querySelector(".error-label");
+  const errorLabel = document.getElementById("editBaendePopupContainer").querySelector(".error-label");
   errorLabel.style.display = "block";
 
   setTimeout(() => {
@@ -162,23 +140,20 @@ function autofillBandData() {
 
   // Validierung des Manga-Index
   if (!bandIndex || isNaN(bandIndex)) {
-    alert("Bitte geben Sie einen gültigen Manga-Index ein.");
+    MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Bitte geben Sie einen gültigen Manga-Index ein.");
     return;
   }
   console.log("Der MangaIndex ist", bandIndex);
 
+  MangaLibFeedback.clear(document.getElementById("editBaendePopupContainer"));
   // Anzeigen des Lade-Labels
   showLoading();
 
-  mangaLibFetch(`/autofillBandData/${bandIndex}`, { method: "POST" })
-    .then((response) => {
-      if (!response.ok) throw new Error("Autofill-Anfrage abgewiesen");
-      return response.json();
-    })
+  MangaLibFeedback.request(`/autofillBandData/${bandIndex}`, { method: "POST" }, document.getElementById("editBaendePopupContainer"), { persist: false })
     .then((data) => {
       console.log("Autofilled data:", data); // Log hinzugefügt
       document.getElementById("bild_url").value = data.BildUrl; // Schlüssel angepasst
-      document.getElementById("editBandCoverImage").src = data.BildUrl; // Schlüssel angepasst
+      mangaLibSetCover(document.getElementById("editBandCoverImage"), data.BildUrl); // Schlüssel angepasst
       document.getElementById("preis").value = data["Preis"];
       document.getElementById("mp_url").value = data.mpUrl;
       hideLoading();
@@ -186,7 +161,7 @@ function autofillBandData() {
     .catch((error) => {
       hideLoading();
       showError();
-      console.error("Error autofilling band data:", error);
+      // Keine Rohfehler oder Antwortbodys anzeigen.
     });
 }
 

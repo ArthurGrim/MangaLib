@@ -435,3 +435,243 @@ Abschlussprüfung: gesamter versionierter Git-Diff und neue Dateien kontrolliert
 `git diff --check` sowie Whitespace-Prüfung aller unversionierten Dateien bestanden.
 Staging-Bereich leer. Der Gesamt-Workspace enthält auch den erhaltenen älteren
 Vorbereitungsstand; diese Dateiübersicht zählt ausschließlich die Nachbereitung.
+
+## 11. Nachprüfung T02-Schreibvalidierung (11.10.2026)
+
+Erst nach gesonderter Start-/DB-Freigabe in der isolierten manuellen Umgebung,
+mit aktualisiertem Abnahme-JAR und ausschließlich synthetischen Scraper-Doubles.
+In diesem Auftrag wurde keine Anwendung oder Browserabnahme gestartet. Die später
+ausdrücklich freigegebene automatisierte DB-Validierung verwendet ausschließlich
+`mangalib_test`; die manuelle Datenbank wurde von Codex nicht angesprochen.
+
+- Reihen/Bände/Einkaufspositionen mit normalen Werten, Unicode/Sonderzeichen und
+  negativen Preisanpassungen anlegen/bearbeiten. Erwartung: bisherige Datenübernahme,
+  Preise und Erfolgsantworten; unveränderte unbekannte Flags/optionale Felder erhalten.
+- Ungültige/leere Pflichtfelder, falsche IDs, Bandanzahl 0/10.001, Reread −1/10.001
+  und ungültige Preise kontrolliert senden. Erwartung: neutraler 400-Fehler, keine
+  Speicherung. Grenzwerte 10.000 **nicht manuell massenhaft speichern**; dafür Mocks nutzen.
+- Neue URL-Werte mit relativen Pfaden, fremden Schemes oder Userinfo prüfen.
+  Erwartung: 400 ohne Speicherung; null/leere optionale Werte und gültige HTTP(S)-
+  URLs weiter möglich. Keine historische URL automatisch umschreiben.
+- Autofill: 900001/900002 weiter synthetisch erfolgreich; 900005 weiterhin kontrollierte
+  Double-Ablehnung. Syntaktisch ungültige Indizes nun neutral 400 schon vor dem Double.
+  Vorhandene Formulardaten bleiben bei Fehlern erhalten; keine echte Scraperaktion.
+- Speichern/Kauf mit abgelaufener Session weiter 403, kein Replay. Ungültige Kauf-IDs
+  kontrolliert 400, fehlende Item-IDs weiter 404, Statusabfrage bei neuer Reihe weiter 417.
+  Fehlermeldungen dürfen keine internen Exceptiontexte oder Rohdaten zeigen.
+
+Die Browseranzeige dieser Fehler und die manuelle Abnahme bleiben offen. Die
+automatisierten Rollback-/Datenerhaltungsprüfungen und `clean test` sind nach
+Eigentümerfreigabe bestanden (371 Tests; zehn Tabellen und Schema-Metadaten erhalten).
+M06/T03/T06 bleiben separate Aufträge; diese Checkliste ist keine Freigabe
+zum Starten oder Ändern einer Datenbank. Technische Regeln und ausgeführte Prüfungen:
+[TESTING.md](TESTING.md#t02--schreibvalidierung-analyse-grenzen-und-datenbankfreie-prüfung).
+
+
+## 12. T02-Nachbesserung: Dialogfehler und vier UI-Befunde (11.10.2026)
+
+Dieser Abschnitt ergänzt die historischen Berichte. Die manuelle Anwendung war vom
+Eigentümer beendet; Codex hat keine DB-Verbindung, SQL-Ausführung, Anwendung,
+HTTP-Listener oder Browser gestartet. Keine echten Scraper, Migrationen, neuen
+Dependencies, Commits oder Pushes. Die vorherigen T02-Backendänderungen bleiben
+unverändert erhalten; M06/T03/T06 wurden nicht vorgezogen.
+
+### Ursachen und gezielte Korrekturen
+
+- **Fehlerdarstellung:** Add-/Einkaufs-/Kaufhandler interpretierten Fehlerantworten
+  ungeprüft als JSON; Edit hatte bereits eine Formatprüfung, aber eine pauschale
+  native Alert-Meldung. Die gemeinsame Fetch-Hilfe zeigte ebenfalls native Alerts.
+  Ihre Ablehnung kann von fehlendem Token, unzulässigem Ziel oder HTTP 403 stammen:
+  **kein Beweis für Sessionablauf**, auch nicht bei der früheren Browserbeobachtung.
+- **Einheitliche Rückmeldung:** `MangaLibFeedback` in `security.js` liest bei 4xx/5xx
+  keine Fehlerbodys, unterscheidet 400/403/404/5xx und prüft bei JSON-Erfolg Content-Type
+  und Objektform. Feste Texte via `textContent`, fokussierbare `role=alert`-/Live-Region
+  im jeweiligen Dialog; Kauf-/Löschfehler erscheinen sichtbar im Hauptbereich.
+  Eingaben bleiben bei Fehlern erhalten. CSRF-, Origin-, Redirect- und Cookie-Regeln
+  bleiben unverändert; nur die clientseitige Präsentation der Ablehnung wurde ersetzt.
+- **Unbestätigte Speicherung:** Button während Request sperren; bei 403, 5xx,
+  Netzwerk-/Abbruch-/Formatfehlern bis zum Neuladen gesperrt halten. Auch Abbrechen
+  und Wiederöffnen hebt die Sperre nicht auf. Vor erneutem Schreiben gespeicherten
+  Stand nach Neuladen kontrollieren. Kontrollierte 400/404 ermöglichen bewusste
+  Korrektur. Kein automatischer Retry und keine neue serverseitige Idempotenz (T03).
+- **Erfolgsverträge:** JSON-200, Band-204 ohne Body, Delete-200 ohne Body und
+  Kauf-417 mit Statusauswahl bleiben erhalten. Der Kaufstatusdialog bleibt bei
+  Create-Fehlern offen und behält seine Auswahl; nach 400 ist eine bewusste Korrektur
+  möglich. Cancel vor Create startet keinen weiteren Request. Der gemeinsame
+  Statusdialog wird jeweils nur einem laufenden Kauf zugeordnet.
+- **A – Close-Button:** Überflüssige Suche nach `editBandCloseButton` entfernt.
+  Der bestehende Cancel-/`closeEditBandPopup()`-Mechanismus bleibt erhalten.
+- **B – Observer:** Nicht vorhandenes Ziel `bands-container` und überflüssigen
+  MutationObserver entfernt. Lazy Loading bleibt bei Seiteninitialisierung und
+  unmittelbar nach `toggleBands()` aktiv; der Fallback startet auch ohne Scrollen.
+- **C – Cover:** Template legt normalen/manuellen lokalen Ersatzcoverpfad getrennt
+  fest. Dynamische Cover/Preview in der manuellen Umgebung verwenden bei externen
+  URLs den lokalen `/manual-test/cover.svg`, passend zur unveränderten CSP; reguläre
+  gültige Cover bleiben nutzbar. Ladefehler fallen einmalig auf lokale Cover zurück.
+  Keine gespeicherte Bild-URL, Band-Konstruktor oder Entity-Zuordnung verändert.
+- **D – ID:** Nur sichtbare Beschriftung in „Band-ID“ geändert; `manga_reihe_id`,
+  Payload und Zuordnung bleiben unverändert.
+- Lade-/Fehlerindikatoren sind auf ihren tatsächlichen Dialog begrenzt, statt bei
+  Band-/Reihenbearbeitung versehentlich den ersten Add-Dialog zu treffen.
+
+### Prüfnachweise und Grenzen
+
+- **158 DOM-Tests bestanden = 93 bestehende + 65 neue**, 0 Fehler/Skipped,
+  mit `node --test src/test/js/*.test.cjs`, vorhandenes jsdom, gesperrtes Netzwerk.
+  Matrix für vier echte Schreibhandler: 400 JSON/Text, 403, 404, unerwartetes 417,
+  500 HTML, falsches Format, defektes/null/leeres JSON, NetworkError und AbortError.
+  Zusätzlich Werterhalt, Fokus/Inline-Text, keine Rohfehler/Alerts/automatischen Replays,
+  Doppelclick-Sperre, Kauf-417/Cancel/Create-Fehler, JSON-/204-/Delete-Erfolg,
+  Dialoge, manuelles Ersatzcover und Lazy Loading. Bestehende Payload-/CSRF-/XSS-
+  Assertions erhalten; Präsentationsassertions gezielt von Alert auf Inline geändert.
+- **297 DB-freie Java-Tests bestanden**: 44 Guard + 61 Policy + 192 bestehende
+  Validator-/Service-/Standalone-MockMvc-Fälle. **85 manuelle Schutz-/Template-/
+  Artefaktfälle bestanden**; echte Thymeleaf-Auswahl des Ersatzcovers ergänzt.
+  Vor jedem Gradle-Lauf Taskplan geprüft, ausschließlich offline.
+- Erstlauf eines neuen Tests scheiterte an jsdoms nicht unterstütztem Reload;
+  erwartete Reloads werden jetzt explizit erfasst, andere DOM-Fehler bleiben Fehler.
+  Ein weiterer neuer Cancel-Test hatte fälschlich schon einen Status vorausgewählt;
+  Fixture korrigiert. Abschließende Läufe erfolgreich, keine Assertions abgeschwächt.
+- Historische **371 vollständige Spring-/Integrationstests** wurden in diesem Auftrag
+  nicht wiederholt. Keine neue DB-/Schema-/Stammdatenmessung; Unverändertheit folgt
+  hier aus vollständigem Zugriffsverzicht, nicht aus einer gemessenen DB-Prüfung.
+  Bestehende MVC-/JSON-Backendverträge und ihre Java-Assertions unverändert.
+- jsdom prüft kein reales Layout, Bildrendering oder echten Sessionablauf. AbortError
+  ist synthetisch simuliert; keine neue allgemeine Timeout-/Scraperarchitektur.
+  Frontend-Sperren gelten pro Seite und ersetzen keine Atomarität/Mehrtab-Idempotenz.
+  Allgemeine Read-/Linkfehler und Debug-Rohlogs bleiben separate T02/T06-Arbeit.
+
+### Spätere Browser-Nachprüfung – erst nach gesonderter Startfreigabe
+
+1. Aktualisiertes manuelles JAR/ValidateOnly prüfen, bestehenden DB-Bestand nicht
+   neu importieren. Nach bewusstem Start Loopback/PID/Banner bestätigen und hart neu laden.
+2. Add/Reihen-/Band-/Einkaufsdialog öffnen, ohne Speichern schließen und wieder öffnen;
+   Werte, Band-ID-Beschriftung, lokale Cover, Aufklappen und Scrollen kontrollieren.
+   Keine alten Close-/Observer-/externen Ersatzcoverfehler erwarten.
+3. Ausschließlich freigegebene negative Schreibfälle erneut abnehmen: leerer Titel
+   ohne Alert/Request; ungültige Bandanzahl/Reread mit sichtbarem neutralen 400-Hinweis,
+   erhaltenen Werten und beobachtetem HTTP-Status. Vorhandenen Bestand kontrollieren.
+4. 403/Sitzung, unterbrochene/unklare Antwort gezielt beobachten: keine pauschale
+   Sessiondiagnose, kein Replay, gesperrter Schreibbutton. Nach Reload zuerst Stand lesen.
+   Keine echten DB-Fehler provozieren; sensible Inhalte dürfen nicht erscheinen.
+5. Positive Speicherung/Band-204, Kauf-417/Status/Cancel und synthetischen Autofill
+   ausschließlich nach zusätzlicher ausdrücklicher Schreibfreigabe prüfen. Tastatur,
+   Fokus, Meldungskontrast, Dialogscrollen und Smartphone-Layout sind kein jsdom-Nachweis.
+
+## 13. T02-Nachbesserung: Reread, Preisdarstellung und Titel-Layout (14.10.2026)
+
+### Bestätigte Ursachen und Korrekturen
+
+- **Reread bei Reihenanlage:** Formular und Requestvalidierung übergaben den Wert
+  korrekt; der Anlagezweig des Controllers ließ ihn beim Serviceaufruf weg. Die
+  neu erzeugten Details hatten damit keinen Reread, der Lesevertrag zeigte 0.
+  Jetzt wird der validierte Wert übergeben und vor dem ersten Details-Speichern
+  gesetzt. Zulässig bleiben 0 bis 10000; fehlend/null im Anlage-Request bleibt 0.
+  Alte Serviceaufrufe ohne Reread behalten ihre null-Semantik. Die bereits
+  funktionierende Bearbeitung und die fachlichen Band-/Lesestatusregeln bleiben
+  unverändert. Bestehende Datensätze werden nicht nachträglich korrigiert.
+- **Einkaufspreise:** Der Templateausdruck verlangte zwei Vorkommastellen und
+  vertauschte deutsche Dezimal-/Tausendertrennzeichen. Jetzt werden mindestens
+  eine Vorkommastelle, deutsche Trennzeichen und zwei Nachkommastellen dargestellt:
+  `8,49 €`, `13,98 €`, `0,00 €`, gegebenenfalls `−0,02 €`.
+  Das Minuszeichen wird ausschließlich zur Anzeige vereinheitlicht. Keine Änderung
+  gespeicherter Preise, numerischer Aggregation oder bestehender Rundungsverträge.
+- **Lange Titel:** Implizite Grid-/Flex-Mindestbreiten drängten Text und Buttons
+  über den verfügbaren Platz. Das ergänzende Stylesheet erlaubt schrumpfbare
+  Textspalten und Zeilenumbruch, reserviert Aktionsspalten und ordnet auf schmalen
+  Seiten Sidebar/Navigation sowie Dialog-Speicherbuttons ohne Überlagerung an.
+  Dialoge sind in der Höhe begrenzt und scrollbar; Titel werden nicht verändert.
+
+### Tatsächliche datenbankfreie Prüfung
+
+308 Java-Fälle (einschließlich 44 Guard-/61 Policy-Fällen), 32 ausgewählte
+Template-/Mock-Fälle und 164 DOM-Fälle bestanden, jeweils ohne Fehler/Skipped.
+Neu: fünf Controller-, sechs Service-, acht Preis- und sechs CSS-/DOM-Fälle.
+Der echte Details-Speicheraufruf wird mit Repository-Mocks auf Reread geprüft;
+die Preisfälle rendern die tatsächlichen Templateausdrücke. Keine vollständige
+Integrationstestsuite, DB-Verbindung, Anwendung, Browser oder Scraper ausgeführt.
+Das laufende manuelle JAR wurde ausdrücklich nicht neu gebaut (`-x manualBootJar`).
+Historische Browser-/Integrationsergebnisse sind damit nicht erneut bestätigt.
+DB-Unverändertheit wurde nicht neu gemessen; dieser Auftrag hatte keinerlei DB-Zugriff.
+
+### Noch erforderliche Browsernachprüfung – gesonderte Freigabe notwendig
+
+1. Erst nach freigegebener Paketierung und bewusstem Neustart das neue manuelle
+   JAR per ValidateOnly, Loopback/PID und Banner bestätigen; Browser hart neu laden.
+   Kein Reset/Fixture-Reimport. Die Datensätze von
+   `T02_BROWSER_ACCEPTANCE_20261014_R01` und der ursprüngliche Bestand bleiben erhalten.
+2. Nur neue, ausdrücklich freigegebene synthetische Reihen mit Reread 0 und 1
+   anlegen, neu laden und den gespeicherten Wert kontrollieren. 10000 bezeichnet
+   hier Reread, keinesfalls eine Massenerzeugung von Bänden. Fehlend/null und
+   ungültige Grenzen sind bereits Mock-getestet; reale Schreibprüfung separat freigeben.
+   Die bestehende Reihenbearbeitung erneut auf unverändertes Verhalten prüfen.
+3. Einzel-/Positions-/Monatspreise auf konsistente deutsche Darstellung prüfen;
+   keine Preise vorhandener Einträge ändern. Negative Anzeige nur in fachlich
+   zulässigen Kontexten prüfen, keine neue negative Einkaufspreisregel einführen.
+4. Lange Unicode-Titel und ungetrennte Titel bei etwa 320/480/768/1100 Pixeln
+   kontrollieren: lesbarer Umbruch, keine horizontalen Überläufe oder überlagerten
+   Buttons; Maus und Tastatur in Reihen-/Band-/Einkaufsdialogen, Speichern/Schließen,
+   Dialogscrollen und Abstand zum manuellen Banner prüfen. Erst nach Schreibfreigabe
+   tatsächlich speichern. jsdom liefert hierfür keinen visuellen Nachweis.
+5. Nach erlaubten Schreibprüfungen neu laden und ursprüngliche Reihen/Bände sowie
+   R01-Datensätze vergleichen. Keine automatische Bereinigung oder Reparatur.
+
+Keine allgemeine UI-Neugestaltung oder Umsetzung von M06/T03/T06 in diesem Auftrag.
+
+## 14. Bestätigte Browsernachprüfung und Integrationsabschluss (15.10.2026)
+
+Der Projekteigentümer hat die drei zuletzt korrigierten Befunde im Browser erfolgreich
+nachgeprüft: **Reread 3 bleibt nach Reihenanlage und Neuladen erhalten**, Einkaufspreise
+erscheinen im deutschen Format, lange Titel umbrechen im schmalen Fenster und die
+Schaltflächen bleiben sichtbar/bedienbar. Dies aktualisiert den offenen Nachtest aus
+Abschnitt 13; keine erneute Browserausführung durch Codex und keine Behauptung einer
+vollständigen visuellen Abnahme aller Bildschirmbreiten/Sonderfälle.
+
+Nach ausdrücklicher Freigabe ausschließlich für `mangalib_test` hat Codex erneut
+44 datenbankfreie Guard-Fälle, einen lesenden Ausgangstest, die vollständige Suite
+mit **382 erfolgreichen Tests (0 Fehler/Skipped)**, einen lesenden Abschlusstest und
+**164 DOM-Fälle (0 Fehler/Skipped)** ausgeführt. Alle 29 MVC-/JSON-Verträge bestanden.
+Vorher-/Nachher-Fingerabdruck einschließlich Schema identisch:
+`ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570`.
+Zehn Tabellen und 78 Stammdaten unverändert, Geschäftstabellen vor/nach leer,
+transaktionale Fixtures zurückgerollt; AUTO_INCREMENT bewusst ausgenommen.
+
+**Historischer betrieblicher Restpunkt (inzwischen abgeschlossen, siehe Abschnitt 15):** Der angeforderte `clean test`-Aufruf scheiterte vor
+Testbeginn an der Windows-Dateisperre des laufenden manuellen JARs. Die vollständige
+Suite wurde danach mit `test` erfolgreich ausgeführt, ohne Tests auszuwählen oder
+abzuschwächen. Kein Stop/Neustart und kein Löschungsbehelf. Ein erfolgreicher
+`clean test` erforderte damals ein ausdrücklich freigegebenes Wartungsfenster ohne
+laufende Instanz aus `build/libs`; im damaligen Auftrag keine Bereinigung oder Wiederholung.
+
+Kein Zugriff auf `mangalib_manual_test` oder produktive Daten, kein Browser-/Scraper-
+aufruf und keine Änderung der synthetischen R01-Daten in diesem Auftrag. Die manuelle
+Anwendung bleibt unberührt. Historische Testberichte bleiben erhalten; genaue
+Befehle, Berichtsablage und verbleibende T02-Grenzen stehen in TESTING.md.
+
+## 15. Abschließender Nachtrag: kontrollierter Stop und erfolgreicher Clean-Test (15.10.2026)
+
+Die eindeutig zugeordnete manuelle Testinstanz **PID 106732 wurde kontrolliert per
+Ctrl+C in ihrer ursprünglichen Startsession beendet**. Port **18080 ist frei**;
+kein erzwungener Prozessabbruch und kein anschließender Neustart. Die Hinweise auf
+eine weiterlaufende Instanz und einen ausstehenden Clean-Test in den früheren
+Abschnitten beschreiben ausschließlich den damaligen Stand.
+
+Nach erneuter Schutzprüfung und 44 erfolgreichen datenbankfreien Guard-Tests:
+**`clean test` vollständig erfolgreich – 382 bestanden, 0 Fehler, 0 übersprungen**,
+ohne Testfilter. Alle **29 MVC-/JSON-Vertragstests** bestanden. Lesende Fingerabdrücke
+vor und nach der Suite identisch:
+`ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570`.
+Zehn Tabellen und 78 Stammdatensätze samt Schema-Metadaten unverändert, keine
+verbliebenen Fixtures; AUTO_INCREMENT bewusst ausgenommen. Ausschließlich
+`mangalib_test` verwendet, keine Testzugriffe auf die manuelle oder produktive Datenbank.
+Die **164 DOM-Tests** waren bereits erfolgreich; keine erneute Browser-/DOM-Prüfung
+für diesen Abschluss behauptet. Die bestätigte Eigentümer-Browsernachprüfung aus
+Abschnitt 14 bleibt erhalten.
+
+Abschließendes Code-Review einschließlich unversionierter Dateien ohne neue
+blockierende Befunde; bisheriger T02-Implementierungsumfang technisch commitfähig.
+**Kein pauschaler T02-Abschluss:** Altbestandsverträglichkeit sowie
+SSRF-/Scraper-/Requestgrößengrenzen bleiben offen; T03, M06 und T06 eigenständige
+Folgearbeiten. Keine Änderung der synthetischen Testdaten, keine Migration oder
+Bereinigung und keine Commits, Pushes oder Merges. Genaue Prüfnachweise und lokale
+Berichtsablage im abschließenden Nachtrag von TESTING.md.
