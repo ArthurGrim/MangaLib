@@ -489,3 +489,313 @@ commitfähig; keine Aussage über einen vollständigen T02-Abschluss oder produk
 Freigabe. Altbestandsverträglichkeit sowie SSRF-/Scraper-/Requestgrößengrenzen bleiben
 offen. T03, M06 und T06 bleiben eigenständige Folgearbeiten. Keine Migrationen,
 Schemaänderungen, Bereinigungen, echten Scraper, Commits, Pushes oder Merges erfolgt.
+
+## M06 – Datenbankfreier Implementierungszwischenstand (15.10.2026)
+
+**Historischer Stand vor der Integrationsfreigabe:** Die folgenden Ergebnisse und
+damals offenen Integrationsprüfungen bleiben erhalten. Der anschließende Abschnitt
+„M06 – Geschützte Integration und Datenerhaltung“ dokumentiert die inzwischen
+ausgeführten DB-Prüfungen; die manuelle Browserabnahme ist weiterhin offen.
+
+Branch `codex/m06-reading-status`, Ausgangsbasis `a6f5e3c`. Keine neue DB-Freigabe.
+Erweiterungen überspringen die pauschale Reihenstatus-/Reread-Verteilung und die
+Importaktualisierung alter Bände. Nur zusätzliche Bände werden erzeugt und explizit
+ungelesen initialisiert. Anschließend verwendet der Reihenservice dieselbe lesende
+Bandstatus-Aggregation wie die Einzelbandbearbeitung: alle gelesen → Reihe gelesen,
+mindestens ein ungelesener Band → Reihe nicht vollständig gelesen. Vorhandene
+Reihen- und Band-Rereads bleiben beim Ergänzen einschließlich null unverändert.
+
+Vor einer Mutation wird die Erweiterbarkeit geprüft: eindeutige positive Band-IDs,
+passende Beziehungen und lückenlose eindeutige Nummern 1..N. Bei Ziel Z>N dürfen
+N+1..Z angehängt werden, auch wenn die bisher deklarierte Anzahl abweicht (beispielsweise
+deklarierte Anzahl 5, tatsächlich 2 Bände, gewünschter neuer Bestand 4). Die neue
+deklarierte Anzahl entspricht dem angeforderten Ziel; Altbände werden nicht repariert,
+umnummeriert, überschrieben oder gelöscht. Die Repositoryreihenfolge ist unerheblich.
+Lücken, doppelte/fehlende Nummern/IDs und fremde Beziehungen werden vor Änderungen
+abgewiesen. Eine deklarierte Erhöhung, deren Ziel keinen neuen Band erfordert,
+wird ebenfalls abgewiesen. Fehlende Details und widersprüchliche Details-Zuordnung
+sind im Erweiterungspfad gesperrt; beide Kaufzuordnungen prüfen fehlende Details
+bereits vor der Dereferenzierung und liefern kontrolliert 400 ohne Kaufmarkierung.
+
+Gleichzeitige Änderungen von Titel, Reihen-URLs und anderen ausdrücklich bearbeiteten
+Reihenmetadaten bleiben möglich. Beim Ergänzen wird auch aus abweichend mitgesendeten
+Lesestatus-/Reread-Werten kein Auftrag zur Änderung historischer Bandwerte abgeleitet.
+Diese Änderungen müssen separat über die bestehenden Bearbeitungsfunktionen erfolgen.
+Importwerte für schon vorhandene Bände werden beim Anhängen nicht übernommen.
+Ohne tatsächliche Erweiterung bleibt das bisherige Bearbeitungsverhalten erhalten.
+Neuanlage bleibt unverändert: normal ungelesen, ausdrücklich gewähltes Gelesen bei
+vollständiger Reihenneuanlage weiterhin wirksam; Kaufneuanlage beginnt ungelesen.
+Keine neuen Requestfelder, UI-Felder, Datenstrukturen, Spalten oder Migrationen.
+
+### Tatsächlich ausgeführte Prüfung
+
+Vor jedem Gradle-Testlauf wurde derselbe Aufruf mit `--dry-run` geprüft. Abschließender
+Aufruf (zunächst mit zusätzlichem `--dry-run`, danach ohne):
+
+```powershell
+.\gradlew.bat --offline --no-daemon test --tests de.mangalib.service.ReadingStatusExtensionTest --tests 'de.mangalib.validation.*' --tests de.mangalib.testsupport.TestDatabaseGuardTest --tests de.mangalib.security.LocalSecurityPolicyTest manualSafetyTest --tests de.mangalibmanual.SeriesEditRegressionTest -x manualBootJar
+```
+
+**348 Fälle im ausgewählten `test`-Task bestanden**: 40 neue M06-Fälle plus 308
+bestehende Unit-/Standalone-MockMvc-/Guard-/Policy-Fälle (einschließlich 44 Guard
+und 61 Policy). **17 bestehende SeriesEditRegressionTest-Fälle bestanden** im
+ausgewählten `manualSafetyTest`; insgesamt 365 Fälle, 0 Fehler/Errors/Skipped.
+Ein vorheriger engerer datenbankfreier Lauf bestand ebenfalls; Wiederholungen
+sind keine zusätzlichen unterschiedlichen Testfälle. Bekannte Deprecation-/CDS-
+Hinweise bleiben. Keine Assertions abgeschwächt. Keine zusätzlichen Dependencies.
+
+`ReadingStatusExtensionTest` verwendet echte Main-/Einkaufscontroller sowie echte
+Reihen-, Band-, Details- und Einkaufsservices mit Repository-Mocks. Es startet
+keinen Spring-Kontext, keine DataSource, keinen Listener und keinen Scraper.
+Geprüft werden vollständige/teilweise/ungelesene sowie widersprüchliche Reihen,
+mehrere neue Bände, beide Kaufzuordnungen, nullable Reihen-/Band-Rereads,
+unveränderte Altbandwerte anhand ihrer IDs (inklusive Preise, Anpassungen, URLs,
+Sonderflags, Zeitwerte und Beziehungen), gleichzeitige Reihenmetadatenänderung,
+freigegebene Anzahlabweichungen, nebenwirkungsfreie Ablehnung unklarer Bestände,
+fehlende Details sowie bestehende Bearbeitungs- und Neuanlage-/Kaufverträge
+(Controllerantworten 200/400/417). Bestehende Standalone-MockMvc-Fälle prüfen die
+unveränderten Sicherheitsfilter und Eingabeverträge; keine Filter deaktiviert.
+`-x manualBootJar` vermeidet Paketierung und Artefaktstarts; nur die ausdrücklich
+ausgewählte datenbankfreie manuelle Testklasse wurde ausgeführt.
+
+### Noch nicht geprüft / bewusste Grenzen
+
+Die Repository-Mock-Identitätsmap ist kein Persistenznachweis. Nach ausdrücklicher
+Freigabe fehlen geschützte Integrationstests mit Flush/Clear und erneutem Laden,
+Nach-Rollback-Vergleich, Daten-/Schemafingerabdrücken sowie die vollständige Suite
+inklusive der 29 MVC-/JSON-Verträge. Die historischen 382 Volltests wurden nicht
+ausgeführt. Es wurde keinerlei DB-Zugriff oder SQL ausgeführt; daher keine neue
+Daten-/Schema-Unverändertheitsmessung behaupten. DOM-/Browsertests nicht ausgeführt;
+Frontend/Requeststruktur unverändert. Historische 164 DOM-Fälle bleiben historisch.
+
+Manuell später prüfen: teilweise/vollständig gelesene eigene synthetische Reihe
+ergänzen, alte Einzelbandwerte und Reihen-Reread nach Reload vergleichen, neue
+Bände ungelesen; beide Kaufzuordnungen, Titel-/Metadatenänderung und anschließende
+Einzelbandbearbeitung. Ausschließlich nach neuer Start-/Schreibfreigabe.
+
+Nicht vorgezogen: T03-Kaufatomarität/Parallelität/Idempotenz, allgemeine stabile
+Bandidentifikation und Reduktion, Preis-/Restcent-Verteilung; S03-Rereaddefinition
+und Lesehistorie; T04, T05, T06 sowie verbleibende T02-Scraper-/SSRF-Arbeiten.
+SQL-NULL-Lesestatus und produktive Altbestandsverträglichkeit bleiben gesondert
+zu prüfen. Keine automatische Reparatur; M06 bleibt bis zur Integration und
+Browserabnahme ein Implementierungszwischenstand.
+
+## M06 – Geschützte Integration und Datenerhaltung (15.10.2026)
+
+Ausdrückliche Freigabe ausschließlich für die vorhandene isolierte automatisierte
+Testumgebung. Branch `codex/m06-reading-status`, Prozesspasswort verfügbar ohne
+Wertausgabe, keine externen Framework-/JVM-Overrides. Unveränderte TestContext-
+Factory und GuardedTestDataSource prüfen vor Initialisierung und jeder Verbindung
+ausschließlich Profil `test`, `localhost:3306/mangalib_test`, `mangalib_test_user`
+und Passwort aus `MANGALIB_TEST_DB_PASSWORD`. DDL nur `validate`, SQL-Initialisierung
+und Migrationen deaktiviert, keine alternativen DataSources/JPA-/Pool-/JNDI-Wege.
+
+### Neue echte Persistenzprüfung
+
+`ReadingStatusIntegrationTest` verwendet `@SpringBootTest`, `@ActiveProfiles("test")`,
+`@Transactional`, `@Rollback` und MockMvc mit den bestehenden Sicherheitsfiltern.
+Kein HTTP-Listener. Ausschließlich neu erzeugte Fixtures aus dem bestehenden
+`PersistenceTestFixtures`-Weg (inklusive DB-/Benutzer-/InnoDB-Prüfung vor INSERT);
+Stammdaten werden nur referenziert. Keine eigene JDBC-Verbindung, kein `@Commit`,
+`REQUIRES_NEW`, asynchroner Schreibweg, Cleanup, Seeding oder Constraint-Eingriff.
+Beide Live-Scraper werden statisch durch fail-fast Mocks gesperrt und auf fehlende
+Aufrufe geprüft. Testtransaktion und Rollback-Markierung bleiben bis zum Ende aktiv.
+
+Nach fachlichen Schreibaktionen ausdrücklich `flush()`, `clear()` und neue
+Repositoryabfragen. Altbandwerte werden in skalaren Snapshots anhand persistierter
+IDs verglichen: Nummer, externer Index, Reihen-FK, Lesestatus, nullable Reread,
+Preis/Anpassung, URLs als Strings ohne URL.equals/DNS, Sonderflag und Zeitwerte.
+Anzahl/Nummern/Beziehungen neuer Bände sowie Reihenaggregate werden separat geprüft.
+
+| Neue Integrationsgruppe | Fälle |
+|---|---:|
+| Direkte Erweiterung: vollständig/teilweise/ungelesen, beide widersprüchlichen Reihenflags, gleichzeitige Reihenmetadaten | 5 |
+| Band-Rereads null/0/2/5 bei Reihen-Reread null/0/3/10000 nach Reload | 4 |
+| Kauf über Index und Titel, jeweils vollständig/teilweise/ungelesen, Kaufmarkierung | 6 |
+| Deklarierte Anzahl 1/3/5 bei zwei tatsächlichen Bänden, Erweiterung auf vier | 3 |
+| Lücken, doppelte Nummern, keine tatsächliche Ergänzung, fehlende Details; jeweils direkt und Kauf, identischer Zustand nach Ablehnung | 8 |
+| Zweite Reihe mit gültigen FKs bleibt unverändert und beeinflusst Aggregation nicht | 1 |
+| Einzelbandstatusänderung und unveränderter Nachbarband nach Reload | 1 |
+| Normale Reihenbearbeitung ohne Erweiterung, beide Lesestatuswerte | 2 |
+| Reihenneuanlage mit Reread 0/3/10000, einschließlich T02-Fix | 3 |
+| Kauf als neue Reihe mit unverändertem 417-/200-Vertrag und ungelesenem Default | 1 |
+| **Summe** | **34** |
+
+Doppelte Bandnummern und fehlende Details waren im bestehenden Schema ohne
+Constraint-Abschaltung darstellbar. Fehlende Details wurden durch eine eigene neue
+Reihe ohne Details angelegt, nicht durch Löschen vorhandener Daten. Die abgewiesenen
+Aktionen vergleichen jeweils die vollständigen Daten-/Schemasnapshots vor/nach
+dem Aufruf und prüfen fehlende Kaufmarkierung. Eine fremde Beziehung innerhalb
+eines per Reihen-FK geladenen Bestands lässt sich mit korrektem Mapping nicht
+künstlich herstellen; die Integration prüft stattdessen die Isolation einer zweiten
+gültigen Reihe. Widersprüchliche Objektbeziehungen/IDs bleiben zusätzlich durch
+die datenbankfreien M06-Fälle abgesichert. SQL-NULL-Lesestatus wurde nicht erzwungen.
+
+`@BeforeTransaction` erfasst vor jedem Fall sämtliche bestehenden Tabellenwerte
+und Schema-Metadaten, `@AfterTransaction` vergleicht nach tatsächlichem Rollback
+erneut denselben Snapshot. Alle 34 Nach-Rollback-Prüfungen bestanden, auch im Volltest.
+Dies ergänzt den globalen Vorher-/Nachher-Vergleich; kein automatisches DELETE-Cleanup.
+
+### Ausgeführte Stufen und genaue Befehle
+
+Vor **jedem** nachstehenden Gradle-Aufruf wurde derselbe Aufruf mit zusätzlichem
+`--dry-run` erfolgreich geprüft. Reihenfolge:
+
+```powershell
+.\gradlew.bat --offline --no-daemon test --tests de.mangalib.testsupport.TestDatabaseGuardTest
+.\gradlew.bat --offline --no-daemon test --tests de.mangalib.DatabaseIntegrityBaselineTest
+.\gradlew.bat --offline --no-daemon test --tests de.mangalib.ReadingStatusIntegrationTest
+.\gradlew.bat --offline --no-daemon test --tests de.mangalib.MvcContractTest --tests de.mangalib.LocalSecurityMvcTest --tests de.mangalib.ServiceTest --tests de.mangalib.PersistenceCompatibilityTest --tests de.mangalib.RepositoryCompatibilityTest --tests de.mangalib.TestDataPreservationTest --tests de.mangalib.TemplateRenderingTest --tests de.mangalib.MangalibApplicationTests --tests de.mangalib.DemoApplicationTests
+.\gradlew.bat --offline --no-daemon clean test
+.\gradlew.bat --offline --no-daemon test --tests de.mangalib.DatabaseIntegrityBaselineTest
+```
+
+| Stufe | Bestanden | Fehler/Errors | Skipped |
+|---|---:|---:|---:|
+| Guard vor erstem DB-Zugriff | 44 | 0 | 0 |
+| Lesender Ausgangsfingerabdruck | 1 | 0 | 0 |
+| Neue M06-Integration gezielt | 34 | 0 | 0 |
+| Bestehende geschützte Regressionen | 73 | 0 | 0 |
+| Vollständiger ungefilterter `clean test` | **456** | **0** | **0** |
+| Gesonderter lesender Abschlussfingerabdruck | 1 | 0 | 0 |
+
+456 unterschiedliche Fälle = historische 382 + 40 M06-Unitfälle + 34 neue
+Integrationsfälle. Wiederholte gezielte Läufe sind keine zusätzlichen Fälle.
+Alle **29 MVC-/JSON-Vertragsfälle** bestanden in der gezielten Stufe und im Volltest,
+keine Assertions abgeschwächt. Die Live-Scraper bleiben durch bestehende Tags/
+Deaktivierung ausgeschlossen, keine unerwarteten Skipped-Fälle. Alle Stufen waren
+im ersten Lauf erfolgreich; keine Anwendungscodekorrektur in diesem Integrationsauftrag.
+Bekannte Hinweise zu veralteten APIs und HotSpot-CDS bleiben. Keine neuen Dependencies.
+
+### Daten-/Schema-Nachweis und verbleibende Abnahme
+
+Unmittelbarer Ausgangs- und Abschlussfingerabdruck identisch (auch gleich dem
+historischen Referenzwert, ohne Herstellung eines erwarteten Zustands):
+
+`ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570`
+
+Zehn Tabellen unverändert; 78 Stammdaten (62 Verlage, 4 Status, 4 Typen, 3 Formate,
+5 Sammelbände). Alle fünf Geschäftstabellen vor/nach leer, keine verbliebenen Fixtures.
+Schema: 75 Spalten, 24 Indexeinträge, 12 Fremdschlüssel und 26 Key-Column-Einträge
+unverändert. AUTO_INCREMENT bewusst ausgenommen und nicht zurückgesetzt.
+Lokale ignorierte Nachweise unter `.gradle/m06-integration-20261015/`:
+`before.xml`, `after.xml`, `targeted-integration.xml`, `regression-results`,
+`clean-test-results`, `clean-test-counts.json` und `clean-test-report/index.html`.
+Der reguläre `build/reports/tests/test`-Bericht zeigt nach dem letzten separaten
+Lauf nur den Abschluss-Baseline-Test; der vollständige Clean-Bericht wurde vorher gesichert.
+
+Kein Zugriff auf `mangalib` oder `mangalib_manual_test`, keine direkte SQL-/JDBC-
+Administration, Schemaänderung, Migration, Bereinigung oder Initialisierung. Kein
+manuelles JAR im Buildverzeichnis vorhanden; kein Anwendungsprozess gestoppt oder
+gestartet, kein Browser, HTTP-Listener oder echter Scraper. Kein `manualSafetyTest`, DOM-Lauf oder
+`assemble` in diesem Auftrag. Die früheren 17 manuellen Mock-Fälle und 164 DOM-Fälle
+bleiben historische separate Nachweise.
+
+**Technisch bereit für eine gesondert freizugebende isolierte manuelle Browserabnahme,
+M06 noch nicht vollständig abgeschlossen.** Dort direkte Erweiterung und Kauf über
+beide Zuordnungen, individuelle alte Lesestatus/Rereads nach Reload, ungelesene neue
+Bände, Reihenaggregation und gleichzeitige Metadatenänderung prüfen. Keine manuelle
+Start-/Schreibfreigabe aus diesem Integrationsauftrag ableiten.
+T03-Kaufatomarität/Parallelität/Idempotenz, allgemeine Bandidentifikation/Reduktion
+und Preis-/Restcentregeln bleiben offen; ebenso S03-Lesehistorie, produktive
+Altbestandsverträglichkeit, SQL-NULL-Lesestatus und andere abgegrenzte Roadmap-Themen.
+
+### M06 – Manuelle Vorbereitung durchgeführt, Browserabnahme blockiert (15.10.2026)
+
+Dieser Folgeauftrag wiederholte keine Java-/DOM-Suite und führte keine Verbindung
+zu `mangalib_test` aus. Die oben dokumentierten 456 erfolgreichen Java-Fälle und
+29 MVC-/JSON-Verträge bleiben der technische Nachweis; die Browserabnahme ist offen.
+
+Vor dem Build den identischen Aufgabenplan geprüft:
+
+```powershell
+.\gradlew.bat --offline --no-daemon assembleManualTest --dry-run
+.\gradlew.bat --offline --no-daemon assembleManualTest
+.\scripts\Start-ManualTest.ps1 -ValidateOnly -JavaPath 'C:/Program Files/Java/jdk-21/bin/java.exe'
+.\scripts\Start-ManualTest.ps1 -JavaPath 'C:/Program Files/Java/jdk-21/bin/java.exe'
+```
+
+Build und ValidateOnly erfolgreich. Die drei betroffenen M06-Klassen im JAR sind
+bytegleich zum aktuellen Kompilat (SHA-256-Vergleich). Bestehende Artefaktprüfung
+bestätigt manuellen Launcher/Double und schließt Standardstartkonfiguration,
+Live-Scraper, Selenium und DevTools aus. Passwortvariable verfügbar und nicht leer,
+keine unsicheren Framework-/JVM-Overrides; keine Secretwerte ausgegeben/gespeichert.
+Eigene PID 1632 und alleiniger Listener `127.0.0.1:18080` eindeutig bestätigt,
+Startlog ausschließlich Profil `manual-test` und manuelle Datenbank.
+
+Kein steuerbarer DOM-Browser-Connector vorhanden. Das vorhandene Computer-Use-
+Werkzeug initialisierte sich und listete Firefox-Fenster, brach beim Fensterzugriff
+jedoch mit **`Computer Use app approval timed out`** ab. Keine Browsernavigation,
+keine Formularbedienung, keine direkten HTTP-Schreibrequests und keine SQL-Schreib-
+abkürzung. Sichtbares Testbanner und fachliche Browserfälle deshalb nicht bestätigt.
+Das ist eine Werkzeugblockade, kein nachgewiesener M06-Anwendungsfehler.
+
+Die ausdrücklich freigegebenen rein lesenden manuellen Snapshots wurden über den
+bereits installierten MySQL-Client mit festen manuellen Zugangsdaten, ohne Options-
+dateien und mit abwesender Login-Datei ausgeführt. Passwort nur im Kindprozess-
+Environment aus `MANGALIB_MANUAL_DB_PASSWORD`, nie in Argumenten/Dateien. Fester Host,
+Port, Benutzer und Datenbank; Identität im Ergebnis geprüft. SQL nur SELECTs in
+einer `READ ONLY`-Transaktion, abschließend ROLLBACK; kein DML/DDL oder Export/Import.
+Der Anwendungsstartweg und seine Guards wurden nicht verändert.
+
+Alle 15 Snapshotabschnitte (zehn Tabellen plus fünf Metadatengruppen) identisch.
+Sechs Reihen, zehn Bände, drei Einkaufspositionen sowie sämtliche Details und
+17 manuelle Stammdatensätze unverändert. Schema: zehn Tabellen, 75 Spalten,
+24 Indexeinträge, zwölf Fremdschlüssel und 26 Key-Column-Einträge. AUTO_INCREMENT
+ausgenommen. SHA-256 der manuellen JSON-Snapshots vor/nach identisch:
+`ce4a6db574a05f4d14052e3a189e6a616da9d627102bf28e7c6ede32ab96ebf1`.
+Dieses manuelle JSON-Prüfformat ist nicht mit dem JUnit-Fingerabdruck gleichzusetzen.
+Lokale ignorierte Nachweise: `.gradle/m06-browser-20261015/before.json`, `after.json`
+und das ausschließlich lesende Hilfsskript `ReadManualSnapshot.ps1` (ohne Secrets).
+
+Eigene Startsession kontrolliert per Ctrl+C beendet; PID 1632 nicht mehr vorhanden,
+Port 18080 frei. Null neue Reihen/Bände/Einkaufspositionen, keine Bereinigung oder
+Änderung vorhandener Daten. Keine Produktiv-/automatisierten DB-Zugriffe, echten
+Scraper, externen Navigationen, neuen Abhängigkeiten oder Git-Abschlussaktionen.
+Fortsetzung der sieben Browsergruppen erst mit funktionierender UI-Appfreigabe;
+keine vollständige M06-Abnahme behaupten. Siehe MANUAL_TESTING.md, Abschnitt 16.
+
+### M06 – Sieben UI-Szenarien erfolgreich abgenommen (15.10.2026)
+
+Die vorangehende Werkzeugblockade ist historisch. Mit dem vorhandenen Codex
+In-app Browser wurden nun sämtliche sieben freigegebenen Szenarien A–G über
+reguläre Formulare/Kaufbuttons erfolgreich ausgeführt und nach vollständigem
+Neuladen geprüft: vollständige/teilweise gelesene Reihe erweitern, unterschiedliche
+Rereads erhalten, Kaufzuordnung über Index/Titel, gleichzeitige Titeländerung und
+nachträgliche Einzelbandmarkierung. **7 erfolgreich, 0 fachliche Fehler, 0 blockiert,
+0 nicht durchgeführt. M06 technisch und manuell abgenommen, noch nicht gemergt.**
+
+Keine Gradle-/JUnit-/DOM-Suite wiederholt; die vorhandenen 456 erfolgreichen Java-
+Tests einschließlich 34 M06-Integrationsfällen und 29 MVC-/JSON-Verträgen bleiben
+der gesonderte Automatennachweis. Kein neuer Build erforderlich: drei betroffene
+M06-Klassen im vorhandenen manuellen JAR bytegleich zum aktuellen Kompilat.
+
+Branch, Passwortverfügbarkeit und unveränderte Schutzkonfiguration geprüft;
+`Start-ManualTest.ps1 -ValidateOnly` erfolgreich. Eigene Instanz PID 90716 nur mit
+`manual-test`, `mangalib_manual_test_user` / `mangalib_manual_test` und einzigem
+Listener `127.0.0.1:18080`. Testbanner im Browser bestätigt. Keine nativen Firefox-
+Aktionen, Autofill-/Live-Scraperaufrufe, externen Navigationen, Ersatz-HTTP-
+Schreibrequests oder SQL-Schreibbefehle. Browserkonsole ohne beobachtete Warnungen/
+Fehler; kein vollständiger Netzwerk-Trace über die Schnittstelle verfügbar.
+
+Neue synthetische Daten mit Präfix `M06_TEST_20261015_IAB_`: vier Reihen (7–10),
+14 Bände (11–24), zwei Einkaufspositionen (5/6, beide gekauft), zugehörige Details.
+B/C/F teilten eine Reihe; G folgte direkt auf A. Keine Bereinigung.
+Lesende READ-ONLY-Snapshots vergleichen alle zuvor vorhandenen Zeilen unverändert:
+sechs Reihen/Details, zehn Bände, drei Einkaufspositionen/Details (1/2/4),
+17 Stammdatensätze und sämtliche Schemaabschnitte (zehn Tabellen, 75 Spalten,
+24 Indexeinträge, zwölf FKs, 26 Key-Column-Einträge). AUTO_INCREMENT ausgenommen.
+Die alten BCF-Bandzeilen 14–16 sind auch zum Zwischensnapshot exakt identisch.
+
+Manuelle JSON-Hashes, durch neue Testdaten erwartungsgemäß unterschiedlich:
+vorher `ce4a6db574a05f4d14052e3a189e6a616da9d627102bf28e7c6ede32ab96ebf1`,
+nachher `edffee9430083f993a55a91865a48dc1804a61837e32f61597de4f1d9923adc7`.
+Keine Verwechslung mit dem automatisierten JUnit-Datenbankfingerabdruck.
+Lokale Nachweise in `.gradle/m06-iab-20261015/` (Git-ignoriert); vorherige Berichte
+erhalten. Szenarientabelle, endgültige Zustände, Screenshot und UI-/SQL-NULL-
+Nachweisgrenzen in MANUAL_TESTING.md, Abschnitt 17.
+
+Eigene Startsession per Ctrl+C beendet; PID 90716 nicht mehr vorhanden, Port 18080
+frei. Kein Zugriff auf `mangalib`/`mangalib_test`, keine Schemaänderung, Migration,
+neue Abhängigkeit oder Anwendungscodeänderung. T03/S03 nicht vorgezogen; keine
+Commits, Pushes oder Merges.

@@ -325,11 +325,30 @@ public class BandService {
         WriteValidation.volumes(anzahlBaende);
         scrapedData = WriteValidation.scrapedData(scrapedData);
         List<Band> existierendeBaende = bandRepository.findByMangaReiheId(mangaReihe.getId());
+        updateOrCreateBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung,
+                scrapedData, anzahlBaendeChanged, existierendeBaende, false);
+    }
+
+    /**
+     * Ergänzt ausschließlich neue Bände hinter einem zuvor geprüften Bestand.
+     * Die Reihenfolge der Repositoryliste wird nicht zur Zuordnung alter Bände verwendet.
+     * Alte Bände werden weder gespeichert noch mit Importdaten überschrieben.
+     */
+    void appendBaende(MangaReihe mangaReihe, Integer anzahlBaende, BigDecimal preisProBand,
+            BigDecimal gesamtpreisAenderung, Map<String, String> scrapedData, List<Band> existing) {
+        WriteValidation.volumes(anzahlBaende);
+        updateOrCreateBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung,
+                WriteValidation.scrapedData(scrapedData), true, existing, true);
+    }
+
+    private void updateOrCreateBaende(MangaReihe mangaReihe, Integer anzahlBaende, BigDecimal preisProBand,
+            BigDecimal gesamtpreisAenderung, Map<String, String> scrapedData, boolean anzahlBaendeChanged,
+            List<Band> existierendeBaende, boolean appendOnly) {
         int existierendeAnzahl = existierendeBaende.size();
         System.out.println("Anzahl existierender Bände: " + existierendeAnzahl);
         System.out.println("Anzahl Bände: " + anzahlBaende);
 
-        for (int i = 1; i <= anzahlBaende; i++) {
+        for (int i = appendOnly ? existierendeAnzahl + 1 : 1; i <= anzahlBaende; i++) {
             Band band;
             if (i <= existierendeAnzahl) {
                 // Aktualisieren eines existierenden Bandes
@@ -349,6 +368,7 @@ public class BandService {
                 band = new Band();
                 band.setMangaReihe(mangaReihe);
                 band.setBandNr(i);
+                band.setIstGelesen(false);
                 System.out.println("Es wurde ein neuer Band erstellt mit der Nr.:" + i);
                 band.setPreis(preisProBand);
             }
@@ -546,7 +566,8 @@ public class BandService {
      * @param mangaDetails Die MangaDetails, deren istGelesen-Status überprüft und
      *                     aktualisiert werden soll.
      */
-    private void updateMangaDetailsIstGelesenStatus(MangaDetails mangaDetails) {
+    // Gemeinsame Aggregation für Einzelbandbearbeitung und reine Erweiterung; keine Bandmutation.
+    void updateMangaDetailsIstGelesenStatus(MangaDetails mangaDetails) {
         List<Band> baende = bandRepository.findByMangaReiheId(mangaDetails.getMangaReihe().getId());
         boolean alleBaendeGelesen = baende.stream().allMatch(Band::isIstGelesen);
 

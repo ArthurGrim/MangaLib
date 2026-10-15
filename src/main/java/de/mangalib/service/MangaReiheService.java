@@ -342,7 +342,15 @@ public class MangaReiheService {
         }
         MangaReihe mangaReihe = mangaReiheOptional.get();
 
-        boolean anzahlBaendeChanged = !mangaReihe.getAnzahlBaende().equals(anzahlBaende);
+        // Tatsächlichen Bestand vor jeder Mutation erfassen. Eine bloße Korrektur
+        // der deklarierten Anzahl ist kein Nachweis für neu anzulegende Bände.
+        List<Band> existing = bandRepository.findByMangaReiheId(mangaReiheId);
+        boolean extension = anzahlBaende > existing.size()
+                || mangaReihe.getAnzahlBaende() != null && anzahlBaende > mangaReihe.getAnzahlBaende();
+        if (extension) {
+            validateExtension(mangaReihe, existing, anzahlBaende);
+        }
+        boolean anzahlBaendeChanged = !Objects.equals(mangaReihe.getAnzahlBaende(), anzahlBaende);
         System.out.println("Update die Stammdaten");
 
         updateMangaReiheAttributes(mangaReihe, mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
@@ -353,8 +361,12 @@ public class MangaReiheService {
 
         System.out.println("Setze Details");
 
-        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl, istGelesen,
-                reread,
+        // Vorgefüllte Formularwerte sind kein Massenänderungsauftrag. Auch ein
+        // abweichend mitgesendeter Wert wird bei Erweiterung nicht auf Altbände verteilt.
+        MangaDetails previousDetails = mangaReihe.getMangaDetails();
+        MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl,
+                extension ? previousDetails.isIstGelesen() : istGelesen,
+                extension ? previousDetails.getReread() : reread,
                 sammelbandTypId,
                 scrapedData);
         mangaDetailsRepository.save(details);
@@ -362,17 +374,26 @@ public class MangaReiheService {
 
         System.out.println("Update den Gelesenstatus");
         // Überprüfen und aktualisieren des istGelesen-Status der Bände
-        updateBaendeIstGelesenStatus(details);
+        if (!extension) {
+            updateBaendeIstGelesenStatus(details);
+        }
 
         System.out.println("Update die Bände");
 
-        bandService.updateOrCreateBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData,
-                anzahlBaendeChanged);
+        if (extension) {
+            bandService.appendBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData, existing);
+        } else {
+            bandService.updateOrCreateBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData,
+                    anzahlBaendeChanged);
+        }
 
         System.out.println("Bände geupdatet");
 
-        if (anzahlBaendeChanged)
+        if (extension) {
+            bandService.updateMangaDetailsIstGelesenStatus(details);
+        } else if (anzahlBaendeChanged) {
             details.setIstGelesen(false);
+        }
 
         mangaDetailsRepository.save(details);
 
@@ -395,11 +416,34 @@ public class MangaReiheService {
         mangaReihe.setAktualisiertAm(Timestamp.valueOf(LocalDateTime.now()));
 
         // Reread-Wert der MangaReihe aktualisieren
-        if (reread != null) {
+        if (!extension && reread != null) {
             updateMangaReiheReread(details, reread);
         }
 
         return Optional.of(mangaReiheRepository.save(mangaReihe));
+    }
+
+    /**
+     * Freigegebener M06-Sonderfall: Nur ein eindeutig identifizierbarer Bestand
+     * mit Nummern 1..N darf um N+1..Z ergänzt werden, unabhängig von der deklarierten
+     * Anzahl. Keine Lückenfüllung, Umnummerierung, Reduktion oder Altbestandsreparatur.
+     * Fehlende Details würden historische false/null-Werte erfinden und sind hier gesperrt.
+     */
+    private static void validateExtension(MangaReihe row, List<Band> existing, int target) {
+        MangaDetails details = row.getMangaDetails();
+        WriteValidation.require(target > existing.size() && details != null
+                && Objects.equals(row.getId(), details.getId())
+                && details.getMangaReihe() != null
+                && Objects.equals(row.getId(), details.getMangaReihe().getId()));
+        Set<Long> ids = new HashSet<>();
+        Set<Integer> numbers = new HashSet<>();
+        for (Band band : existing) {
+            WriteValidation.require(band != null && band.getId() != null && band.getId() > 0
+                    && ids.add(band.getId()) && band.getBandNr() != null
+                    && band.getBandNr() >= 1 && band.getBandNr() <= existing.size()
+                    && numbers.add(band.getBandNr()) && band.getMangaReihe() != null
+                    && Objects.equals(row.getId(), band.getMangaReihe().getId()));
+        }
     }
 
     /**
@@ -445,7 +489,7 @@ public class MangaReiheService {
         if (!mangaReihe.getTitel().equals(titel)) {
             mangaReihe.setTitel(titel);
         }
-        if (!mangaReihe.getAnzahlBaende().equals(anzahlBaende)) {
+        if (!Objects.equals(mangaReihe.getAnzahlBaende(), anzahlBaende)) {
             mangaReihe.setAnzahlBaende(anzahlBaende);
             mangaReihe.setPreisProBand(mangaReihe.getPreisProBand());
         }

@@ -675,3 +675,163 @@ SSRF-/Scraper-/Requestgrößengrenzen bleiben offen; T03, M06 und T06 eigenstän
 Folgearbeiten. Keine Änderung der synthetischen Testdaten, keine Migration oder
 Bereinigung und keine Commits, Pushes oder Merges. Genaue Prüfnachweise und lokale
 Berichtsablage im abschließenden Nachtrag von TESTING.md.
+
+## 16. M06 – Vorbereitung erfolgreich, Browserabnahme technisch blockiert (15.10.2026)
+
+Freigegeben war eine dauerhafte Schreibabnahme ausschließlich an neu anzulegenden
+synthetischen M06-Datensätzen in der vorhandenen manuellen Datenbank. Tatsächlich
+wurden **keine Browser-Schreibaktionen durchgeführt und keine Testdatensätze angelegt**.
+
+### Erfolgreiche Vorbereitung
+
+- Branch `codex/m06-reading-status`, vorhandene Änderungen erhalten.
+- `assembleManualTest --dry-run`, danach Offline-Build erfolgreich. M06-Klassen im
+  Artefakt entsprechen bytegenau dem aktuellen Kompilat. Keine Live-Scraper-/Selenium-
+  oder Standardstartbestandteile; ausschließlich vorhandene synthetische Doubles.
+- Vorhandenes Startskript mit `-ValidateOnly` und Java 21 erfolgreich. Passwort nur
+  aus `MANGALIB_MANUAL_DB_PASSWORD`, keine unsicheren Overrides und keine Secretdateien.
+- Vor Start Port frei, keine vorhandene manuelle Instanz. Eigene PID **1632** mit
+  erwartetem manuellem JAR gestartet; Profil `manual-test`, ausschließlich
+  `127.0.0.1:18080` und `mangalib_manual_test` / `mangalib_manual_test_user` bestätigt.
+  Sichtbares Banner konnte wegen der folgenden UI-Blockade nicht geprüft werden.
+
+### Blockade und tatsächlich nicht ausgeführte Fälle
+
+Der DOM-Browser-Connector stand nicht zur Verfügung. Das vorhandene Windows-
+Computer-Use-Werkzeug konnte Firefox-Fenster auflisten, meldete beim Zugriff auf
+das ausgewählte Fenster jedoch **`Computer Use app approval timed out`**. Keine
+Navigation und keine Eingabe-/Speicheraktion ausgeführt. Die technische UI-Freigabe
+wurde nicht umgangen; keine direkten Schreibrequests oder SQL-Schreibbefehle benutzt.
+
+| Geplantes Browserszenario | Tatsächlicher Stand |
+|---|---|
+| Vollständig gelesene Reihe um ungelesenen Band ergänzen | Nicht durchgeführt |
+| Teilweise gelesene Reihe um zwei Bände ergänzen | Nicht durchgeführt |
+| Unterschiedliche Rereads vor/nach Erweiterung und Reload | Nicht durchgeführt; SQL-NULL nicht künstlich herstellen |
+| Kaufzuordnung über Manga-Index | Nicht durchgeführt |
+| Kaufzuordnung über Titel-Fallback | Nicht durchgeführt |
+| Erweiterung mit gleichzeitiger Reihenmetadatenänderung | Nicht durchgeführt |
+| Nachträgliche Einzelbandmarkierung und Aggregation | Nicht durchgeführt |
+
+Null fachliche Browserfälle ausgeführt; daraus keine Aussage über Erfolg/Fehlschlag
+der M06-Funktionen ableiten. Die 456 automatisierten Tests einschließlich 34 JPA-
+Integrationsfällen bleiben separat dokumentiert und ersetzen die Browserabnahme nicht.
+
+### Lesender Bestandsvergleich und Abschluss
+
+Vor Start und nach der blockierten Bedienung ausschließlich lesende Snapshots mit
+festem manuellem MySQL-Konto und einer READ-ONLY-Transaktion erfasst. Keine produktive
+oder automatisierte Datenbank, kein Schemaexport/-import und kein Seeding. Verglichen
+wurden sämtliche Tabellenzeilen einschließlich Status/Rereads/Beziehungen und alle
+relevanten Schema-Metadaten; nicht nur Zeilenzahlen.
+
+- Reihen-IDs **1–6**, Band-IDs **1–10**, Einkaufspositions-IDs **1, 2, 4** vollständig
+  unverändert, einschließlich der vorhandenen T02-/Eigentümer-Abnahmedaten.
+- 17 Stammdaten unverändert: ein Verlag, vier Status, vier Typen, drei Formate,
+  fünf Sammelbände. Sechs Reihen-/drei Einkaufsdetails unverändert.
+- Zehn Tabellen, 75 Spalten, 24 Indexeinträge, zwölf Fremdschlüssel und 26
+  Key-Column-Einträge unverändert; AUTO_INCREMENT ausgenommen.
+- SHA-256 der manuellen JSON-Snapshots vor/nach identisch:
+  `ce4a6db574a05f4d14052e3a189e6a616da9d627102bf28e7c6ede32ab96ebf1`.
+  Alle 15 Snapshotabschnitte identisch, **null neue Reihen, Bände oder Einkaufspositionen**.
+- Private lokale Nachweise in `.gradle/m06-browser-20261015/` (Git-ignoriert),
+  keine Passwörter enthalten. Das manuelle JSON-Hashformat ist vom JUnit-Format getrennt.
+- Eigene PID 1632 über Ctrl+C der Startsession beendet, Prozessende bestätigt,
+  Port **18080 anschließend frei**. Kein erzwungener Abbruch oder fremder Prozessstop.
+
+**M06 bleibt manuell nicht abgenommen.** Vor einer Fortsetzung muss die technische
+Browser-/Computer-Use-Appfreigabe verfügbar sein. Danach Sicherheitsprüfung und
+aktuellen Ausgangssnapshot erneut durchführen und ausschließlich neue eindeutig
+gekennzeichnete M06-Testdaten verwenden. Keine Wiederherstellung/Bereinigung nötig.
+Keine M06-Codekorrektur in diesem Auftrag; T03/S03 und andere Folgearbeiten unverändert.
+
+## 17. M06 – Browserabnahme mit integriertem Browser erfolgreich (15.10.2026)
+
+**M06 technisch und manuell abgenommen; noch nicht nach `main` gemergt.** Die
+Werkzeugblockade aus Abschnitt 16 bleibt historisch erhalten. Die spätere native
+Firefox-Prüfung wurde zusätzlich wegen fehlender URL-Policy-Unterstützung beendet.
+Für diesen Abnahmelauf wurde ausschließlich der vorhandene Codex In-app Browser
+verwendet; keine native Firefox-Steuerung und keine Sicherheitsausnahme.
+
+### Startschutz und Nachweisgrenzen
+
+Branch `codex/m06-reading-status` bestätigt, vorhandene Änderungen erhalten. Das
+vorhandene manuelle JAR war aktuell: die drei betroffenen M06-Klassen bytegleich
+zum Kompilat, deshalb kein erneuter Build. Passwortvariable vorhanden, keine
+unsicheren Framework-/JVM-Overrides; keine Secretwerte ausgegeben oder gespeichert.
+`Start-ManualTest.ps1 -ValidateOnly` mit Java 21 erfolgreich. Anschließend über
+dasselbe Skript eigene PID **90716** gestartet: ausschließlich Profil `manual-test`,
+manuelle Datenbank/Konto und einziger Listener `127.0.0.1:18080` bestätigt.
+
+`http://127.0.0.1:18080/home` erreichbar, Testbanner sichtbar, sechs bestehende
+Reihen dargestellt. Ausschließlich reguläre UI-Aktionen mit unverändertem Session-/
+CSRF-Schutz; keine direkten HTTP-Schreibrequests oder SQL-Schreibbefehle.
+Jeder Speicher-/Kaufvorgang einmalig ausgelöst und anschließend neu geladen.
+Keine Autofill-/Scraperaktionen oder externen Navigationen. Geprüfte Bild-/Script-/
+Stylesheet-Attribute waren lokal, bestehende manuelle CSP sperrt externe Bilder
+und fremde Fetch-Ziele. Keine Warnungen/Fehler in der abgefragten Browserkonsole.
+Ein vollständiger Netzwerk-Mitschnitt war über diese Browserschnittstelle nicht
+verfügbar; die Beobachtung ersetzt keinen paketweisen Netzwerk-Nachweis.
+
+### Tatsächlich ausgeführte Szenarien
+
+Gemeinsamer Präfix `M06_TEST_20261015_IAB_`; G = gelesen, U = ungelesen.
+B, C und F verwenden bewusst dieselbe neue Reihe zur Begrenzung der Testdaten.
+
+| Fall | Neue Testdaten / UI-Aktion | Nach vollständigem Neuladen bestätigt | Ergebnis |
+|---|---|---|---|
+| A | Reihe 7 (`A`), zwei gelesen angelegte Bände; im Reihendialog auf drei erweitern | Alte IDs 11/12 bleiben G; neuer Band 13 U; Reihencheckbox aus | Erfolgreich durchgeführt |
+| B | Reihe 8 (`BCF`), drei Bände individuell auf G/U/G setzen; auf fünf erweitern | IDs 14/15/16 unverändert G/U/G; 17/18 U; Reihe nicht vollständig gelesen | Erfolgreich durchgeführt |
+| C | An derselben Reihe individuelle Rereads 0/2/5 über Banddialoge setzen; erweitern | Alte Rereads 0/2/5 und unmittelbar vor Erweiterung gespeicherter Reihen-Reread 0 erhalten; neue Banddialoge zeigen 0 | Erfolgreich durchgeführt |
+| D | Reihe 9 (`D_INDEX`), Index 96001501, Band 19 G/Reread 2 und 20 U; neue Position 5 mit demselben Index kaufen | Reihe 9 auf drei Bände erweitert, 19 G/Reread 2 und 20 U erhalten; 21 U; Position gekauft; keine doppelte Reihe/Bände | Erfolgreich durchgeführt |
+| E | Reihe 10 (`E_TITLE`), Index 96001502, Band 22 G/Reread 3 und 23 U; Position 6 mit gleichem Titel, aber Index 96001503 kaufen | Titel-Fallback erweitert Reihe 10; 22 G/Reread 3 und 23 U erhalten; 24 U; Position gekauft; keine neue Dublettenreihe | Erfolgreich durchgeführt |
+| F | Gleichzeitig mit B/C Titel in `M06_TEST_20261015_IAB_BCF_ÄÖÜ geändert` ändern | Neuer Titel und fünf Bände gespeichert; alte Bandzeilen 14–16 gegenüber Zwischensnapshot exakt unverändert | Erfolgreich durchgeführt |
+| G | Nach A ausschließlich neuen Band 13 im Banddialog gelesen markieren | 11/12 weiterhin G, 13 nun G; Reihencheckbox wird wahr | Erfolgreich durchgeführt |
+
+**7 erfolgreich, 0 fachlich fehlgeschlagen, 0 technisch blockiert, 0 nicht durchgeführt.**
+Bei bestehender Kaufzuordnung führt bereits der Einkaufswagen-Klick die Übernahme
+aus; ein zusätzlicher Statusdialog wird regulär nur für eine neue Reihe benötigt.
+Kein Kauf wurde wiederholt. G wurde direkt nach A geprüft; der Endzustand von A
+ist deshalb G/G/G und nicht mehr der zuvor nachgewiesene Zwischenzustand G/G/U.
+
+Reread-Grenze: Die vorbereitenden Einzelbandänderungen aggregierten den zunächst
+bei Anlage eingegebenen Reihen-Reread 2 regulär auf 0. Maßgeblich für C ist der
+unmittelbar vor der Erweiterung erneut im Reihendialog beobachtete Wert 0.
+Die Erweiterung selbst verändert ihn nicht. Neue Band-Rereads können gespeichert
+SQL-NULL sein und werden im Dialog als 0 angezeigt; keine SQL-NULL-Zustände erzeugt
+oder normalisiert. Die getrennten JPA-Tests decken diese Unterscheidung ab.
+
+### Bestands- und Schemaschutz
+
+Ausschließlich lesende Snapshots mit dem bereits geprüften Hilfsskript und festem
+manuellem Konto in READ-ONLY-Transaktionen erstellt. Sämtliche vorher vorhandenen
+Datensätze anhand ID und vollständiger Zeilenwerte verglichen:
+
+- Reihen 1–6, Details 1–6, Bände 1–10 und Einkaufspositionen/Details 1/2/4 unverändert.
+- Alle 17 Stammdatensätze unverändert.
+- Zehn Tabellen, 75 Spalten, 24 Indexeinträge, zwölf Fremdschlüssel und 26
+  Key-Column-Einträge unverändert; AUTO_INCREMENT weiterhin ausgenommen.
+- Ausschließlich neu: vier Reihen/Details (7–10), 14 Bände (11–24), zwei
+  Einkaufspositionen/Details (5/6). Beide neuen Positionen als gekauft gespeichert.
+- Endbestand: zehn Reihen, 24 Bände und fünf Einkaufspositionen. Alle neuen Daten
+  bleiben bewusst erhalten, kein Cleanup/Reset/Seeding.
+
+Manuelle JSON-Snapshot-Hashes (wegen ausdrücklich freigegebener neuer Daten
+erwartungsgemäß verschieden, kein JUnit-Hashformat):
+
+```text
+vorher: ce4a6db574a05f4d14052e3a189e6a616da9d627102bf28e7c6ede32ab96ebf1
+nachher: edffee9430083f993a55a91865a48dc1804a61837e32f61597de4f1d9923adc7
+```
+
+Lokale ignorierte Nachweise: `.gradle/m06-iab-20261015/`, mit `before.json`,
+`bcf-before-extension.json`, `d-after-purchase.json`, `after.json`, `comparison.txt`
+und `bcf-final.png`. Vorherige Nachweise in Abschnitt 16 nicht überschrieben.
+
+Eigene PID 90716 über Ctrl+C der ursprünglichen Startsession beendet. Prozessende
+und freier Port 18080 bestätigt; kein erzwungener Stop oder Neustart. Keine
+Verbindungen zur produktiven/automatisierten Datenbank, keine Migrationen oder
+Schemaänderungen, keine neuen Abhängigkeiten und keine Codekorrekturen in diesem
+Auftrag. Die 456 erfolgreichen Java-Tests wurden nicht erneut ausgeführt.
+T03 (unter anderem Kaufatomarität/Identifikation/Reduktion) und S03
+(Lesedatum/Reread-Historie) bleiben eigenständige Folgearbeiten.
