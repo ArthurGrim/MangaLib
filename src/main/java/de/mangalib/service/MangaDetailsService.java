@@ -179,10 +179,7 @@ public class MangaDetailsService {
             boolean istGelesen, Integer reread, Long sammelbandTypId,
             Map<String, String> scrapedData) {
         MangaDetails details = mangaReihe.getMangaDetails();
-        if (details == null) {
-            details = new MangaDetails();
-            details.setMangaReihe(mangaReihe);
-        }
+        de.mangalib.validation.WriteValidation.require(details != null);
         if (anilistUrl != null) {
             if (!anilistUrl.equals(details.getAnilistUrl() != null ? details.getAnilistUrl() : "")) {
                 details.setAnilistUrl(anilistUrl);
@@ -197,7 +194,7 @@ public class MangaDetailsService {
             details.setIstGelesen(istGelesen);
         }
         if(reread != null){
-            if (reread.equals(details.getReread() != null ? details.getReread() : 0)) {
+            if (!Objects.equals(reread, details.getReread())) {
                 details.setReread(reread);
             }
         }
@@ -263,6 +260,13 @@ public class MangaDetailsService {
         }
 
         return details;
+    }
+
+    /** Vorabprüfung vor Änderungen an der Reihe; fehlende Referenz nicht als NULL übernehmen. */
+    public void validateSammelbandReference(MangaDetails details, Long requestedId) {
+        if (requestedId != null && !Objects.equals(requestedId, details.getSammelbaende().getId())) {
+            de.mangalib.validation.WriteValidation.require(sammelbaendeService.findById(requestedId).isPresent());
+        }
     }
 
 }

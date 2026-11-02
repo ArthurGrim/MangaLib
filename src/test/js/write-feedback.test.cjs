@@ -66,6 +66,8 @@ async function setup(t, script = 'popup_add_reihe.js', config = {}) {
 }
 
 const failures = [
+  { name: '413 Größenbegrenzung', status: 413, message: /technischen Größenbegrenzungen.*Seite.*neu/, parsed: 0, blocked: true },
+  { name: '415 Anfrageformat', status: 415, message: /Anfrageformat wird nicht unterstützt/, parsed: 0, blocked: false },
   { name: '400 JSON', status: 400, message: /ungültig/, parsed: 0, blocked: false },
   { name: '400 Text', status: 400, type: 'text/plain', message: /ungültig/, parsed: 0, blocked: false },
   { name: '403 HTML', status: 403, type: 'text/html', message: /Sicherheitsgründen.*Seite neu/, parsed: 0, blocked: true },

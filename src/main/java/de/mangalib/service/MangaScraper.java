@@ -21,7 +21,7 @@ public class MangaScraper {
 
     public static Map<String, String> scrapeMangaData(String mangaIndex) {
         String baseUrl = "https://www.manga-passion.de";
-        String url = baseUrl + "/editions/" + mangaIndex;
+        String url = ScraperDestinationPolicy.series(mangaIndex).toASCIIString();
 
         System.out.println("Scraping URL: " + url);
 
@@ -250,8 +250,7 @@ public class MangaScraper {
             }
 
         } catch (Exception e) {
-            System.out.println("FEHLER: Konnte die Webseite nicht korrekt laden!");
-            e.printStackTrace();
+            throw new IllegalStateException("Reihenimport fehlgeschlagen.",e);
         } finally {
             try {
                 driver.quit();
@@ -272,13 +271,7 @@ public class MangaScraper {
     }
 
     private static WebDriver setupWebDriver() {
-        // ggf. Pfad anpassen
-        System.setProperty("webdriver.gecko.driver", "E:\\Programme\\Test\\geckodriver.exe");
-
-        FirefoxOptions options = new FirefoxOptions();
-        options.addArguments("--headless");
-
-        return new FirefoxDriver(options);
+        return ScraperBrowser.open();
     }
 
     public static void main(String[] args) {

@@ -23,7 +23,7 @@ public class BandScraper {
 
     public static Map<String, String> scrapeBandData(String bandIndex) {
         Map<String, String> bandData = new HashMap<>();
-        String fullUrl = BASE_URL + "/volumes/" + bandIndex;
+        String fullUrl = ScraperDestinationPolicy.volume(bandIndex).toASCIIString();
 
         System.out.println("Scraping Band-URL: " + fullUrl);
 
@@ -101,8 +101,7 @@ public class BandScraper {
             }
 
         } catch (Exception e) {
-            System.out.println("Fehler beim Scrapen des Bandes: " + e.getMessage());
-            e.printStackTrace();
+            throw new IllegalStateException("Bandimport fehlgeschlagen.",e);
         } finally {
             try { driver.quit(); } catch (Exception ignored) {}
         }
@@ -241,10 +240,7 @@ public class BandScraper {
     }
 
     private static WebDriver setupWebDriver() {
-        System.setProperty("webdriver.gecko.driver", "E:\\Programme\\Test\\geckodriver.exe");
-        FirefoxOptions options = new FirefoxOptions();
-        options.addArguments("--headless");
-        return new FirefoxDriver(options);
+        return ScraperBrowser.open();
     }
 
     public static void main(String[] args) {

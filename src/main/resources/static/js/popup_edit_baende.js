@@ -1,26 +1,36 @@
+let bandOriginalUrls = {};
+let bandRereadUnknown = false;
+let bandSpecialUnknown = false;
+let bandSpecialEdited = false;
+document.getElementById("ist_spezial").addEventListener("change", () => { bandSpecialEdited = true; });
+
 function editBand(bandId) {
   console.log("Editing band with ID:", bandId);
   fetch(`/getBand/${bandId}`) // Korrigieren Sie den Pfad hier
-    .then((response) => response.json())
+    .then((response) => {
+      if (response.ok === false) throw new Error("Bestand nicht verfügbar");
+      return response.json();
+    })
     .then((data) => {
+      bandOriginalUrls = { image: data.bildUrl ?? "", mp: data.mpUrl ?? "" };
+      bandRereadUnknown = data.rereadNull === true;
+      bandSpecialUnknown = data.specialNull === true;
+      bandSpecialEdited = false;
       console.log("Fetched data for band:", data);
       mangaLibSetCover(document.getElementById("editBandCoverImage"), data.bildUrl);
       document.getElementById("manga_reihe_id").textContent = data.id;
       document.getElementById("band_nr").textContent = data.bandNr;
       document.getElementById("band_index").value = data.bandIndex;
-      document.getElementById("preis").value = parseFloat(data.preis)
-        .toFixed(2)
-        .replace(".", ",");
-      document.getElementById("aenderung_preis").value = parseFloat(
-        data.aenderungPreis
-      )
-        .toFixed(2)
-        .replace(".", ",");
+      const money = value => value == null ? "" : Number(value).toFixed(2).replace(".", ",");
+      document.getElementById("preis").value = money(data.preis);
+      document.getElementById("aenderung_preis").value = money(data.aenderungPreis);
       document.getElementById("bild_url").value = data.bildUrl;
       document.getElementById("mp_url").value = data.mpUrl;
       document.getElementById("ist_gelesen").checked = data.istGelesen;
       document.getElementById("ist_spezial").checked = data.istSpecial;
-      document.getElementById("reread_band").value = data.reread;
+      document.getElementById("ist_spezial").indeterminate = bandSpecialUnknown;
+      document.getElementById("reread_band").value = bandRereadUnknown ? "" : data.reread;
+      document.getElementById("reread_band").placeholder = "Unbekannt";
 
       const titleLabel = document.querySelector(
         "#editBaendePopupContainer .title-label"
@@ -31,7 +41,12 @@ function editBand(bandId) {
       document.getElementById("editBaendePopupContainer").style.display =
         "flex";
     })
-    .catch((error) => console.error("Error fetching band data:", error));
+    .catch(() => {
+      const popup = document.getElementById("editBaendePopupContainer");
+      MangaLibFeedback.show(popup, "Bestand konnte nicht geladen werden. Bitte Seite neu laden.");
+      popup.style.display = "flex";
+      popup.querySelector(".save-button-edit").disabled = true;
+    });
 }
 
 function saveBand() {
@@ -54,15 +69,20 @@ function saveBand() {
   }
 
   if (
-    !preisElement.value.trim() ||
-    isNaN(parseFloat(preisElement.value.replace(",", ".")))
+    preisElement.value.trim() &&
+    !Number.isFinite(Number(preisElement.value.replace(",", ".")))
   ) {
     MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Preis muss eine gültige Zahl sein.");
+    return;
+  }
+  if (aenderungPreisElement.value.trim() && !Number.isFinite(Number(aenderungPreisElement.value.replace(",", ".")))) {
+    MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Änderung Preis muss eine gültige Zahl sein.");
     return;
   }
 
   if (
     bildUrlElement.value.trim() &&
+    bildUrlElement.value !== bandOriginalUrls.image &&
     !bildUrlElement.value.match(/^https?:\/\/.+$/)
   ) {
     MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Bitte geben Sie eine gültige Bild-URL ein.");
@@ -71,6 +91,7 @@ function saveBand() {
 
   if (
     mpUrlElement.value.trim() &&
+    mpUrlElement.value !== bandOriginalUrls.mp &&
     !mpUrlElement.value.match(/^https?:\/\/.+$/)
   ) {
     MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Bitte geben Sie eine gültige MP-URL ein.");
@@ -88,13 +109,13 @@ function saveBand() {
     id: bandIdElement.textContent,
     bandNr: bandNrElement.textContent,
     bandIndex: bandIndexElement.value,
-    preis: parseFloat(preis).toFixed(2), // Formatierung auf zwei Dezimalstellen
-    aenderungPreis: parseFloat(aenderungPreis).toFixed(2), // Formatierung auf zwei Dezimalstellen
+    preis: preis ? Number(preis).toFixed(2) : null,
+    aenderungPreis: aenderungPreis ? Number(aenderungPreis).toFixed(2) : null,
     bildUrl: bildUrlElement.value,
     mpUrl: mpUrlElement.value,
     istGelesen: istGelesenElement.checked,
-    istSpecial: istSpezialElement.checked,
-    reread: reread.value,
+    istSpecial: bandSpecialUnknown && !bandSpecialEdited ? null : istSpezialElement.checked,
+    reread: reread.value || (bandRereadUnknown ? null : "0"),
   };
 
   MangaLibFeedback.request("/editBand", {

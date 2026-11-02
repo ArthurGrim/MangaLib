@@ -35,6 +35,8 @@ const MangaLibFeedback = (() => {
     400: "Einige Angaben sind ungültig. Bitte überprüfe deine Eingaben.",
     403: "Die Anfrage wurde aus Sicherheitsgründen abgewiesen. Bitte lade die Seite neu, bevor du es erneut versuchst.",
     404: "Der gewünschte Eintrag wurde nicht gefunden.",
+    413: "Die Anfrage überschreitet die technischen Größenbegrenzungen. Bitte reduziere die Importdaten und lade die Seite vor einem erneuten Versuch neu.",
+    415: "Das Anfrageformat wird nicht unterstützt. Bitte überprüfe deine Eingaben.",
     500: "Beim Verarbeiten ist ein Fehler aufgetreten. Bitte versuche es später erneut.",
     unknown: "Die Aktion konnte nicht eindeutig bestätigt werden. Bitte überprüfe den gespeicherten Stand, bevor du sie erneut ausführst."
   };
@@ -110,13 +112,21 @@ function mangaLibCoverPlaceholder() {
 }
 function mangaLibCoverUrl(value) {
   const fallback = mangaLibCoverPlaceholder();
-  if (!value) return fallback;
+  if (typeof value !== "string" || !value) return fallback;
+  // Nur diese eigenen statischen Platzhalter dürfen relative Pfade sein.
+  if (value === "/svg/filler_img2.png" || value === "/manual-test/cover.svg") return value;
+  const text = value.trim();
+  if (!/^https?:\/\//i.test(text) || /[\u0000-\u0020\u007f\\]/.test(text)) return fallback;
+  let url;
+  try {
+    url = new URL(text);
+    if (!["http:", "https:"].includes(url.protocol) || !url.hostname || url.username || url.password) return fallback;
+  } catch { return fallback; }
   // Die manuelle CSP erlaubt nur lokale Bilder. Gespeicherte URLs nicht umschreiben.
   if (fallback === "/manual-test/cover.svg") {
-    try { if (new URL(value, location.href).origin !== location.origin) return fallback; }
-    catch { return fallback; }
+    if (url.origin !== location.origin) return fallback;
   }
-  return value;
+  return url.href;
 }
 function mangaLibSetCover(image, value) {
   image.onerror = () => { image.onerror = null; image.src = mangaLibCoverPlaceholder(); };

@@ -215,6 +215,7 @@ class ReadingStatusExtensionTest {
     @ParameterizedTest @ValueSource(booleans = {true, false})
     void normalEditWithoutAdditionalVolumesKeepsExistingExplicitBulkBehavior(boolean read) {
         var input = request(2); input.put("istGelesen", read); input.put("reread", 3);
+        input.put("applyReadToVolumes", true); input.put("applyRereadToVolumes", true);
         assertEquals(200, main.addMangaReihe(input).getStatusCode().value());
         assertEquals(2, stored.size()); assertEquals(read, details.isIstGelesen());
         assertTrue(stored.stream().allMatch(b -> b.isIstGelesen() == read));

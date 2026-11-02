@@ -53,6 +53,11 @@ public final class WriteValidation {
                 && value.abs().compareTo(MONEY_LIMIT) < 0);
     }
 
+    /** Numerischer Vergleich ohne Änderung von gespeicherter Scale oder NULL-Semantik. */
+    public static boolean sameMoney(BigDecimal first, BigDecimal second) {
+        return first == null ? second == null : second != null && first.compareTo(second) == 0;
+    }
+
     /** URI-Parsing löst keine Hosts auf. Leere optionale Werte bleiben unverändert. */
     public static String optionalUrl(String value) {
         if (value == null || value.isEmpty()) return value;
@@ -86,6 +91,30 @@ public final class WriteValidation {
         } catch (java.net.URISyntaxException | java.net.MalformedURLException e) {
             throw new IllegalArgumentException("Ungültige Eingabe.");
         }
+    }
+
+    /** Altwerte nur bei exakter Übereinstimmung mit dem serverseitigen Bestand erhalten.
+     * Der Lieferant wird erst bei unzulässiger neuer Syntax benötigt; kein DNS/HTTP.
+     */
+    public static String editedUrl(String value, java.util.function.Supplier<String> stored) {
+        try { return optionalUrl(value); }
+        catch (IllegalArgumentException invalid) {
+            if (Objects.equals(value, stored.get())) return value;
+            throw invalid;
+        }
+    }
+
+    /** Inkonsistente Beziehungen vor jeder Mutation abweisen, niemals Ersatzdaten erzeugen. */
+    public static void editableRelations(de.mangalib.entity.MangaReihe row) {
+        require(row != null && row.getStatus() != null && row.getVerlag() != null
+                && row.getTyp() != null && row.getFormat() != null
+                && row.getMangaDetails() != null && row.getMangaDetails().getSammelbaende() != null
+                && row.getStatus().getStatusId() != null && row.getVerlag().getVerlagId() != null
+                && row.getTyp().getTypId() != null && row.getFormat().getFormatId() != null
+                && row.getId() != null && Objects.equals(row.getId(), row.getMangaDetails().getId())
+                && row.getMangaDetails().getMangaReihe() != null
+                && Objects.equals(row.getId(), row.getMangaDetails().getMangaReihe().getId())
+                && row.getMangaDetails().getSammelbaende().getId() != null);
     }
 
     /** Absichtlich syntaktisch: URL.equals/hashCode können DNS-Auflösung auslösen. */

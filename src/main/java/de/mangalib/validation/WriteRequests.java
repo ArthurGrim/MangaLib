@@ -14,10 +14,19 @@ public final class WriteRequests {
             Boolean outOfPrint, Boolean adjustedPrice, String anilist, String cover, Long omnibus,
             BigDecimal adjustment, Map<String, String> scraped, boolean edit) {
         public static Series from(Map<String, Object> data) {
+            return from(data, () -> null);
+        }
+        public static Series from(Map<String, Object> data,
+                java.util.function.Supplier<de.mangalib.entity.MangaReihe> stored) {
             Map<String, String> scraped = WriteValidation.scrapedData(data.get("scrapedData"));
             String editValue = scraped.get("istEdit");
             WriteValidation.require(editValue == null || editValue.equals("true") || editValue.equals("false"));
             boolean edit = Boolean.parseBoolean(editValue);
+            for (String option : java.util.List.of("applyReadToVolumes", "applyRereadToVolumes", "rereadEdited")) {
+                scraped.remove(option); // Externe Importdaten sind niemals ein Massenänderungsauftrag.
+                Boolean requested = bool(data, option, false);
+                if (Boolean.TRUE.equals(requested)) scraped.put(option, "true");
+            }
             Long id = stringId(data, "mangaReiheId", edit);
             Integer index = integer(data, "mangaIndex", false);
             WriteValidation.index(index);
@@ -32,8 +41,14 @@ public final class WriteRequests {
                     stringId(data, "typId", true), stringId(data, "formatId", true), title, count,
                     absentZeroMoney(data, "preisProBand"), read, reread == null ? 0 : reread,
                     bool(data, "istVergriffen", false), bool(data, "istEbayPreis", false),
-                    WriteValidation.optionalUrl(string(data, "anilistUrl", false)),
-                    WriteValidation.optionalUrl(string(data, "coverUrl", false)),
+                    WriteValidation.editedUrl(string(data, "anilistUrl", false), () -> {
+                        var row = edit ? stored.get() : null;
+                        return row == null || row.getMangaDetails() == null ? null : row.getMangaDetails().getAnilistUrl();
+                    }),
+                    WriteValidation.editedUrl(string(data, "coverUrl", false), () -> {
+                        var row = edit ? stored.get() : null;
+                        return row == null || row.getMangaDetails() == null ? null : row.getMangaDetails().getCoverUrl();
+                    }),
                     stringId(data, "sammelbandTypId", false), absentZeroMoney(data, "gesamtpreisAenderung"),
                     scraped, edit);
         }
@@ -60,6 +75,9 @@ public final class WriteRequests {
     }
 
     public static Band band(Map<String, Object> data) {
+        return band(data, () -> null);
+    }
+    public static Band band(Map<String, Object> data, java.util.function.Supplier<Band> stored) {
         Band band = new Band();
         band.setId(stringId(data, "id", true));
         band.setBandNr(positiveInt(string(data, "bandNr", true)));
@@ -67,14 +85,28 @@ public final class WriteRequests {
         band.setBandIndex(index == null || index.isEmpty() ? null : positiveInt(index));
         band.setPreis(optionalMoney(data, "preis"));
         band.setAenderungPreis(optionalMoney(data, "aenderungPreis"));
-        band.setBildUrl(WriteValidation.toUrl(string(data, "bildUrl", false)));
-        band.setMpUrl(WriteValidation.toUrl(string(data, "mpUrl", false)));
+        band.setBildUrl(editedBandUrl(string(data, "bildUrl", false), stored, true));
+        band.setMpUrl(editedBandUrl(string(data, "mpUrl", false), stored, false));
         String reread = string(data, "reread", false);
-        band.setReread(reread == null || reread.isEmpty() ? 0 : Integer.valueOf(reread));
+        band.setReread(data.containsKey("reread") && data.get("reread") == null ? null
+                : reread == null || reread.isEmpty() ? 0 : Integer.valueOf(reread));
         WriteValidation.reread(band.getReread());
         band.setIstGelesen(bool(data, "istGelesen", true));
         band.setIstSpecial(bool(data, "istSpecial", false));
         return band;
+    }
+
+    private static java.net.URL editedBandUrl(String value, java.util.function.Supplier<Band> stored, boolean image) {
+        WriteValidation.editedUrl(value, () -> {
+            Band old = stored.get();
+            java.net.URL url = old == null ? null : image ? old.getBildUrl() : old.getMpUrl();
+            return url == null ? null : url.toExternalForm();
+        });
+        if (value == null || value.isEmpty()) return null;
+        try { return new java.net.URI(value).toURL(); }
+        catch (java.net.URISyntaxException | java.net.MalformedURLException invalid) {
+            throw new IllegalArgumentException("Ungültige Eingabe.");
+        }
     }
 
     public static String string(Map<String, ?> data, String name, boolean required) {

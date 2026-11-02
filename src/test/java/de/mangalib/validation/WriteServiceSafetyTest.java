@@ -121,6 +121,12 @@ class WriteServiceSafetyTest {
         var newUrl = java.net.URL.of(new java.net.URI("https://example.invalid/b"), handler);
         var row = new MangaReihe(); row.setId(1L); row.setAnzahlBaende(1); row.setAenderungGesamtpreis(BigDecimal.ZERO);
         var detail = new de.mangalib.entity.MangaDetails(); detail.setMangaReihe(row); row.setMangaDetails(detail);
+        var status = new de.mangalib.entity.Status(); status.setStatusId(1L); row.setStatus(status);
+        var publisher = new de.mangalib.entity.Verlag(); publisher.setVerlagId(1L); row.setVerlag(publisher);
+        var type = new de.mangalib.entity.Typ(); type.setTypId(1L); row.setTyp(type);
+        var format = new de.mangalib.entity.Format(); format.setFormatId(1L); row.setFormat(format);
+        var omnibus = new de.mangalib.entity.Sammelband(); omnibus.setId(1L); detail.setSammelbaende(omnibus);
+        detail.setId(1L);
         var stored = new Band(); stored.setId(1L); stored.setMangaReihe(row); stored.setPreis(BigDecimal.ONE);
         stored.setAenderungPreis(BigDecimal.ZERO); stored.setBildUrl(oldUrl); stored.setMpUrl(oldUrl);
         var input = new Band(); input.setId(1L); input.setBildUrl(sameUrl); input.setMpUrl(newUrl);

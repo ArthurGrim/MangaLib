@@ -161,7 +161,8 @@ class ReadingStatusIntegrationTest {
         r.getMangaDetails().setIstGelesen(mode.equals("full") || mode.equals("inconsistentTrue"));
         r.getMangaDetails().setReread(3); flushClear(); var before = state();
         int target = mode.equals("partial") ? 5 : 3;
-        postJson("/addMangaReihe", edit(target), 200);
+        var input = edit(target); input.put("applyReadToVolumes", true); input.put("applyRereadToVolumes", true);
+        postJson("/addMangaReihe", input, 200);
         assertExtension(before, target, 3);
         assertEquals("M06 geändert " + r.getId(), row().getTitel());
         assertEquals("https://example.invalid/new-metadata", row().getMangaDetails().getAnilistUrl());
@@ -246,6 +247,8 @@ class ReadingStatusIntegrationTest {
     @ParameterizedTest @ValueSource(booleans = {true, false})
     void ordinarySeriesEditRetainsExistingReadSelection(boolean read) throws Exception {
         var input = edit(2); input.put("istGelesen", read); input.put("reread", 3);
+        // Die freigegebene UI-Semantik verlangt jetzt einen ausdrücklichen Massenauftrag.
+        input.put("applyReadToVolumes", true); input.put("applyRereadToVolumes", true);
         var ids = state().keySet(); postJson("/addMangaReihe", input, 200); flushClear();
         assertEquals(ids, state().keySet()); assertEquals(read, row().getMangaDetails().isIstGelesen());
         assertTrue(volumes().stream().allMatch(b -> b.isIstGelesen() == read)); assertEquals(3, row().getMangaDetails().getReread());

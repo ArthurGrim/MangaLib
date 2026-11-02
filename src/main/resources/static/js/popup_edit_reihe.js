@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let initialFlags = {};
   let initialOptionalUrls = {};
   const changedFlags = new Set();
+  document.getElementById("reread-edit").addEventListener("input", () => changedFlags.add("reread"));
   for (const [field, id] of [["istVergriffen", "istvergriffen-edit"], ["istEbayPreis", "istebaypreis-edit"]]) {
     document.getElementById(id).addEventListener("change", () => changedFlags.add(field));
   }
@@ -103,11 +104,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Senden einer Anfrage an den Server, um die Daten der MangaReihe zu erhalten
     fetch(`/getMangaReiheData/${mangaReiheId}`)
-      .then((response) => response.json())
+      .then((response) => {
+        if (response.ok === false) throw new Error("Bestand nicht verfügbar");
+        return response.json();
+      })
       .then((data) => {
         initialFlags = { istVergriffen: data.istVergriffen ?? null, istEbayPreis: data.istEbayPreis ?? null };
         initialOptionalUrls = { anilistUrl: data.anilistUrl ?? null, coverUrl: data.coverUrl ?? null };
         changedFlags.clear();
+        document.getElementById("apply-read-edit").checked = false;
+        document.getElementById("apply-reread-edit").checked = false;
         console.log("Empfangene Daten:", data);
         // Setzen der Werte in die Formularfelder
         document.getElementById("id-edit").textContent = data.id;
@@ -128,7 +134,8 @@ document.addEventListener("DOMContentLoaded", function () {
           data.anilistUrl ?? "";
         document.getElementById("coverUrl-edit").value = data.coverUrl ?? "";
         document.getElementById("istgelesen-edit").checked = data.istGelesen;
-        document.getElementById("reread-edit").value = data.reread ?? 0;
+        document.getElementById("reread-edit").value = data.rereadNull === true ? "" : data.reread ?? 0;
+        document.getElementById("reread-edit").placeholder = "Unbekannt";
         document.getElementById("istvergriffen-edit").checked =
           data.istVergriffen;
         document.getElementById("istebaypreis-edit").checked =
@@ -150,8 +157,10 @@ document.addEventListener("DOMContentLoaded", function () {
         MangaLibFeedback.clear(editpopupContainer);
         document.getElementById("editPopupContainer").style.display = "flex";
       })
-      .catch((error) => {
-        console.error("Fehler beim Abrufen der MangaReihe-Daten:", error);
+      .catch(() => {
+        MangaLibFeedback.show(editpopupContainer, "Bestand konnte nicht geladen werden. Bitte Seite neu laden.");
+        editpopupContainer.style.display = "flex";
+        saveButton.disabled = true; // Keine veralteten Formularwerte nach Ladefehler speichern.
       });
 
     // Weitere Funktionen und Logik...
@@ -295,12 +304,12 @@ document.addEventListener("DOMContentLoaded", function () {
       MangaLibFeedback.show(editpopupContainer, "Anzahl der Bände muss eine positive ganze Zahl sein.");
       return;
     }
-    if (anilistUrl && !anilistUrl.match(/^https?:\/\/.+$/)) {
+    if (anilistUrl && anilistUrl !== (initialOptionalUrls.anilistUrl ?? "").trim() && !anilistUrl.match(/^https?:\/\/.+$/)) {
       MangaLibFeedback.show(editpopupContainer, "Bitte geben Sie eine gültige AniList-URL ein.");
       return;
     }
 
-    if (coverUrl && !coverUrl.match(/^https?:\/\/.+$/)) {
+    if (coverUrl && coverUrl !== (initialOptionalUrls.coverUrl ?? "").trim() && !coverUrl.match(/^https?:\/\/.+$/)) {
       MangaLibFeedback.show(editpopupContainer, "Bitte geben Sie eine gültige Cover-URL ein.");
       return;
     }
@@ -347,6 +356,9 @@ document.addEventListener("DOMContentLoaded", function () {
         ? initialOptionalUrls.coverUrl ?? null : coverUrl,
       sammelbandTypId: istSammelband ? sammelbandTypId : null,
       reread: reread ? parseInt(reread, 10) : 0,
+      rereadEdited: changedFlags.has("reread"),
+      applyReadToVolumes: document.getElementById("apply-read-edit").checked,
+      applyRereadToVolumes: document.getElementById("apply-reread-edit").checked,
       scrapedData: scrapedData,
     };
 

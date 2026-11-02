@@ -234,7 +234,8 @@ public class MainController {
     @ResponseBody // Damit der Rückgabewert als Response Body gesendet wird
     public ResponseEntity<?> addMangaReihe(@RequestBody Map<String, Object> requestData) {
         try {
-            var input = WriteRequests.Series.from(requestData);
+            var input = WriteRequests.Series.from(requestData, () -> mangaReiheService
+                    .findById(WriteRequests.purchaseId(requestData, "mangaReiheId")).orElse(null));
             MangaReihe saved;
             if (!input.edit()) {
                 saved = mangaReiheService.saveMangaReihe(input.index(), input.status(), input.publisher(),
@@ -310,6 +311,10 @@ public class MainController {
         }
 
         MangaReihe mangaReihe = mangaReiheOpt.get();
+        try { WriteValidation.editableRelations(mangaReihe); }
+        catch (IllegalArgumentException inconsistent) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Bestand kann nicht bearbeitet werden: Beziehungen fehlen."));
+        }
         Map<String, Object> response = new HashMap<>();
 
         response.put("id", mangaReihe.getId());
@@ -321,10 +326,11 @@ public class MainController {
         response.put("titel", mangaReihe.getTitel());
         response.put("anzahlBaende", mangaReihe.getAnzahlBaende());
         BigDecimal preisProBand = mangaReihe.getPreisProBand();
-        response.put("preisProBand", String.valueOf(preisProBand).replace(".", ","));
+        response.put("preisProBand", preisProBand == null ? "Unbekannt" : preisProBand.toPlainString().replace(".", ","));
         response.put("istGelesen", mangaReihe.getMangaDetails().isIstGelesen());
         response.put("reread",
                 mangaReihe.getMangaDetails().getReread() != null ? mangaReihe.getMangaDetails().getReread() : 0);
+        response.put("rereadNull", mangaReihe.getMangaDetails().getReread() == null);
         response.put("istEbayPreis", mangaReihe.getIstEbayPreis());
         response.put("istVergriffen", mangaReihe.getIstVergriffen());
         BigDecimal gesamtpreisAenderung = mangaReihe.getAenderungGesamtpreis() != null
@@ -375,13 +381,14 @@ public class MainController {
             bandData.put("istGelesen", band.isIstGelesen());
             bandData.put("istSpecial", band.getIstSpecial() != null ? band.getIstSpecial() : false);
             bandData.put("mpUrl", band.getMpUrl() != null ? band.getMpUrl().toString() : "");
-            bandData.put("formattedPreis", String.format("%.2f €", band.getPreis()));
+            bandData.put("formattedPreis", band.getPreis() == null ? "Unbekannt" : String.format("%.2f €", band.getPreis()));
             bandData.put("bandIndex", band.getBandIndex() != null ? band.getBandIndex() : "");
             bandData.put("titel", mangaReihe.getTitel());
 
             // Calculate and format the total price
-            BigDecimal totalPrice = band.getPreis().add(band.getAenderungPreis());
-            bandData.put("totalPreis", String.format("%.2f €", totalPrice));
+            BigDecimal totalPrice = band.getPreis() == null || band.getAenderungPreis() == null
+                    ? null : band.getPreis().add(band.getAenderungPreis());
+            bandData.put("totalPreis", totalPrice == null ? "Unbekannt" : String.format("%.2f €", totalPrice));
             result.add(bandData);
         }
         return result;
@@ -403,6 +410,8 @@ public class MainController {
             bandData.put("mpUrl", band.getMpUrl() != null ? band.getMpUrl().toString() : "");
             bandData.put("bandIndex", band.getBandIndex() != null ? band.getBandIndex() : "");
             bandData.put("reread", band.getReread() != null ? band.getReread() : 0);
+            bandData.put("rereadNull", band.getReread() == null);
+            bandData.put("specialNull", band.getIstSpecial() == null);
 
             // Titel der Manga-Reihe abrufen
             MangaReihe mangaReihe = band.getMangaReihe();
@@ -421,7 +430,8 @@ public class MainController {
     @PostMapping(value = "/editBand", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Void> updateBand(@RequestBody Map<String, Object> bandData) {
         try {
-            Band band = WriteRequests.band(bandData);
+            Band band = WriteRequests.band(bandData, () -> bandService
+                    .findById(WriteRequests.purchaseId(bandData, "id")).orElse(null));
             bandService.updateBand(band);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {

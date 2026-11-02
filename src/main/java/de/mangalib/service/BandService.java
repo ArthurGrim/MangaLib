@@ -482,9 +482,23 @@ public class BandService {
         Optional<Band> optionalBand = bandRepository.findById(bandData.getId());
         if (optionalBand.isPresent()) {
             Band band = optionalBand.get();
+            WriteValidation.editableRelations(band.getMangaReihe());
+            if (bandData.getBildUrl() != null) WriteValidation.editedUrl(bandData.getBildUrl().toExternalForm(),
+                    () -> band.getBildUrl() == null ? null : band.getBildUrl().toExternalForm());
+            if (bandData.getMpUrl() != null) WriteValidation.editedUrl(bandData.getMpUrl().toExternalForm(),
+                    () -> band.getMpUrl() == null ? null : band.getMpUrl().toExternalForm());
+            boolean financialChange = bandData.getPreis() != null && !WriteValidation.sameMoney(bandData.getPreis(), band.getPreis())
+                    || bandData.getAenderungPreis() != null && !WriteValidation.sameMoney(bandData.getAenderungPreis(), band.getAenderungPreis());
+            boolean knownPrices = bandRepository.findByMangaReiheId(band.getMangaReihe().getId()).stream()
+                    .allMatch(b -> (Objects.equals(b.getId(), band.getId()) && bandData.getPreis() != null || b.getPreis() != null)
+                            && (Objects.equals(b.getId(), band.getId()) && bandData.getAenderungPreis() != null || b.getAenderungPreis() != null));
+            WriteValidation.require(!financialChange || knownPrices);
+            WriteValidation.require(!financialChange || band.getMangaReihe().getAnzahlBaende() != null
+                    && band.getMangaReihe().getAnzahlBaende() > 0);
 
             boolean preisChanged = false;
             boolean rereadChanged = false;
+            boolean readChanged = bandData.isIstGelesen() != band.isIstGelesen();
 
             // Aktualisiere die Attribute des Bands
             if (bandData.getBandNr() != null && !bandData.getBandNr().equals(band.getBandNr())) {
@@ -493,12 +507,12 @@ public class BandService {
             if (bandData.getBandIndex() != null && !bandData.getBandIndex().equals(band.getBandIndex())) {
                 band.setBandIndex(bandData.getBandIndex());
             }
-            if (bandData.getPreis() != null && !bandData.getPreis().equals(band.getPreis())) {
+            if (bandData.getPreis() != null && !WriteValidation.sameMoney(bandData.getPreis(), band.getPreis())) {
                 preisChanged = true;
                 band.setPreis(bandData.getPreis());
             }
             if (bandData.getAenderungPreis() != null
-                    && !bandData.getAenderungPreis().equals(band.getAenderungPreis())) {
+                    && !WriteValidation.sameMoney(bandData.getAenderungPreis(), band.getAenderungPreis())) {
                 preisChanged = true;
                 band.setAenderungPreis(bandData.getAenderungPreis());
                 System.out.println("AenderungPreis: " + bandData.getAenderungPreis());
@@ -516,7 +530,7 @@ public class BandService {
                 rereadChanged = true;
                 band.setReread(bandData.getReread());
             }
-            if (bandData.getIstSpecial() != band.getIstSpecial()) {
+            if (bandData.getIstSpecial() != null && !Objects.equals(bandData.getIstSpecial(), band.getIstSpecial())) {
                 band.setIstSpecial(bandData.getIstSpecial());
             }
 
@@ -524,31 +538,33 @@ public class BandService {
 
             // Berechne und speichere die neuen Gesamtpreise
             MangaReihe mangaReihe = band.getMangaReihe();
-            System.out.println("Alte Aenderung Gesamtpreis: " + mangaReihe.getAenderungGesamtpreis());
-            BigDecimal neueAenderungGesamtpreis = calculateAenderungGesamtpreis(mangaReihe);
-            System.out.println("Neue Aenderung Gesamtpreis: " + neueAenderungGesamtpreis);
-            mangaReihe.setAenderungGesamtpreis(neueAenderungGesamtpreis);
-            System.out.println("Aenderung Gesamtpreis gesetzt auf: " + mangaReihe.getAenderungGesamtpreis());
-            System.out.println("Alter Gesamtpreis: " + mangaReihe.getGesamtpreis());
-            BigDecimal neuerGesamtpreis = calculateGesamtpreis(mangaReihe);
-            System.out.println("Neuer Gesamtpreis: " + neuerGesamtpreis);
-            mangaReihe.setGesamtpreis(neuerGesamtpreis);
-            System.out.println("Gesamtpreis gesetzt auf: " + mangaReihe.getGesamtpreis());
+            if (financialChange) {
+                System.out.println("Alte Aenderung Gesamtpreis: " + mangaReihe.getAenderungGesamtpreis());
+                BigDecimal neueAenderungGesamtpreis = calculateAenderungGesamtpreis(mangaReihe);
+                System.out.println("Neue Aenderung Gesamtpreis: " + neueAenderungGesamtpreis);
+                mangaReihe.setAenderungGesamtpreis(neueAenderungGesamtpreis);
+                System.out.println("Aenderung Gesamtpreis gesetzt auf: " + mangaReihe.getAenderungGesamtpreis());
+                System.out.println("Alter Gesamtpreis: " + mangaReihe.getGesamtpreis());
+                BigDecimal neuerGesamtpreis = calculateGesamtpreis(mangaReihe);
+                System.out.println("Neuer Gesamtpreis: " + neuerGesamtpreis);
+                mangaReihe.setGesamtpreis(neuerGesamtpreis);
+                System.out.println("Gesamtpreis gesetzt auf: " + mangaReihe.getGesamtpreis());
 
-            // Nur aktualisieren, wenn sich der Preis geändert hat
-            if (preisChanged) {
-                System.out.println("Preis Pro Band wird neu berechnet");
-                mangaReihe.setPreisProBand(
-                        neuerGesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2,
-                                RoundingMode.HALF_UP));
-            }
+                // Nur aktualisieren, wenn sich der Preis geändert hat
+                if (preisChanged) {
+                    System.out.println("Preis Pro Band wird neu berechnet");
+                    mangaReihe.setPreisProBand(
+                            neuerGesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2,
+                                    RoundingMode.HALF_UP));
+                }
 
-            if (neueAenderungGesamtpreis.compareTo(BigDecimal.ZERO) != 0) {
-                mangaReihe.setIstEbayPreis(true);
+                if (neueAenderungGesamtpreis.compareTo(BigDecimal.ZERO) != 0) {
+                    mangaReihe.setIstEbayPreis(true);
+                }
             }
 
             // Überprüfen und aktualisieren des istGelesen-Status der MangaDetails
-            updateMangaDetailsIstGelesenStatus(mangaReihe.getMangaDetails());
+            if (readChanged) updateMangaDetailsIstGelesenStatus(mangaReihe.getMangaDetails());
 
             // Speichere die aktualisierte MangaReihe
             mangaReiheRepository.save(mangaReihe);

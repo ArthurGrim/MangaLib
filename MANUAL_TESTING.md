@@ -1,5 +1,8 @@
 # Isolierte manuelle Browserabnahme unter Windows
 
+> Aktueller T02-Abschlussstand (02.11.2026): [T02_CLOSEOUT.md](T02_CLOSEOUT.md). Technisch abgeschlossen für das lokale Einzelbenutzermodell. Codex bestätigte die 413-UI-/Reload-Behandlung mit dokumentierter Statusgrenze; der Projekteigentümer bestätigte die letzte echte HTTP-415-Abnahme. Historische Nachträge bleiben erhalten.
+
+
 Stand: 11.10.2026. **Einrichtung und erste Browserabnahme durch den Projekteigentümer abgeschlossen.** Ergebnisse und Fehlernachbereitung stehen in Abschnitt 10. Die Abschnitte 2–6 beschreiben den historischen Vorbereitungs-/Ersteinrichtungsweg und bleiben für zukünftige **neue, leere** Umgebungen erhalten. Die bestehende manuelle DB nicht neu einrichten, überschreiben oder erneut mit Fixtures befüllen. Die 179 bisherigen Java-/Spring-Tests bleiben eine getrennte historische Baseline; die Nachbereitung erlaubt ausschließlich datenbankfreie Prüfungen, keinen DB-/Anwendungs-/Browserstart.
 
 ## 1. Betriebsgrenzen
@@ -72,7 +75,7 @@ Die alten `SQLQuery.sql` / `Inserts.sql` **nicht ausführen**: fester Produktivn
 In PowerShell, Clientpfad gegebenenfalls vollständig angeben:
 
 ```powershell
-Set-Location 'C:\Users\drewe\Documents\MangaLib'
+Set-Location '<lokales MangaLib-Projektverzeichnis>'
 $manualDirectory = Join-Path $env:LOCALAPPDATA 'MangaLib/manual-test'
 New-Item -ItemType Directory -Path $manualDirectory -Force | Out-Null
 $rawSchema = Join-Path $manualDirectory 'schema-source.sql'
@@ -835,3 +838,768 @@ Schemaänderungen, keine neuen Abhängigkeiten und keine Codekorrekturen in dies
 Auftrag. Die 456 erfolgreichen Java-Tests wurden nicht erneut ausgeführt.
 T03 (unter anderem Kaufatomarität/Identifikation/Reduktion) und S03
 (Lesedatum/Reread-Historie) bleiben eigenständige Folgearbeiten.
+
+## 18. T02 – Nachprüfung der Altbestandskorrekturen (16.10.2026)
+
+**Historischer Vorbereitungsstand vor der unten dokumentierten Browserabnahme.** Geschützte Integration am 16.10.2026
+erfolgreich: 40 neue Legacy-Fälle, 107 bestehende geschützte Regressionen und
+ungefilterter `clean test` mit 547 bestandenen Fällen, 0 Fehlern/Skipped; Daten- und
+Schemafingerabdruck unverändert. Details und Nachweisgrenzen im neuen Nachtrag von
+TESTING.md. Keine manuelle DB-Verbindung oder Browserausführung in diesem Auftrag.
+Erst nach neuer Freigabe aktuelles manuelles Artefakt bauen/validieren/starten.
+Ausschließlich `manual-test`,
+`mangalib_manual_test`, Loopback und synthetische Doubles; vorhandene T02-/M06-
+Datensätze unverändert lassen. Neue eindeutig markierte synthetische Datensätze
+verwenden, Bestands-/Schema-Snapshots erhalten; keine SQL-Fixtures improvisieren.
+
+1. Teilweise gelesene neue Reihe nur im Titel/URL/Metadatum ändern: individuelle
+   Bandstatus und Rereads nach Reload unverändert, beide Massenoptionen zunächst aus.
+2. Lesestatus-Massenoption ausdrücklich aktivieren: vorhandene Bände übernehmen den
+   Wert auch dann, wenn der Reihenwert schon gleich ist. Erneutes Öffnen setzt die
+   Option zurück. Reihenwertänderung ohne Option verändert keine Bandwerte.
+3. Reread-Massenoption prüfen: bisheriger Mindestwertvertrag, höhere Bandwerte
+   bleiben erhalten. M06-Erweiterung bleibt unabhängig davon erhalten: alte Bände
+   unverändert, neue Bände ungelesen; neue Bände später einzeln bearbeitbar.
+4. Unbekannte Rereads/Spezialflags und Preise nur bei bereits passend vorhandenen,
+   freigegebenen synthetischen Datensätzen prüfen: unbekannt statt 0/false/NaN,
+   unberührte Werte erhalten; bewusstes 0/false separat prüfen. Kein SQL-NULL-Seeding
+   allein für Browsertests; nicht verfügbare Zustände als nicht prüfbar kennzeichnen.
+5. Historische unsichere Bild-URL zeigt lokalen Platzhalter. Andere Feldänderung
+   erhält den URL-Altwert; neue ungültige URL bleibt abgewiesen. Band-URL leeren
+   bedeutet weiterhin behalten. Keine externen Links öffnen.
+6. Kontrollierte Lade-/Beziehungsfehler zeigen feste Meldung und verhindern das
+   Speichern alter Dialogwerte. Keine automatische Reparatur oder Wiederholung.
+7. Neue Checkboxen/Labels bei schmalem Fenster, Tastatur und Dialogscrollen prüfen.
+
+Die vorstehende Checkliste beschrieb den Plan, keinen damals bereits erbrachten
+Browsernachweis. Die inzwischen durchgeführten Fälle und Grenzen folgen hier;
+automatisierte Nachweise stehen weiterhin getrennt im Nachtrag von TESTING.md.
+
+### Tatsächliche isolierte Browserabnahme (16.10.2026)
+
+Nach ausdrücklicher Eigentümerfreigabe auf `codex/t02-security-hardening` mit dem
+Codex In-app Browser durchgeführt. Kein Firefox-/Selenium-/Live-Scraperstart.
+Passwort ausschließlich aus der vorhandenen Prozessvariable
+`MANGALIB_MANUAL_DB_PASSWORD`, ohne Ausgabe oder Speicherung. Kein externer
+Framework-/JVM-Override, vor Start kein MangaLib-Prozess und Port 18080 frei.
+
+Taskplan `assembleManualTest --dry-run` geprüft, danach
+`.\gradlew.bat --offline --no-daemon assembleManualTest` erfolgreich. Bestehendes
+`Start-ManualTest.ps1 -ValidateOnly -JavaPath 'C:/Program Files/Java/jdk-21/bin/java.exe'`
+erfolgreich ohne DB/Listener. Derselbe Startweg anschließend ohne ValidateOnly:
+eigene PID **21952**, Java 21, ausschließlich `manual-test`, feste manuelle
+DataSource/Benutzeridentität und synthetisches Gateway. Artefaktprüfung schließt
+Standardstartkonfiguration, Live-Scraper, Selenium und DevTools aus. Listener
+ausschließlich **127.0.0.1:18080**, sichtbares manuelles Testbanner bestätigt.
+Die vorhandenen Guards, Sicherheitsfilter, Konfigurationen und Anwendungscode
+wurden nicht geändert.
+
+Ausgangsbestand: zehn Reihen/Details, 24 Bände, fünf Einkaufspositionen/Details,
+17 Stammdatensätze. Alle Schreibaktionen ausschließlich über normale UI-Dialoge
+an einer neuen eigenen Reihe mit Präfix `T02_LEGACY_BROWSER_20261016_`.
+Keine direkten HTTP-Schreibrequests, SQL-Fixtures, Bereinigung oder Wiederholung
+einer unklaren Schreibaktion. Nach jedem gespeicherten Szenario vollständiger
+Reload und erneutes Öffnen/Lesen der betroffenen Anzeige beziehungsweise Dialoge.
+
+| Szenario | Tatsächliche Browserbeobachtung nach Reload | Bewertung |
+|---|---|---|
+| **A – unabhängige Metadaten** | Neue Reihe mit drei Bänden: teilweise gelesen, individuelle Rereads 1/5/0, Preise 8,49/6,99/0,00 und Anpassung −0,02/0/0. Nur Titel auf Unicode-/Sonderzeichenvariante geändert. Beide Massenoptionen zunächst aus; alle Bandspalten im ergänzenden Vorher-/Nachher-Snapshot identisch. | **Bestanden** |
+| **B – expliziter Lesestatus** | Reihenwert bereits false, Massenoption ausdrücklich aktiviert: alle drei Bände anschließend ungelesen. Erneutes Öffnen setzt beide Optionen aus. Danach nur Reihenwert true ohne Option gespeichert: alle Bandwerte bleiben false. | **Bestanden** |
+| **C – Reread-Mindestwert** | Explizite Massenaktion mit Wert 3 ergibt 3/5/3; höherer Wert 5 erhalten. Danach erneute reine Titeländerung ohne Optionen: Dialogwerte einschließlich Preise/Lesestatus nach Reload identisch. | **Bestanden** |
+| **D – M06-Erweiterung** | Eigene Reihe wieder teilweise gelesen vorbereitet, von drei auf vier erweitert. Beide Massenoptionen aktiviert, gelesen=true und Reread=9 mitgesendet. Alte Bände einschließlich sämtlicher Spalten unverändert; neuer Band ungelesen, Reihenstatus false und Reihen-Reread weiterhin 3. Optionen nach erneutem Öffnen wieder aus. | **Bestanden für M06/T02**, bekannter Preisbefund siehe unten |
+| **E – unbekannt gegenüber bewusstem Wert** | Neuer Band hatte von selbst Reread NULL (leeres Feld) und Spezialflag NULL (unbestimmte Checkbox). Unabhängige lokale Bildänderung erhielt beide nach Reload; anschließend bewusst 1/false gespeichert. An anderem eigenen Band bewusst Reread 0 und Preis 0,00 gespeichert und wieder angezeigt. Neuer Erweiterungsband zeigt wieder unbekannten Reread/Spezialflag. | **Teilweise bestanden**; unbekannter Preis nicht verfügbar |
+| **F – URLs und Fehleranzeige** | Neue file-URL clientseitig mit „Bitte geben Sie eine gültige Bild-URL ein.“ abgewiesen. Neue HTTP(S)-Userinfo-URL über regulären Speicherhandler mit „Einige Angaben sind ungültig. Bitte überprüfe deine Eingaben.“ abgewiesen. Dialog/Eingaben bleiben erhalten, Save bedienbar, kein Alert oder interner Exceptiontext; nach Cancel/Reload Original-URL erhalten. Bild-src bleibt lokaler Platzhalter. | **Teilweise bestanden**; historisch ungültiger URL-Altwert nicht verfügbar |
+| **G – schmale Ansicht/Tastatur** | Bei 640 × 800 Pixeln beide neuen Labels und Checkboxen eindeutig zugeordnet und ohne Überlagerung bedienbar. Tab von Gelesen fokussiert Lesestatus-Massenoption, nächster Tab die Reread-Option; Leertaste schaltet jeweils gezielt. Dialog scrollt zum fokussierten Feld; nach erneutem Öffnen beide aus. Temporäre Viewport-Vorgabe zurückgesetzt. | **Bestanden** |
+
+Ergebnis auf Gruppenebene: **5 vollständig bestandene, 2 teilweise prüfbare Gruppen,
+0 neue T02-Fehler**. Zwei Teilfälle ausdrücklich **nicht prüfbar**: unbekannter
+Bandpreis und Erhalt einer bereits historisch unsicheren URL. Im vorhandenen
+synthetischen Bestand fehlen diese Zustände; keine künstliche Erzeugung per SQL
+oder neuen ungültigen URL-Schreibweg. Fehlende Details/Beziehungen und gesperrte
+Ladefehler wurden ebenfalls nicht künstlich in der Browserumgebung hergestellt;
+hierfür gelten die getrennten JPA-/Mock-/DOM-Nachweise. Keine pauschale Abnahme
+aller möglichen Altbestandszustände oder von T02 insgesamt.
+
+Keine beobachteten Warnungen/Fehler in der Browserkonsole, keine nativen Alerts,
+unhandled Promise Rejections oder sichtbaren Schreibwiederholungen. Der Connector
+liefert hier keinen vollständigen HTTP-/Netzwerk-Trace: **keine HTTP-Statuscodes
+aus der Fehlermeldung abgeleitet**, keine exakte Requestzählung behauptet. Die
+automatisierten MockMvc-Verträge bleiben der separate Statuscode-Nachweis.
+Kein Autofill, externer Link oder echter Scraper wurde ausgelöst. Externe Default-
+Cover wurden in der manuellen Oberfläche auf `/manual-test/cover.svg` abgebildet;
+die manuelle Bild-CSP bleibt zusätzlich aktiv. Ein vollständiger Nachweis sämtlicher
+Unterressourcen-/SSRF-Pfade ist diese Browserabnahme nicht.
+
+### Erneut beobachteter bestehender T04-Preisfehler
+
+Beim normalen Erhöhen von drei auf vier Bände erhielt der neue Band **28 den Preis
+0,00**, obwohl vorher ein Reihenpreis von 5,15 angezeigt wurde. Gesamtsumme blieb
+15,46; angezeigter Reihenpreis danach 3,87. Alte Bandpreise und Anpassungen blieben
+unverändert. Reproduktion: Reihendialog einer eigenen Reihe öffnen, Bandanzahl
+erhöhen, ohne Preisimport speichern, neu laden und neuen Band öffnen.
+
+Der Edit-Payload enthält keinen `preisProBand`; `WriteRequests.Series.from`
+verwendet dafür `absentZeroMoney` (WriteRequests.java:42,157). Der Anhängepfad
+übernimmt diesen 0-Standardpreis (BandService.java:430). Auch das Startsession-Log
+meldet für den neuen Band „Setze Standardpreis: 0“. Dies entspricht dem bereits
+geplanten T04-Punkt „Neu angelegte Bände dürfen bei fehlendem Preis nicht
+stillschweigend 0 € erhalten“, keiner neuen Lesestatus-/Altbestandsregression.
+**Nicht korrigiert**, keine Preise oder Testdaten nachträglich bereinigt. Fachliche
+Preissemantik/Verteilung bleibt T03/T04 und benötigt einen gesonderten Auftrag.
+
+### Neue Daten und Bestandsvergleich
+
+Ausschließlich neu, bewusst dauerhaft erhalten:
+
+- Reihe und Details **11**, Endtitel
+  `T02_LEGACY_BROWSER_20261016_R01_ÄÖÜ 漫画 & Metadaten unverändert erhalten`.
+- Vier Bände **25–28**, zugehörige Nummern 1–4; keine neue Einkaufsposition.
+
+| Band-ID | Gelesen | Reread | Preis | Anpassung |
+|---|---|---:|---:|---:|
+| 25 | ja | 3 | 8,49 | −0,02 |
+| 26 | nein | 5 | 6,99 | 0,00 |
+| 27 | nein | 3 | 0,00 | 0,00 |
+| 28 | nein | unbekannt/NULL | 0,00 (T04) | 0,00 |
+
+Rein lesende Snapshots mit einer unveränderten Kopie des etablierten Skripts:
+fester MySQL-Client, keine Optionsdateien, abwesende Login-Datei, ausschließlich
+manuelles Konto/Ziel, Passwort nur im Kindprozess-Environment, Identitätsprüfung,
+READ-ONLY-Transaktion und abschließendes ROLLBACK. Keine SQL-Schreibbefehle.
+
+Alle ursprünglichen Zeilen anhand ID und vollständiger Spaltenwerte unverändert:
+zehn Reihen/Details, 24 Bände, fünf Einkaufspositionen/Details sowie sämtliche
+17 Stammdaten. Zehn Tabellen, 75 Spalten, 24 Indexeinträge, zwölf Fremdschlüssel
+und 26 Key-Column-Einträge identisch; AUTO_INCREMENT weiterhin ausgenommen.
+Zwischensnapshots bestätigen sämtliche Bandspalten bei A und sämtliche alten
+Bandspalten bei D unverändert. Nur sechs neue Geschäftszeilen (1 Reihe, 1 Details,
+4 Bände); Endbestand elf Reihen/Details, 28 Bände, fünf Einkaufspositionen/Details.
+
+Manuelle JSON-Snapshot-Hashes, durch freigegebene Neuanlage erwartungsgemäß verschieden:
+
+```text
+vorher: edffee9430083f993a55a91865a48dc1804a61837e32f61597de4f1d9923adc7
+nachher: 2eb8d9ed03cd73a66ace123f4a3f60507f2de3d48c31450a9aacc96b8732c226
+```
+
+Keine Verwechslung mit dem JUnit-Fingerabdruck. Lokale ignorierte Nachweise in
+`.gradle/t02-legacy-browser-20261016/`: `before.json`, `after.json`, `comparison.txt`,
+`state-a/`, `state-d/`, `options-640.png`, `invalid-url-640.png`, `final-series.png`
+und `shutdown.txt`. Frühere Nachweise unverändert erhalten.
+
+### Kontrollierter Abschluss
+
+Eigene PID **21952** vor Beendigung erneut als manuelles JAR mit einzigem
+Loopback-Listener identifiziert, anschließend **Ctrl+C in ursprünglicher
+PTY-Startsession 8051**. Tomcat meldet „Graceful shutdown complete“, danach JPA-
+EntityManagerFactory geschlossen. PID nicht mehr vorhanden, **Port 18080 frei**;
+kein Force-Stop, kein fremder Prozess beendet, kein Neustart. Der unterbrochene
+Vordergrundprozess liefert dabei Exitcode 1; geordneter Java-Shutdown und tatsächliches
+Prozess-/Listenerende wurden unabhängig bestätigt.
+
+Nur MANUAL_TESTING.md und TESTING.md in diesem Browserauftrag bearbeitet. Keine
+Verbindung zu `mangalib` oder `mangalib_test`, keine Migrationen, Schemaänderungen,
+Initialisierung, Bereinigung, neuen Dependencies oder Anwendungscodekorrekturen.
+Keine Java-/DOM-Suite erneut ausgeführt; 547 Java- und 198 DOM-Erfolge bleiben
+getrennte technische Nachweise. Kein Git-Staging/Commit/Push/Merge. Weitere Arbeit
+erst nach Eigentümerfreigabe; T02-Scraper-/SSRF-/Requestgrößengrenzen bleiben offen.
+
+## 19. T02 – Echte HTTP-Abnahme der Requestgrenzen: kontrollierter Abbruch (16.10.2026)
+
+**Teilnachweis, keine abgeschlossene HTTP-/Browserabnahme.** Die freigegebene
+HTTP-Prüfung wurde bei nicht eindeutig bestätigtem Verbindungsende sofort gestoppt.
+Keine eigenständige Anwendungscodekorrektur oder automatische Wiederholung.
+Die 678 Java-/198 DOM-Erfolge bleiben getrennte historische Nachweise.
+
+### Vorbereitung und sichere Ausführung
+
+Branch `codex/t02-security-hardening`, keine relevanten Framework-/JVM-Overrides;
+manuelle Passwortvariable vorhanden/nicht leer, ohne Wertausgabe. Zunächst kein
+manueller Launcher/Listener auf 18080; das durch `clean` entfernte JAR fehlte.
+Aufgabenplan `.\gradlew.bat --offline --no-daemon assembleManualTest --dry-run`
+geprüft: nur Haupt-/Manual-Kompilierung, Ressourcen und manuelle Paketierung.
+Danach `assembleManualTest` erfolgreich. Anschließend vorhandenes Skript:
+
+```powershell
+.\scripts\Start-ManualTest.ps1 -ValidateOnly -JavaPath 'C:/Program Files/Java/jdk-21/bin/java.exe'
+```
+
+ValidateOnly erfolgreich ohne DB/Listener. Unveränderte manuelle Guards erzwingen
+`manual-test`, `mangalib_manual_test` / `mangalib_manual_test_user`, feste JDBC-URL
+auf 127.0.0.1:3306, Passwort aus `MANGALIB_MANUAL_DB_PASSWORD`, nur Schema-Validierung,
+keine SQL-Initialisierung/Migrationen und keine alternativen DataSources.
+Artefaktprüfung schließt Standardstart, Live-Scraper, Selenium, WebDriverManager
+und DevTools aus; ausschließlich synthetisches Scraper-Gateway vorhanden.
+
+Vor Start vollständiger lesender Snapshot mit bytegleicher Kopie des etablierten
+Hilfsskripts: READ-ONLY-Transaktion, feste manuelle DB-/Benutzeridentität, Passwort
+nur im Kindprozess-Environment. Danach Start über dasselbe Skript ohne ValidateOnly
+in PTY-Session **45472**: Java 21, eigene PID **38212**, ausschließlich Profil
+`manual-test`, Tomcat **11.0.24**, einziger zugehöriger Listener **127.0.0.1:18080**.
+Prozessidentität und Listener wurden unabhängig lesend bestätigt.
+
+### Fünf tatsächlich ausgeführte HTTP/1.1-Fälle
+
+Eng begrenzter Python-Standardbibliothek-Client, ausschließlich TCP-Ziel
+127.0.0.1:18080, Host `localhost:18080`, Connect-Timeout 3 s / I/O-Timeout 5 s,
+sequenziell, begrenzte Antwortgröße. Alle drei POST-Probes ausschließlich auf
+dem statisch geprüften, nicht vorhandenen `/__t02_request_limit_probe__`, ohne
+gültigen CSRF-Token. Keine Geschäftsroute, kein HTTP-Ersatz positiver UI-Aktionen.
+
+| Fall | Erwartung | Tatsächlich beobachtet | Bewertung / Schicht |
+|---|---|---|---|
+| GET `/home` | 200 und manueller Marker im HTML | 200, vollständige 71.305-Byte-Antwort, Marker vorhanden | Bestanden für HTTP-Auslieferung; keine visuelle Browserprüfung |
+| GET `/einkaufsliste` auf derselben Verbindung nach vollständig gelesener erster Antwort | 200 und Wiederverwendung | 200, vollständige 15.197-Byte-Antwort, Marker vorhanden | Bestanden; echte sequenzielle Keep-alive-Wiederverwendung, kein Pipelining |
+| Syntaktisch gültiges JSON `{}`, Content-Length 2, ohne CSRF | 403 ohne Fachaktion | 403, vollständige JSON-Antwort | Bestanden; bestehende Security-Kette, kein positiver Fachvertrag |
+| POST ohne Content-Length/Transfer-Encoding und ohne Body | 403 ohne Fachaktion | 403, vollständige JSON-Antwort | Bestanden; nur leerer Request, kein Test zusätzlicher ungerahmter Datenbytes |
+| Content-Length **33.554.433**, angekündigter Body nicht gesendet | Früh 413; Verbindungsende beobachten | Vollständige 413, aber kein EOF/Reset innerhalb 1 s nach Antwortende | Größenablehnung bestanden; Verbindungstrennung unklar, **Abbruch** |
+
+Home/Einkaufsliste: `Content-Type: text/html;charset=UTF-8`, `Transfer-Encoding:
+chunked`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` und manuelle
+CSP vorhanden. Sessioncookies mit `Path=/`, `HttpOnly`, `SameSite=Strict`
+beobachtet; keine Cookie-/Tokenwerte protokolliert. Die 403-Antworten hatten
+`Content-Type: application/json`, chunked und DENY/nosniff. Dies ersetzt keine
+browserseitige Cookie-/Session-/CSRF-Abnahme.
+
+Die 413 stammt anhand des exakt passenden festen Texts aus dem neuen
+RequestBodyLimitFilter, **nicht aus Tomcats Headerparser**:
+
+```text
+HTTP/1.1 413
+Connection: close
+Content-Type: text/plain;charset=UTF-8
+Content-Length: 60
+
+Anfrage überschreitet die technischen Größenbegrenzungen.
+```
+
+Alle 60 UTF-8-Bytes vollständig gelesen. Danach ergab Peek auf derselben Verbindung
+im festgelegten **1-Sekunden-Fenster** weder EOF noch Reset; die Wartefrist lief ab.
+Der Client schloss seine Verbindung und stoppte ohne Wiederholung. Keine Folgeanfrage
+angehängt. **Nicht nachgewiesen:** dauerhaft offene Verbindung, Request-Smuggling,
+Umgehung der Größenbegrenzung oder Datenmutation. Die konkrete Ursache bleibt offen;
+Warten auf angekündigte Bodybytes ist eine mögliche, nicht bewiesene Erklärung.
+`maxSwallowSize=0` und `Connection: close` allein bestätigen die tatsächliche
+prompte Trennung bei nicht übertragenem angekündigtem Body ausdrücklich nicht.
+
+Nach dem Abbruch **nicht ausgeführt**: tatsächlich empfangene 32-MiB-Grenzbytes,
+chunked Request-Bodies/Chunk-Grenzen/Übergröße, doppelte/widersprüchliche
+Content-Length, CL+TE, echte 400/415 und HTTP-Wiedererreichbarkeit nach Ablehnung.
+Chunked **Antworten** beweisen keine chunked **Requests**. Kein instrumentierter
+Nachweis von Controller-/Service-Aufrufzählern; keine Fachroute aufgerufen,
+Nichtmutation separat durch vollständige Snapshots bestätigt. Vorbereitete weitere
+Clientfälle wurden nicht ausgeführt.
+
+### Browserblocker und offener nächster Schritt
+
+In dieser Sitzung wird **kein Codex-In-app-Browser-Connector** als Werkzeug
+angeboten. Keine native Firefox-Ausweichlösung, Browserinstallation oder positive
+HTTP-Schreibaktion als Ersatz. Marker nur im gelieferten HTML nachgewiesen.
+Nicht ausgeführt: synthetische Reihenanlage, browserseitiges Session-/CSRF-/
+Host-/Origin-Verhalten, sichtbare 413-Meldung, Formularderhalt, Save-Sperre,
+ausbleibender Replay und neue bewusste Aktion nach Reload. Kein Datensatz mit
+Präfix `T02_REQUEST_LIMIT_BROWSER_20261016_` angelegt. Die statisch vorhandene
+generische 413-Fehlerhilfe ist **kein beobachteter UX-Befund**.
+
+Vor Fortsetzung gesonderte Freigabe für die eng begrenzte Untersuchung des
+Verbindungsendes einholen; keine automatische Korrektur. Danach übrige HTTP-Fälle
+und bei tatsächlich verfügbarem Connector die regulären UI-Fälle prüfen.
+
+### Datenerhaltung und Shutdown
+
+Vollständiger manueller JSON-Snapshot vorher/nachher identisch:
+
+`2eb8d9ed03cd73a66ace123f4a3f60507f2de3d48c31450a9aacc96b8732c226`
+
+Alle IDs und vollständigen Zeilenwerte unverändert: elf Reihen/Details, 28 Bände,
+fünf Einkaufspositionen/Details und 17 Stammdatensätze. **Keine neuen Geschäftszeilen.**
+Identisch auch zehn Tabellen, 75 Spalten, 24 Indexeinträge, zwölf Fremdschlüssel,
+26 Key-Column-Einträge; AUTO_INCREMENT ausgenommen. Keine SQL-Schreibbefehle,
+Bereinigung, Migration, Initialisierung oder Seeding.
+
+Eigene PID/Listener vor Shutdown erneut bestätigt; **Ctrl+C in ursprünglicher
+Session 45472**, „Graceful shutdown complete“ und geschlossene EntityManagerFactory
+beobachtet. PID 38212 nicht mehr vorhanden, **Port 18080 frei**, kein Force-Stop.
+Exitcode 1 der unterbrochenen Vordergrundsession ist vom beobachteten erfolgreichen
+Java-Shutdown zu unterscheiden. Keine fremden Prozesse beendet, kein Neustart.
+
+Ignorierte lokale Nachweise unter `.gradle/t02-request-limit-http-20261016/`:
+`ReadManualSnapshot.ps1`, `before.json`, `after.json`, `comparison.txt`,
+`http_probe.py`, `http-results.json`, `shutdown.txt`. HTTP-Nachweise enthalten nur
+neutrale Header, Status, Größen/Hashes und feste Filtertexte; keine Session-/
+CSRF-/Passwortwerte oder vollständigen HTML-Seiten.
+
+Nur MANUAL_TESTING.md und TESTING.md in diesem Auftrag bearbeitet. Keine Verbindung
+zu `mangalib` oder `mangalib_test`, keine Anwendungscode-/Guard-/Profil-/Limitänderung,
+Live-Scraper, externen Abrufe, Installationen, Browserstarts oder Java-/DOM-Suiten.
+Keine Staging-Aktionen, Commits, Pushes, Merges oder weitere T02-/T03-/T04-/T06-Arbeit.
+
+## 20. T02 – Statische Diagnose des verzögerten TCP-Verbindungsendes (16.10.2026)
+
+**Der Befund aus Abschnitt 19 ist mit der lokalen Tomcat-Implementierung erklärbar;
+ein Produktionscodefehler in MangaLib ist nicht nachgewiesen.** Die dortige
+1-Sekunden-Beobachtung bleibt unverändert historisch erhalten. Sie beweist weder
+eine dauerhaft offene Verbindung noch eine Umgehung des Bodylimits. Für den
+künstlich unvollständigen Request war ein verpflichtendes EOF innerhalb einer
+Sekunde kein sachgerechtes Erfolgskriterium.
+
+### Quellenbasis und getrennte Nachweise
+
+Ausschließlich lokal vorhandene Quellen/Bibliotheken von **Tomcat 11.0.24** und
+Python 3.12 untersucht, keine Downloads oder neue Dependencies. Die Bibliothek
+`BOOT-INF/lib/tomcat-embed-core-11.0.24.jar` im zuletzt gebauten manuellen Artefakt
+ist bytegleich zur untersuchten Gradle-Cache-Bibliothek, SHA-256:
+
+`e7b966dcaac8c5ffa4f10e44031ebf5b71f2123560c08ac8b7120028615aea08`
+
+`javap -c` bestätigt im tatsächlichen Bytecode von `IdentityInputFilter.end()`
+den `InputBuffer.doRead`-Aufruf **vor** dem Vergleich der geschluckten Bytes mit
+der Grenze. Quellen und Bytecodeauszug liegen ignoriert unter
+`.gradle/t02-connection-diagnosis-20261016/`; keine Frameworkquellen ins Repository
+oder öffentliche Dokumente kopiert. Folgende Zeilen beziehen sich auf die dort
+unverändert aus dem Sources-JAR entnommenen Dateien:
+
+| Komponente / Fundstelle | Statisch belegte Bedeutung |
+|---|---|
+| MangaLib `RequestBodyLimitFilter.java:46–48,64–65,137–145` | Deklarierte Übergröße wird vor `getInputStream()` abgewiesen. Nur Status, Content-Type, Connection-Header und fester Text werden geschrieben; danach Rückkehr ohne Downstream-Filter. Keine Replay-Request-/Response-Wrapper auf diesem Pfad, kein eigener Socketzugriff. |
+| `CoyoteAdapter.java:375–376`, `OutputBuffer.java:209–244` | Tomcat beendet/committet die Servletantwort nach Rückkehr. Der kleine Writerinhalt wird in Bytes umgewandelt und Content-Length berechnet. Eine vollständig ausgelieferte Antwort kann der späteren Input-Abschlussverarbeitung vorausgehen. |
+| `Request.java:811–815,2491–2495`; `StandardContext.java:179` | Der 413-Sonderpfad `finishRequest()` deaktiviert Swallowing nur bei `swallowAbortedUploads=false`. Tomcats Context-Default ist true; kein entsprechender Override im MangaLib-Code gefunden. Dieser Sonderpfad erzwingt hier also nicht den sofortigen Abbruch. |
+| `Http11Processor.java:945–997,1003–1015` | `Connection: close` setzt `keepAlive=false`; `checkMaxSwallowSize()` deaktiviert Keep-alive ebenfalls bei zu viel Restbody. Das ist noch keine unmittelbare Socket-Schließung. |
+| `Http11Processor.java:406–415,446,1200–1238` | Nach Adapter/Response folgt `endRequest()`. Ein gesetzter HTTP-Status ist nicht automatisch Tomcats interner ErrorState. Der nachträgliche Status-Drop-Check greift nur bei noch aktivem Keep-alive; nach dem Response-Commit ist das hier bereits false. Swallowing bleibt deshalb möglich. |
+| `Http11InputBuffer.java:626–631` | Bei aktivem `swallowInput` wird der aktive Inputfilter mit `end()` abgeschlossen. |
+| `IdentityInputFilter.java:149–174` | Für verbleibenden Content-Length-Body erst `buffer.doRead(this)`, dann Prüfung `swallowed > maxSwallowSize`. Der Quellkommentar begründet den absichtlich nicht vorgezogenen Abbruch mit der Möglichkeit für den Client, die Antwort zu empfangen. |
+| `Http11InputBuffer.java:831–840,753–778`; `NioEndpoint.java:1520–1564` | Ohne ReadListener ist der Lesezugriff blockierend. Fehlen Bodybytes, kann der NIO-Worker auf Daten, EOF oder den Read-Timeout warten. EOF/Timeout führen über IOException im Requestabschluss zur Schließung. |
+
+### Was `maxSwallowSize=0` tatsächlich bedeutet
+
+MangaLib setzt die Grenze auf **0 Byte**. Das ist kein unbegrenztes Swallowing
+(negative Werte wären die unbegrenzte Variante), aber auch **kein Verbot jedes
+weiteren Leseversuchs** und keine zeitliche Socket-Frist. Bei Restbody ist die
+Grenze schon logisch überschritten; die Ausnahme wird dennoch erst ausgelöst,
+wenn ein Lesezugriff positive Bytes geliefert hat. Ein erster Netzwerk-/Pufferblock
+kann daher noch gelesen werden. Treffen überhaupt keine Bodybytes ein, kann schon
+dieser erste Zugriff warten. Die Anzahl 0 bedeutet somit nicht „sofortiges EOF“.
+
+`Connection: close` kennzeichnet die Verbindung als nicht wiederzuverwenden.
+Der Connector schließt sie nach seiner Abschluss-/Fehlerverarbeitung. Ein
+Anwendungs-`flushBuffer()` wäre allein kein belegter Fix: früherer Commit beendet
+nicht die nachfolgende Input-Verarbeitung. Ein erzwungenes Socket-Schließen oder
+Tomcat-interne Action-Aufrufe wären zusätzliche Architekturentscheidungen und
+werden nicht implementiert.
+
+Tomcats lokale Quellen haben standardmäßig `disableUploadTimeout=true` und einen
+regulären Connector-Default von 60.000 ms; der NIO-Lesepfad verwendet den effektiven
+Socket-Read-Timeout. **Kein gemessener Timeout der gestarteten Boot-Instanz**:
+Boot-Customizer können Defaults beeinflussen. Weder eine tatsächlich gemessene
+60-Sekunden-Laufzeit noch eine vollständig zeitunbegrenzte Bindung wird behauptet.
+Bei clientseitigem FIN durch `shutdown(SHUT_WR)` wäre aus dem Code eine EOF-/
+Fehlerbehandlung plausibel; diese Variante wurde nicht ausgeführt.
+
+### Prüfung des bisherigen Clients
+
+Der Client liest die Antwort anhand der HTTP-Längengrenze. Beim konkreten Fall
+stimmen empfangene **60 Byte** mit `Content-Length: 60` überein. Python
+`HTTPResponse.isclosed()` allein bedeutet lediglich, dass dessen Reader geschlossen
+ist; es beweist kein TCP-EOF. Die zusätzliche bisherige Prüfung
+`sock.recv(1, MSG_PEEK)` ist dagegen für die getrennte Beobachtung geeignet:
+leere Bytes = EOF, ConnectionResetError = Reset, Timeout = keine Bytes/kein EOF
+im gewählten Fenster. Schließen des Response-Readers schließt den weiterhin
+referenzierten ursprünglichen Socket nicht automatisch.
+
+Es war daher kein offensichtlicher Fehler der EOF-Messung, sondern eine zu strenge
+Erwartung an deren **1-Sekunden-Fenster**. Der Client schloss danach selbst;
+der tatsächliche spätere Server-Schließzeitpunkt wurde damals nicht gemessen.
+Keine Aussage über das Verhalten nach fünf Sekunden oder nach SHUT_WR ableiten.
+
+### Bewertung, Empfehlung und Grenzen
+
+- **HTTP-Ablehnung:** vollständige frühe 413 mit festem Text historisch gemessen.
+- **Nichtwiederverwendung:** Connection-close-Header historisch gemessen und
+  Keep-alive-Deaktivierung statisch belegt.
+- **TCP-Schließung:** im alten 1-Sekunden-Fenster nicht beobachtet; das ist mit
+  dem belegten blockierenden Restbody-Abschluss vereinbar, kein isolierter Bugbeweis.
+- **Ressourcen:** ein solcher unvollständiger Request kann trotz bereits gesendeter
+  413 einen Socket und einen wartenden Connector-Worker bis zu Daten/EOF/Timeout
+  binden. Keine CPU-Dauerlast, tatsächliche Bindungsdauer oder Mehrverbindungswirkung
+  gemessen. Read-Timeouts und Parallelitäts-/Ressourcenbudgets bleiben ein eigener
+  T02-Härtungspunkt; keine Last-/Slowloris-Tests in diesem Auftrag.
+
+**Empfehlung: keine Produktionscodeänderung allein aufgrund des bisherigen Befunds.**
+Die statische Erklärung reicht aus; die nur bedingt freigegebenen Varianten A/B/C
+wurden nicht benötigt und **nicht ausgeführt**. Keine Anwendung gestartet, keine
+DB-Verbindung/Snapshots, Builds, Tests, Browser oder Scraper ausgeführt. Der frühere
+geordnete Shutdown und Datenvergleich aus Abschnitt 19 bleiben historische Nachweise,
+keine neuen Messungen. Für einen separaten Ressourcenhärtungsauftrag zuerst den
+effektiven Connector-Timeout und gewünschte Budgetgrenzen klären, dann eng begrenzte
+Verbindungstests mit neuem Freigaberahmen planen; keine pauschale Timeout-Verkürzung.
+
+Falls künftig ausdrücklich ein schnellerer Abbruch verlangt wird, ist Tomcats
+vorhandene Context-Option `swallowAbortedUploads=false` ein gezielt zu bewertender
+Ansatz für den 413-Pfad, keine jetzt empfohlene oder implementierte Änderung.
+Zu prüfen wären vollständiger Antwortempfang, EOF/Reset bei ausstehendem Body,
+bereits gepufferte Bytes, SHUT_WR sowie unveränderte 400/413/415-/Normalverträge.
+Die Option ersetzt keine allgemeine Zeit-/Parallelitätsbegrenzung und wirkt nicht
+pauschal auf jeden Statuscode; keine Tomcat-internen Socket-Hacks vorwegnehmen.
+
+Weiter offen bleiben die tatsächlichen 32-MiB-Grenzpayloads, chunked Request-Bodies,
+Chunk-Grenzen, CL-Duplikate/Konflikte und CL+TE, reale 400/415, Wiedererreichbarkeit
+nach Ablehnung sowie die vollständige Browserabnahme einschließlich 413-UX.
+Ein zukünftig vollständig gesendeter/gerahmter Request und ein absichtlich
+unvollständiger Request benötigen unterschiedliche Schließerwartungen.
+
+Nur MANUAL_TESTING.md und TESTING.md ergänzt; vorhandene Änderungen erhalten.
+Kein Produktionscode, keine Konfiguration, Limits, Guards, Entities, Geschäftsregeln,
+Dependencies oder Roadmap-Prioritäten geändert. Keine Datenbank-/Git-Schreibaktionen.
+
+## 21. T02 – Verbleibende echte HTTP-/Tomcat-Protokollabnahme (16.10.2026)
+
+Neuer ausdrücklich freigegebener Lauf nach der Diagnose aus Abschnitt 20.
+**19 HTTP-Fälle abgeschlossen:** 17 bestanden, ein Teilnachweis wegen früher
+Headerablehnung und eine erklärte Abweichung bei CL+TE; keine Blockade oder
+unerklärliche Antwort. Keine Produktionscode-/Konfigurationsänderung. Historische
+678 Java-/198 DOM-Erfolge sowie Abschnitte 19/20 unverändert erhalten.
+
+### Vorbereitung
+
+Branch `codex/t02-security-hardening`, manuelle Passwortvariable vorhanden/nicht
+leer, keine relevanten Framework-/JVM-Overrides. Vorher kein manueller Prozess
+und Port 18080 frei. Vorhandenes JAR exklusiv lesbar, Quellen älter als Artefakt;
+Filter-/Konfigurationsklassen im JAR bytegleich zu vorhandenen Kompilaten.
+Kein Neubau erforderlich, daher kein Gradle-/Testlauf. Das vorhandene
+`Start-ManualTest.ps1 -ValidateOnly -JavaPath 'C:/Program Files/Java/jdk-21/bin/java.exe'`
+war erfolgreich ohne DB/Listener. Guards und feste manuelle Konfiguration unverändert:
+nur `manual-test`, `mangalib_manual_test` / `mangalib_manual_test_user`, Passwort
+aus `MANGALIB_MANUAL_DB_PASSWORD`, Schema nur validate, keine Initialisierung/
+Migrationen oder alternativen DataSources; Live-Scraper/Selenium aus Artefakt entfernt.
+
+Vor Start vollständiger lesender Snapshot über unveränderte Kopie des etablierten
+Skripts. Anschließend Start über vorhandenes Skript in eigener PTY-Session
+**17252**, Java 21, PID **32320**, Tomcat **11.0.24**. Prozessidentität und einziger
+zugehöriger Listener **127.0.0.1:18080** unabhängig bestätigt.
+
+### Client, Grenzen und Zuordnung
+
+Python-Standardbibliothek, festes TCP-Ziel 127.0.0.1:18080, Host localhost:18080,
+Connect-Timeout 3 s / I/O-Timeout 5 s, sequenziell, keine automatischen Wiederholungen.
+Neue Verbindung je Fall außer ausdrücklich geprüftem Keep-alive-Paar. Erzeugung
+großer Bodies in höchstens 64-KiB-Blöcken, begrenzte Responseaufnahme; keine
+vollständigen 32-MiB-Clientstrings oder Parallel-/Last-/Slowloris-Serie.
+
+Alle POSTs ausschließlich auf dem zuvor gegen sämtliche Controller-Mappings
+geprüften **nicht existierenden** `/__t02_request_limit_probe__`, ohne gültigen
+CSRF-Token. Nur GET Home/Einkaufsliste zum Marker-/Listener-/Keep-alive-Nachweis.
+Keine Geschäfts-/Scraper-Schreibroute, kein positiver HTTP-Schreibersatz für UI.
+Keine instrumentierten Aufrufzähler: der Ausschluss von Geschäftsschreibpfaden
+folgt aus Routing/Security und wird durch vollständige Snapshots ergänzt.
+Die gewollt lesenden Viewcontroller und mögliche Sicherheits-Fehlerdispatches
+sind davon zu unterscheiden.
+
+Große gültige JSON-Bodies bestehen aus `{}` plus nachfolgendem JSON-Whitespace:
+nur zwei Struktur-Tokens, keine langen Strings oder tiefen Objekte. So ist die
+Bytegrenze unabhängig von den JSON-Strukturgrenzen prüfbar. Das nominelle
+32-MiB-Limit ist daher erreichbar, auch wenn heutige normale Fachpayloads meist
+kleiner sind. Der zusätzliche 4097-Zeichen-String prüft ausdrücklich eine andere
+Grenze und liefert ebenfalls 413, nicht den Nachweis des Bytebudgets.
+
+P = über die Socket-Sendeoperationen übertragene Payloadbytes; W = Bodybytes
+einschließlich Chunk-Framing, ohne Requestzeile/Header. Kein Paketmitschnitt:
+Sendezähler allein beweisen keine vollständige serverseitige Verarbeitung.
+Bei den akzeptierten großen Bodies zeigt die nachgelagerte Security-403 zusammen
+mit dem Filterpfad, dass das vollständige begrenzte Vorlesen/JSON-Prüfen passiert ist.
+403 ist hier **kein positiver fachlicher Speichervertrag**.
+
+| Fall | Framing; tatsächlich gesendet | Status / verantwortliche Schicht | Verbindung / Bewertung |
+|---|---|---|---|
+| Vorab GET Home | kein Body, Connection: close | 200; View, manueller Marker | vollständiges HTML, EOF; bestanden |
+| A: kleines JSON `{}` | CL 2; P/W 2 | 403; Security nach Filter | vollständig; Client schließt; bestanden |
+| A: knapp unter Grenze | CL 33.554.431; P/W 33.554.431 | 403; Security nach Filter | vollständig; Client schließt; bestanden |
+| A: exakt Grenze | CL 33.554.432; P/W 33.554.432 | 403; Security nach Filter | vollständig; Client schließt; bestanden |
+| A: deklarierte Übergröße | CL 33.554.433; **P/W 0** | 413; Anwendungsfilter vor Bodyübertragung | vollständig, nach Client-SHUT_WR EOF; **Teilnachweis** |
+| B: kleines JSON mit ä und Unicode-Escape | chunked in Einbyte-Chunks; P 16 / W 101, Null-Chunk gesendet | 403; Security nach Filter | vollständig; Client schließt; bestanden |
+| B: exakt Grenze | chunked; P 33.554.432 / W 33.559.049, Null-Chunk gesendet | 403; Security nach Filter | vollständig; Client schließt; bestanden |
+| B: tatsächlich über Grenze | chunked; **P 33.554.433 / W 33.559.050**, Null-Chunk gesendet | **413; Anwendungsfilter** | vollständig, EOF; bestanden |
+| C: URL-encoded Form | CL 3; P/W 3 | 415; Anwendungsfilter | vollständig, EOF; bestanden |
+| C: Multipart-Abschluss | CL 11; P/W 11 | 415; Anwendungsfilter | vollständig, EOF; bestanden |
+| C: nicht unterstütztes Content-Encoding gzip | CL 2; P/W 2, harmlose unkomprimierte Bytes | 415; Anwendungsfilter, keine Entpackung | vollständig, EOF; bestanden |
+| C: syntaktisch ungültiges JSON `{` | CL 1; P/W 1 | 400; Anwendungsfilter | vollständig, EOF; bestanden |
+| C: JSON-String mit 4097 Zeichen | CL 4105; P/W 4105 | 413; Anwendungsfilter, Strukturgrenze | vollständig, EOF; bestanden |
+| C: doppelte gleiche CL | zwei Header 0/0; P/W 0 | **400; Tomcat vor Security** | vollständig, EOF; bestanden |
+| C: widersprüchliche CL | zwei Header 0/2; P/W 0 | **400; Tomcat vor Security** | vollständig, EOF; bestanden |
+| C: CL zusammen mit TE | CL 0 plus chunked; P 0 / W 5, Null-Chunk gesendet | **403; Security nach Tomcat-Normalisierung** | Connection: close, EOF; **Abweichung zur strikten Header-400-Erwartung** |
+| D: GET Home | kein Body, neuer Socket | 200; View, Marker | vollständige Antwort; Verbindung wiederverwendet; bestanden |
+| D: GET Einkaufsliste | kein Body, derselbe Socket erst nach vollständiger erster Antwort | 200; View, Marker | vollständige Antwort; danach Client schließt; bestanden |
+| D: abschließender GET Home | kein Body, Connection: close | 200; View, Marker | vollständiges HTML, EOF; bestanden |
+
+Statusverteilung: **4 × 200, 3 × 400, 6 × 403, 3 × 413, 3 × 415**. Keine 500,
+Timeouts oder unvollständigen Antworten. Bei allen beobachteten EOF-Prüfungen war
+EOF beim anschließenden Peek bereits verfügbar; keine verallgemeinerte
+Millisekunden-Schließgarantie. Auf weiter nutzbaren Verbindungen wurde kein
+verpflichtendes Server-EOF verlangt. Keine Pipelining-Angriffsserie.
+
+### Frühe Ablehnung und tatsächliche Bytegrenze
+
+Bei CL 33.554.433 antwortete der Filter schon vor der ersten Payloadübertragung.
+Der Client respektierte diese Ablehnung, beendete seine Sendeseite mit SHUT_WR
+und las die vollständige Antwort; danach EOF. Es wurden **nicht** 33.554.433 Byte
+mit festem Content-Length vollständig übertragen. Eine solche Behauptung wäre
+falsch. Kein Erzwingen des Uploads auf einer bereits abgewiesenen Verbindung.
+Der tatsächliche Limit+1-Lesenachweis ohne deklarierte Länge kommt stattdessen
+aus dem vollständig gesendeten chunked Fall. Dessen 413 basiert nicht auf einem
+überlangen String oder Content-Length. Keine Schwächung von Grenzwerten.
+Der SHUT_WR-Fall bestätigt keine spontane Schließung bei dauerhaft fehlendem Body;
+die Erklärung aus Abschnitt 20 bleibt davon unberührt.
+
+### Header- und Fehlerschichten
+
+Die Filterantworten stimmen exakt mit den festen Meldungen überein:
+
+| Status | Text | Relevante gemessene Header |
+|---|---|---|
+| 400 | `Ungültige Anfrage.` | text/plain;charset=UTF-8, Content-Length 19, Connection: close |
+| 413 | `Anfrage überschreitet die technischen Größenbegrenzungen.` | text/plain;charset=UTF-8, Content-Length 60, Connection: close |
+| 415 | `Nicht unterstütztes Anfrageformat.` | text/plain;charset=UTF-8, Content-Length 35, Connection: close |
+
+Tomcats beide CL-400 dagegen: generische **435-Byte-HTML-Antwort**, Content-Type
+`text/html;charset=utf-8`, Content-Length 435, Connection: close; kein
+Anwendungsfiltertext und keine Security-Header. Lokaler Parserpfad erklärt die
+frühe Ablehnung, daher nicht als Filter-400 ausgeben. Keine erkannten Exception-/
+Stacktrace-Indikatoren in den geprüften Antworten. Security-403: JSON/chunked mit
+DENY/nosniff; View-200: HTML UTF-8/chunked mit DENY/nosniff. Session-/CSRF-Werte und
+vollständige HTML-/Fehlerbodys nicht in den HTTP-Nachweisen gespeichert.
+
+**CL+TE-Besonderheit:** Der schon vor dem Lauf lokal geprüfte
+`Http11Processor.prepareInputFilters()` entfernt Content-Length, setzt die
+Requestlänge auf −1, verwendet chunked und deaktiviert Keep-alive. Deshalb kann
+der Servletfilter die ursprüngliche Headerkombination nicht mehr erkennen.
+Gemessen: CSRF-403 und EOF, **keine rohe CL+TE-400**. Dies war anhand des lokalen
+Codes vorhersehbar, kein unerklärlicher Laufabbruch. Es ist aber auch **kein
+Nachweis einer bedingungslosen Headerkonflikt-Ablehnung**: mit gültigem CSRF wurde
+nicht getestet. Die Mock-Assertion für gleichzeitig sichtbare Servletheader
+beweist diesen rohen Tomcat-Fall nicht. Kein Smuggling oder Datenzugriff bewiesen;
+keine Proxy-/Pipelining-/gültigen Geschäftsrequest-Varianten nachgeschoben.
+Falls strikt jede rohe CL+TE-Kombination 400 liefern soll, ist diese Anforderung
+mit Connector-Möglichkeiten separat zu bewerten; keine Produktionsänderung jetzt.
+
+### Daten, Browsergrenze und Abschluss
+
+Vorher-/Nachher-Snapshot mit sämtlichen IDs/Spaltenwerten und Schema identisch:
+
+`2eb8d9ed03cd73a66ace123f4a3f60507f2de3d48c31450a9aacc96b8732c226`
+
+Elf Reihen/Details, 28 Bände, fünf Einkaufspositionen/Details, 17 Stammdaten,
+zehn Tabellen, 75 Spalten, 24 Indexeinträge, zwölf FKs, 26 Key-Column-Einträge
+unverändert; AUTO_INCREMENT ausgenommen. Keine neuen Geschäftszeilen oder
+Schreib-SQL-/Fixture-/Bereinigungsaktion. Ein lokaler PowerShell-Parserfehler im
+ersten Abschlussaufruf verhinderte dessen Ausführung; nach Syntaxkorrektur genau
+ein erfolgreicher lesender Abschlusssnapshot, kein DB-Fehler oder Protokoll-Retry.
+
+Zu Beginn verfügbare Werkzeuge geprüft: **kein Codex-In-app-Browser-Connector**.
+Browsernachprüfung daher blockiert, HTTP-Abnahme davon unabhängig durchgeführt.
+Keine Browserinstallation/native Ausweichlösung, UI-Aktionen oder positiven
+HTTP-Ersatzwrites. Weiter offen: echte Dialogbedienung, 413-Anzeige, Eingabenerhalt,
+Save-Sperre/kein Replay und bewusste Wiederholung nach Reload.
+
+Eigene PID/Listener vor Stop erneut identifiziert, Ctrl+C in ursprünglicher Session
+17252; „Graceful shutdown complete“ und geschlossene EntityManagerFactory beobachtet.
+**PID 32320 beendet, Port 18080 frei** unabhängig bestätigt. Kein Force-Stop,
+fremder Prozessstopp oder Neustart. Lokale ignorierte Belege:
+`.gradle/t02-http-protocol-20261016/` mit `ReadManualSnapshot.ps1`, `before.json`,
+`after.json`, `comparison.txt`, `protocol_probe.py`, `results.json`, `shutdown.txt`.
+
+Nur MANUAL_TESTING.md und TESTING.md ergänzt; keine Anwendungscode-/Guard-/Profil-/
+Limitänderung, neue Dependency, Produktiv-/mangalib_test-Verbindung, Live-Scraper,
+externe Abrufe, Migrationen, SQL-Schreibbefehle, Staging/Commits/Pushes/Merges.
+Keine Java-/DOM-Suite wiederholt. T02 insgesamt bleibt offen: Browser-/UX-Abnahme,
+Entscheidung über strikte CL+TE-Ablehnung, Ressourcen-/Zeit-/Parallelitätsbudgets,
+Scraper-/SSRF-Schutz und Grenzen der synthetischen Altbestandsnachweise.
+
+## Nachtrag 02.11.2026 – Automatisierte Abschlussregression des Scraperumfangs
+
+Die anschließend ausdrücklich freigegebene automatisierte Regression lief
+AUSSCHLIESSLICH gegen mangalib_test, nicht gegen die manuelle Testdatenbank:
+1016 Javafälle, darunter 29 MVC-/JSON-Verträge, sowie 198 DOM-Fälle bestanden,
+jeweils 0 Fehler/übersprungen. Guards zuerst bestanden, separate geschützte
+Vorher-/Nachher-Fingerabdrücke identisch:
+ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570.
+Zehn Tabellen und 78 Stammdaten unverändert, keine Fixtures verblieben.
+
+Keine manuelle Datenbankverbindung, Browserbedienung oder Anwendung gestartet.
+Manual-JAR und synthetische manuelle Umgebung unverändert; kein Seeding/Reset.
+Dies ersetzt keine noch offene echte Dialog-/413-/Eingabenerhalt-/Replay-Abnahme.
+Die gesonderten nativen Scraper-/Timeoutnachweise sind keine UI-Abnahme des
+manual-test-Profils; dieses bleibt ausschließlich mit synthetischen Doubles.
+
+Geschützte Vollsuite ausdrücklich test --rerun-tasks, kein neuer clean test,
+um das eingefrorene Manual-JAR zu erhalten. assemble ohne zusätzlichen Testlauf
+nach Taskplanprüfung erfolgreich. Vorherige Ergebnisse bleiben historisch.
+Aktuelle Vollberichte und Aussagegrenzen: neuer TESTING.md-Nachtrag; keine
+Produktivfreigabe, Gitaktionen oder Änderungen fachlicher Prioritäten.
+
+## Nachtrag 02.11.2026 – Echte T02-UI-Abnahme weiterhin offen, neuer Kandidat vorbereitet
+
+Aktueller Gesamtstatus: T02_CLOSEOUT.md. Die frühere 19-Fälle-HTTP-Abnahme und
+1016-Java-/198-DOM-Regression bleiben erhalten; sie ersetzen keine echte
+Dialogabnahme. Die strikte rohe CL+TE-Ablehnung ist gemäß Eigentümerentscheidung
+zurückgestellt, nicht erneut als ungeklärter Implementierungsauftrag anzusehen.
+
+Kleine aktuelle Korrektur: eigene feste 413-/415-Texte in security.js. 413-Sperre
+bis Reload und bisherige 415-Korrekturmöglichkeit unverändert, kein automatischer
+Retry. 206 datenbankfreie DOMfälle erfolgreich, einschließlich acht neuer Fälle;
+keine Browser- oder manuelle Datenbankausführung in diesem Auftrag.
+
+Neues separates UI-Artefakt für die spätere Freigabe:
+- build/libs/mangalib-manual-test-t02-closeout.jar
+- SHA256 e89e4e8b2947082892ac847ae842793faa63c96f4422d55638508b1c4553fa1f
+- Statisch geprüft: aktuelle Feedbackdatei, unveränderte Guard-/Doubleklassen,
+  keine Live-Scraper/Selenium/Worker-Ownerklassen. Nicht gestartet.
+- Das bisherige mangalib-manual-test.jar bleibt hashgleich erhalten und enthält
+  weiterhin den historischen Feedbackstand vor diesen beiden neuen Texten.
+
+Nach gesonderter Freigabe: vorhandenes Start-ManualTest.ps1 mit explizitem
+-ArtifactPath auf das neue JAR, zuerst -ValidateOnly, dann manual-test auf
+127.0.0.1:18080. Passwort ausschließlich MANGALIB_MANUAL_DB_PASSWORD. Vorher-/
+Nachher-Nachweise über das bestehende geschützte Verfahren, keine produktiven
+oder automatisierten Testdatenbanken und kein Seeding/Reset.
+
+Begrenzte Abnahme ausschließlich negativer, vor Servicearbeit sicher abgewiesener
+Requests: reale 413-/415-Anzeige, Eingabenerhalt, weiterhin bedienbare Dialoge,
+keine alerts/Exceptiontexte und kein Replay; 413 auch nach erneutem Öffnen gesperrt,
+bewusster erneuter Versuch erst nach Reload. Kein gültiger Speichervorgang,
+keine Kauf-/Lösch-/Autofillaktion. Bei 2xx/unklarer Speicherung STOP und keine
+Bereinigung. Die genaue sichere Browserprobe ist in T02_CLOSEOUT.md beschrieben;
+falls vorhandener Connector sie nicht unterstützt, Eigentümerabnahme statt
+Installation/Umgehung. Diese Dokumentation erteilt KEINE Ausführungsfreigabe.
+
+## Nachtrag 02.11.2026 – Gepatchter Kandidat für die letzte negative UI-Abnahme
+
+Die gesondert genehmigte automatische Regression gegen mangalib_test nach dem
+Tomcat-Patch war erfolgreich: 1016 Javafälle, alle 29 MVC-/JSON-Verträge, 0 Fehler/
+übersprungen; zuerst 44 DB-freie Guards bestanden. 206 DOMfälle ebenfalls bestanden.
+Vorher-/Nachher-Fingerabdruck wieder identisch (zehn Tabellen, 78 Stammdaten,
+keine Fixtures). Dies ist KEINE Freigabe und kein Zugriff auf die manuelle DB.
+
+Der bisherige e89-Kandidat und das ursprüngliche manuelle JAR sind unverändert.
+Damit die verbleibende echte UI-Abnahme bereits den gepatchten Container prüft,
+ist ein weiterer separat benannter Kandidat offline gebaut, nicht gestartet:
+
+build/libs/mangalib-manual-test-t02-closeout-tomcat-11.0.27.jar
+SHA256: 2b4859de35e3437adf2cc59db8028043860c9b7606d40f0d0b3845e64d0d41e2
+
+Alle neun manuellen Guard-/Double-/Profileinträge bytegleich zum Original,
+aktuelle security.js enthalten; drei Tomcatmodule 11.0.27. Keine Selenium-,
+Live-Scraper-, Worker-/Owner- oder Downloadmanagerbestandteile. Init-Hilfe nur
+lokal ignoriert; keine neue Startkomponente. Boot bleibt 4.1.1.
+
+Erst nach neuer ausdrücklicher Start-/Manual-DB-/Browserfreigabe:
+1. Hash, Umgebung, freien Port und geschützten manuellen Datenbankpfad prüfen.
+2. Start-ManualTest.ps1 mit -ArtifactPath auf obiges JAR zuerst -ValidateOnly,
+   danach tatsächlicher Start ausschließlich manual-test auf 127.0.0.1:18080,
+   mangalib_manual_test_user, Passwort nur MANGALIB_MANUAL_DB_PASSWORD.
+3. Vorher-/Nachher-Vergleich über das vorhandene geschützte manuelle Verfahren;
+   kein Seeding, Reset, direkte SQL-Werkzeuge oder gültiger Geschäftsdatenwrite.
+4. Sichtbares Testbanner/Prozesszuordnung prüfen; lesende Dialogaktionen und
+   kontrollierte ungültige 413-/415-Requests mit gültiger Session/CSRF/Origin.
+   Als zusätzliche Sicherheit immer auch einen unabhängig ungültigen Fachwert
+   (z.B. leerer Titel) verwenden, falls ein Filter unerwartet nicht greift.
+5. Fehlertexte, Eingabenerhalt, keine alerts/Exceptiontexte, genau einen Request,
+   413-Sperre über Dialog-Wiederöffnung bis Reload und 415-Korrektur prüfen.
+   Kein automatisches Replay. Bei 2xx/unklarer Speicherung sofort STOP.
+6. Nur die eindeutig selbst gestartete Instanz geordnet beenden, sofern im
+   gesonderten Auftrag freigegeben; keine fremden Prozesse beenden.
+
+Keine Autofill-, Kauf-, Lösch- oder gültigen Speicheraktionen, keine externen
+Navigationen/Live-Scraper. Unterstützt der vorhandene Browserconnector die
+kontrollierte Probe nicht sicher, Eigentümerabnahme statt Umgehung/Installation.
+ValidateOnly startet selbst eine JVM und wurde in dieser Runde NICHT ausgeführt.
+Keine Anwendung/Browser/manual-test-DB gestartet oder angesprochen. Die echte
+UI-Abnahme bleibt der letzte dokumentierte T02-Abschlussblock; kein Commit.
+
+## Nachtrag 02.11.2026 – Ergebnis der echten UI-Probe und verbleibender 415-Schritt
+
+Gepatchter Kandidat gemäß obigem SHA gestartet: ValidateOnly erfolgreich,
+PID 34056, manual-test, nur 127.0.0.1:18080, Banner bestätigt. Im In-app-Browser
+regulären Anlagedialog mit 4097 Zeichen Titel und zusätzlich Bandanzahl 0 einmal
+abgesendet. Sichtbarer eigener Größenlimit-Text, sämtliche Eingaben erhalten,
+kein Alert und keine error/warn-Konsolenmeldungen. Save bleibt bis Reload gesperrt,
+auch nach Cancel/Wiederöffnung. Nach Reload wieder freigegeben, kein weiterer
+Speicherversuch. Ein HTTP-Status wurde nicht unmittelbar über den Connector
+beobachtet; die UI-Meldung ist kein eigenständiger Statuscode-Mitschnitt.
+
+Die mitfreigegebenen unveränderten manuellen READ-ONLY-Snapshots vor/nach waren
+identisch: 2eb8d9ed03cd73a66ace123f4a3f60507f2de3d48c31450a9aacc96b8732c226.
+Elf Reihen, 28 Bände, fünf Einkaufspositionen und alle Stamm-/Schemaabschnitte
+unverändert. Das vorhandene, vorher statisch geprüfte Snapshotverfahren verwendet
+feste manuelle mysql.exe-Argumente, nur SELECTs in READ ONLY und ROLLBACK. Damit
+ist ausschließlich dieses vorhandene Verfahren gemeint; keine frei formulierten
+SQL-Befehle oder Datenadministration. Evidenzen in neuem lokal ignoriertem
+Verzeichnis .gradle/t02-ui-closeout-20261102/, keine alten Evidenzen überschrieben.
+
+Screenshot: ui-413.jpg im genannten lokalen Verzeichnis. Testtab geschlossen,
+Instanz über ihre ursprüngliche Startsession per Ctrl+C beendet. Tomcat meldete
+Graceful shutdown complete; JPA geschlossen, PID nicht mehr vorhanden und Port
+18080 frei. Kein Force-Kill, keine weitere Instanz. Original- und beide separaten
+Manual-JARs unverändert. Keine Autofill-/Kauf-/Lösch-/gültigen Speicheraktionen.
+
+### Noch erforderliche Eigentümerprobe: 415-Fehlerdarstellung
+
+Der derzeitige Connector bietet nur lesendes evaluate und keine Request-
+Interception. Die reguläre UI erzeugt immer JSON. Daher konnte Codex keinen
+kontrollierten 415-Request mit dieser Oberfläche auslösen. Keine Browser-
+Sicherheitsumgehung oder neue Testseite eingeführt. T02 bleibt deshalb offen;
+keine pauschale Abschluss-/Commitbehauptung aus grünen MockMvc-/DOMfällen.
+
+Für eine gezielte Eigentümerabnahme (kein weiterer Codex-Start freigegeben):
+1. Hash des oben genannten gepatchten Kandidaten erneut prüfen; Startskript mit
+   diesem ArtifactPath zunächst -ValidateOnly, dann regulär starten. Ausschließlich
+   manuelle Umgebung, keine parallele Instanz. Vorherzustand mit vorhandenem
+   Snapshotverfahren in einem NEUEN Evidenzverzeichnis sichern.
+2. http://localhost:18080/home öffnen, Testbanner prüfen, Anlagedialog öffnen.
+   Nur ungespeicherte synthetische Formulareingaben verwenden.
+3. Browser-Entwicklerwerkzeuge öffnen, Network-Aufzeichnung aktivieren. In der
+   Konsole EINMAL folgende bestehende Anwendungshilfe aufrufen (CSRF/Host/Origin
+   bleiben aktiv; Form-Content-Type führt vor Facharbeit zu 415; zusätzlich sind
+   Titel/Anzahl unabhängig ungültig):
+
+```javascript
+MangaLibFeedback.request('/addMangaReihe', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: 'titel=&anzahlBaende=0'
+}, document.getElementById('popupContainer')).catch(() => {});
+```
+
+4. Network: genau diese Anfrage mit HTTP 415, kein automatisches Replay.
+   Dialog: „Das Anfrageformat wird nicht unterstützt. Bitte überprüfe deine
+   Eingaben.“; Werte erhalten, Save wieder freigegeben, Cancel bedienbar, keine
+   nativen Alerts/ungefangenen Promises/internen Fehlertexte. KEIN zweiter
+   Speicherversuch erforderlich. Bei 2xx/unklarer Speicherung sofort STOP.
+5. Dialog ohne Speichern schließen, Übersicht neu laden. Nachher-Snapshot im
+   selben neuen Evidenzverzeichnis vergleichen. Nur eigene Instanz per Ctrl+C
+   geordnet beenden. Status, UI-Beobachtung und Datenvergleich zurückmelden.
+
+Keine externen Abrufe, Autofill, gültige Einträge, Kauf-/Löschaktionen, Resets oder
+Migrationen. Diese Anleitung ist kein zusätzlicher Codex-Ausführungsauftrag.
+
+## Abschlussnachtrag 02.11.2026 – Eigentümerabnahme HTTP 415 bestätigt
+
+Der Projekteigentümer hat die oben vorbereitete letzte 415-Probe selbst
+ erfolgreich durchgeführt und bestätigt:
+- HTTP 415 Unsupported Media Type unmittelbar beobachtet.
+- Erwartete verständliche Fehlermeldung angezeigt, kein automatisches Replay.
+- Daten- und Schema-Snapshot vor/nach identisch.
+- Manuelle Instanz kontrolliert beendet, Port 18080 anschließend frei.
+
+Diese Angaben sind Eigentümerbeobachtungen, KEINE von Codex ausgeführte 415-
+Abnahme. Kein neuer Snapshot-Hash übermittelt oder ergänzt. Die bisherige
+Anleitung und damalige Werkzeuggrenze bleiben als Historie erhalten; der
+Schritt ist jetzt abgeschlossen, kein weiterer Ausführungsauftrag daraus.
+
+Codex hatte zuvor die echte 413-UI-Probe mit Eingabenerhalt, verständlichem Text
+und Speichersperre bis Reload bestätigt; Status nicht unmittelbar beobachtbar.
+Keine nachträgliche Behauptung eines gemessenen 413-Codes. T02 ist damit für das
+freigegebene lokale Einzelbenutzermodell technisch abgeschlossen; maßgeblich ist
+T02_CLOSEOUT.md. Keine erneuten Browser-/DB-/Anwendungs-/Scraperprüfungen oder
+Datenänderungen im Abschlussauftrag. Lokaler Abschlusscommit freigegeben, kein
+Push/Merge; T03 weiterhin nur vorbereitet. LAN/Internet, globale OS-Isolierung,
+vollständige Prozessprovenienz und allgemeine Schwachstellenfreiheit sind nicht
+Teil dieser Abnahme. Historische JARs/Evidenzen und Sicherheitsguards erhalten.

@@ -196,17 +196,21 @@ class ManualTestSafetyTest {
         assertThrows(IllegalArgumentException.class, () -> gateway.scrapeVolume("1"));
         assertThrows(IllegalArgumentException.class, () -> gateway.scrapeSeries("1"));
     }
-    @Test void normalGatewayKeepsStaticMockCompatibility() {
+    @Test void normalGatewayDelegatesBothImportsOnlyToJobClient() {
+        var worker = mock(de.mangalib.windowsadapter.ProductionScraperClient.class);
+        var payload = new HashMap<String, String>();
+        payload.put("Titel", "synthetic");
+        when(worker.series("1")).thenReturn(payload);
+        when(worker.volume("2")).thenReturn(payload);
         try (var series = mockStatic(MangaScraper.class); var volumes = mockStatic(BandScraper.class)) {
-            var payload = new HashMap<String, String>();
-            payload.put("Titel", "synthetic");
-            series.when(() -> MangaScraper.scrapeMangaData("1")).thenReturn(payload);
-            volumes.when(() -> BandScraper.scrapeBandData("2")).thenReturn(payload);
-            var gateway = new LiveScraperGateway();
+            var gateway = new LiveScraperGateway(worker);
             assertSame(payload, gateway.scrapeSeries("1"));
             assertSame(payload, gateway.scrapeVolume("2"));
-            series.verify(() -> MangaScraper.scrapeMangaData("1"));
-            volumes.verify(() -> BandScraper.scrapeBandData("2"));
+            verify(worker).series("1");
+            verify(worker).volume("2");
+            verifyNoMoreInteractions(worker);
+            series.verifyNoInteractions();
+            volumes.verifyNoInteractions();
         }
     }
 }

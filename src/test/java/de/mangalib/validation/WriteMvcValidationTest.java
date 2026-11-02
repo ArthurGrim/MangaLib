@@ -66,7 +66,7 @@ class WriteMvcValidationTest {
         new XorCsrfTokenRequestAttributeHandler().handle(request, new MockHttpServletResponse(), () -> generated);
         token = ((CsrfToken) request.getAttribute(CsrfToken.class.getName())).getToken();
         mvc = MockMvcBuilders.standaloneSetup(main, cart)
-                .addFilters(new LocalRequestFilter(8080), new CsrfFilter(csrf)).build();
+                .addFilters(new de.mangalib.security.RequestBodyLimitFilter(), new LocalRequestFilter(8080), new CsrfFilter(csrf)).build();
     }
 
     private MockHttpServletRequestBuilder local(MockHttpServletRequestBuilder request) {
@@ -87,7 +87,13 @@ class WriteMvcValidationTest {
         return new HashMap<>(Map.of("id", "1", "bandNr", "1", "preis", "6.01", "aenderungPreis", "-0.02",
                 "istGelesen", false, "istSpecial", true, "reread", "3"));
     }
-    private void noWork() { verifyNoInteractions(series, bands, shopping, details, scraper, publishers, types, formats); }
+    private void noWork() {
+        // Bei historisch ungültigen URLs ist ein lesender Bestandsvergleich nötig.
+        // Keine einzige Schreib-/Scraperinteraktion zulassen; alle übrigen Aufrufe ebenfalls prüfen.
+        mockingDetails(series).getInvocations().forEach(i -> assertEquals("findById", i.getMethod().getName()));
+        mockingDetails(bands).getInvocations().forEach(i -> assertEquals("findById", i.getMethod().getName()));
+        verifyNoInteractions(shopping, details, scraper, publishers, types, formats);
+    }
     private void bad(String path, Map<String, Object> input) throws Exception {
         var result = mvc.perform(write(path).content(mapper.writeValueAsString(input))).andReturn();
         assertEquals(400, result.getResponse().getStatus()); noWork();

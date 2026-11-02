@@ -47,6 +47,7 @@ class LocalSecurityMvcTest {
     @MockitoSpyBean MainController main;
     @MockitoSpyBean EinkaufslisteController shopping;
     @MockitoSpyBean StatistikController statistics;
+    @org.springframework.test.context.bean.override.mockito.MockitoBean de.mangalib.windowsadapter.ProductionScraperClient worker;
     private TestDatabaseSnapshot.Snapshot before;
     private MockedStatic<BandScraper> bandScraper;
     private MockedStatic<MangaScraper> mangaScraper;
@@ -121,8 +122,13 @@ class LocalSecurityMvcTest {
     }
 
     @Test
-    void rejectsFormPostsAndForwardedHeadersWithValidToken() throws Exception {
-        reject(local(post("/scrape")).contentType("application/x-www-form-urlencoded").content("mangaIndex=123"));
+    void rejectsUnsupportedFormBeforeCsrfAndForwardedHeadersWithValidToken() throws Exception {
+        // Der zentrale Bodyfilter lehnt dieses nicht unterstützte Format jetzt vor CSRF ab.
+        // Ablehnung und ausbleibende Fach-/Scraperarbeit bleiben ausdrücklich verpflichtend.
+        assertEquals(415, mvc.perform(local(post("/scrape")).contentType("application/x-www-form-urlencoded")
+                .content("mangaIndex=123")).andReturn().getResponse().getStatus());
+        verifyNoInteractions(main, shopping, statistics);
+        noScraping();
         var token = sessionToken();
         reject(token.on(local(post("/autofillBandData/123"))).header("Forwarded", "host=localhost:8080"));
         reject(token.on(local(post("/autofillBandData/123"))).header("X-Forwarded-Host", "localhost:8080"));
@@ -152,7 +158,7 @@ class LocalSecurityMvcTest {
     @ValueSource(booleans = {false, true})
     void validAutofillPostPreservesPayloadWithOrWithoutOrigin(boolean origin) throws Exception {
         var token = sessionToken();
-        bandScraper.when(() -> BandScraper.scrapeBandData("123"))
+        when(worker.volume("123"))
                 .thenReturn(Map.of("BildUrl", "https://example.invalid/cover.jpg", "Preis", "6,99 €"));
         var request = token.on(local(post("/autofillBandData/123")));
         if (origin) request.header("Origin", "http://localhost:8080")
@@ -166,7 +172,8 @@ class LocalSecurityMvcTest {
         assertEquals("6,99", json.get("Preis").stringValue());
         assertEquals("https://www.manga-passion.de/volumes/123", json.get("mpUrl").stringValue());
         verify(main).autofillBandData("123");
-        bandScraper.verify(() -> BandScraper.scrapeBandData("123"), times(1));
+        verify(worker, times(1)).volume("123");
+        verifyNoMoreInteractions(worker);
         bandScraper.verifyNoMoreInteractions();
         mangaScraper.verifyNoInteractions();
     }
@@ -174,7 +181,7 @@ class LocalSecurityMvcTest {
     @Test
     void validScrapePostUsesOnlyDoubleAndPreservesImportFields() throws Exception {
         var token = sessionToken();
-        mangaScraper.when(() -> MangaScraper.scrapeMangaData("123")).thenReturn(Map.of(
+        when(worker.series("123")).thenReturn(Map.of(
                 "Titel", "Security Test", "Deutsche Ausgabe Verlag", "Nicht vorhandener Testverlag",
                 "Erstveröffentlichung Typ", "Manga", "Erstveröffentlichung Herkunft", "Japan",
                 "Deutsche Ausgabe Format", "Print"));
@@ -183,7 +190,8 @@ class LocalSecurityMvcTest {
         assertEquals(200, result.getResponse().getStatus());
         assertEquals("Security Test", mapper.readTree(result.getResponse().getContentAsString()).get("Titel").stringValue());
         verify(main).scrapeManga(Map.of("mangaIndex", "123"));
-        mangaScraper.verify(() -> MangaScraper.scrapeMangaData("123"), times(1));
+        verify(worker, times(1)).series("123");
+        verifyNoMoreInteractions(worker);
         mangaScraper.verifyNoMoreInteractions();
         bandScraper.verifyNoInteractions();
     }
@@ -221,6 +229,7 @@ class LocalSecurityMvcTest {
     }
 
     private void noScraping() {
+        verifyNoInteractions(worker);
         bandScraper.verifyNoInteractions();
         mangaScraper.verifyNoInteractions();
     }

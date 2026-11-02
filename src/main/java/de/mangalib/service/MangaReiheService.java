@@ -341,16 +341,51 @@ public class MangaReiheService {
             return Optional.empty();
         }
         MangaReihe mangaReihe = mangaReiheOptional.get();
+        WriteValidation.editableRelations(mangaReihe);
+        var oldDetails = mangaReihe.getMangaDetails();
+        mangaDetailsService.validateSammelbandReference(oldDetails, sammelbandTypId);
+        WriteValidation.editedUrl(anilistUrl, oldDetails::getAnilistUrl);
+        WriteValidation.editedUrl(coverUrl, oldDetails::getCoverUrl);
+        for (String option : List.of("applyReadToVolumes", "applyRereadToVolumes", "rereadEdited")) {
+            String value = scrapedData.get(option);
+            WriteValidation.require(value == null || value.equals("true") || value.equals("false"));
+        }
+        boolean applyRead = "true".equals(scrapedData.get("applyReadToVolumes"));
+        boolean applyReread = "true".equals(scrapedData.get("applyRereadToVolumes"));
+        Integer effectiveReread = reread;
+        // Der bisherige GET-Vertrag zeigt unbekannten Reread als 0. Ohne bewusste
+        // Eingabe/Massenaktion ist das kein Auftrag zur Normalisierung des Altwerts.
+        if (oldDetails.getReread() == null && Objects.equals(reread, 0) && !applyReread
+                && !"true".equals(scrapedData.get("rereadEdited"))) effectiveReread = null;
 
         // Tatsächlichen Bestand vor jeder Mutation erfassen. Eine bloße Korrektur
         // der deklarierten Anzahl ist kein Nachweis für neu anzulegende Bände.
         List<Band> existing = bandRepository.findByMangaReiheId(mangaReiheId);
+        boolean knownPrices = existing.stream().allMatch(b -> b.getPreis() != null && b.getAenderungPreis() != null);
         boolean extension = anzahlBaende > existing.size()
                 || mangaReihe.getAnzahlBaende() != null && anzahlBaende > mangaReihe.getAnzahlBaende();
         if (extension) {
             validateExtension(mangaReihe, existing, anzahlBaende);
         }
+        // Bei unbekannten Altpreisen keine neue Summen-/Nullpreisregel erfinden.
+        // Metadaten sind unabhängig bearbeitbar; finanzielle Operationen kontrolliert sperren.
         boolean anzahlBaendeChanged = !Objects.equals(mangaReihe.getAnzahlBaende(), anzahlBaende);
+        boolean financialChange = preisProBand.signum() != 0 && (mangaReihe.getPreisProBand() == null
+                || preisProBand.compareTo(mangaReihe.getPreisProBand()) != 0)
+                || gesamtpreisAenderung != null && gesamtpreisAenderung.signum() != 0
+                && (mangaReihe.getAenderungGesamtpreis() == null
+                    || gesamtpreisAenderung.compareTo(mangaReihe.getAenderungGesamtpreis()) != 0);
+        boolean bandImport = scrapedData.keySet().stream().anyMatch(k -> k.startsWith("Band "));
+        boolean importedPrices = scrapedData.keySet().stream().anyMatch(k -> k.matches("Band \\d+ Preis"));
+        WriteValidation.require(knownPrices || !extension && !anzahlBaendeChanged && !financialChange && !importedPrices);
+        if (!Objects.equals(mangaReihe.getStatus().getStatusId(), statusId))
+            WriteValidation.require(statusService.getStatusById(statusId).isPresent());
+        if (!Objects.equals(mangaReihe.getVerlag().getVerlagId(), verlagId))
+            WriteValidation.require(verlagService.getVerlagById(verlagId).isPresent());
+        if (!Objects.equals(mangaReihe.getTyp().getTypId(), typId))
+            WriteValidation.require(typService.getTypById(typId).isPresent());
+        if (!Objects.equals(mangaReihe.getFormat().getFormatId(), formatId))
+            WriteValidation.require(formatService.getFormatById(formatId).isPresent());
         System.out.println("Update die Stammdaten");
 
         updateMangaReiheAttributes(mangaReihe, mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
@@ -366,7 +401,7 @@ public class MangaReiheService {
         MangaDetails previousDetails = mangaReihe.getMangaDetails();
         MangaDetails details = mangaDetailsService.updateMangaDetails(mangaReihe, anilistUrl, coverUrl,
                 extension ? previousDetails.isIstGelesen() : istGelesen,
-                extension ? previousDetails.getReread() : reread,
+                extension ? previousDetails.getReread() : effectiveReread,
                 sammelbandTypId,
                 scrapedData);
         mangaDetailsRepository.save(details);
@@ -374,7 +409,7 @@ public class MangaReiheService {
 
         System.out.println("Update den Gelesenstatus");
         // Überprüfen und aktualisieren des istGelesen-Status der Bände
-        if (!extension) {
+        if (!extension && applyRead) {
             updateBaendeIstGelesenStatus(details);
         }
 
@@ -382,7 +417,7 @@ public class MangaReiheService {
 
         if (extension) {
             bandService.appendBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData, existing);
-        } else {
+        } else if (anzahlBaendeChanged || financialChange || bandImport) {
             bandService.updateOrCreateBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData,
                     anzahlBaendeChanged);
         }
@@ -397,26 +432,28 @@ public class MangaReiheService {
 
         mangaDetailsRepository.save(details);
 
-        BigDecimal aenderungGesamtPreis = bandService.calculateAenderungGesamtpreis(mangaReihe);
-        mangaReihe.setAenderungGesamtpreis(aenderungGesamtPreis);
+        if (extension || anzahlBaendeChanged || financialChange || importedPrices) {
+            BigDecimal aenderungGesamtPreis = bandService.calculateAenderungGesamtpreis(mangaReihe);
+            mangaReihe.setAenderungGesamtpreis(aenderungGesamtPreis);
 
-        if (aenderungGesamtPreis.compareTo(BigDecimal.ZERO) != 0) {
-            mangaReihe.setIstEbayPreis(true);
-        }
+            if (aenderungGesamtPreis.compareTo(BigDecimal.ZERO) != 0) {
+                mangaReihe.setIstEbayPreis(true);
+            }
 
-        // Aktualisierung des Gesamtpreises der MangaReihe basierend auf den Bänden
-        BigDecimal gesamtpreis = bandService.calculateGesamtpreis(mangaReihe);
-        mangaReihe.setGesamtpreis(gesamtpreis);
+            // Aktualisierung des Gesamtpreises der MangaReihe basierend auf den Bänden
+            BigDecimal gesamtpreis = bandService.calculateGesamtpreis(mangaReihe);
+            mangaReihe.setGesamtpreis(gesamtpreis);
 
-        // Nur aktualisieren, wenn sich die Anzahl der Bände geändert hat
-        if (anzahlBaendeChanged) {
-            mangaReihe.setPreisProBand(
-                    gesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2, RoundingMode.HALF_UP));
+            // Nur aktualisieren, wenn sich die Anzahl der Bände geändert hat
+            if (anzahlBaendeChanged) {
+                mangaReihe.setPreisProBand(
+                        gesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2, RoundingMode.HALF_UP));
+            }
         }
         mangaReihe.setAktualisiertAm(Timestamp.valueOf(LocalDateTime.now()));
 
         // Reread-Wert der MangaReihe aktualisieren
-        if (!extension && reread != null) {
+        if (!extension && applyReread && reread != null) {
             updateMangaReiheReread(details, reread);
         }
 
