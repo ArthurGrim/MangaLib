@@ -12674,3 +12674,68 @@ Die entfernte private Pfadzeile in MANUAL_TESTING.md war bereits in der
 Ausgangsbasis versioniert; ihre Entfernung bereinigt den aktuellen Baum, keine
 History-Umschreibung. Indexprüfung und git diff --cached --check erfolgreich.
 Die lokale Musterprüfung ersetzt keinen vollständigen Historien-Secret-Scanner.
+
+## Nachtrag 03.11.2026 – gezieltes undici-Sicherheitsupdate
+
+Status **SECURITY_FIX_VERIFIED** für die npm-Projektauflösung. Eigenständiger
+Sicherheitsfix zwischen T03-1/T03-2 und T03-3; keine fachlichen Änderungen.
+
+- Ursache: reine Entwicklungs-/DOM-Testabhängigkeit
+  `mangalib-dom-tests -> jsdom 30.1.2 -> undici 8.11.2`, genau eine Paketversion.
+  jsdom verlangt `^8.11.2`; der vorhandene Bereich erlaubt das Sicherheitsupdate.
+- Regulär und ausschließlich undici auf **8.12.3** aktualisiert. Kein Override,
+  kein jsdom-/Major-/Java-/Spring-Update. package.json unverändert; im Lockfile
+  nur Version, Integrität und zugehörige undici-Verweise verändert (4/4 Zeilen).
+  Patch 8.12.3 enthält die Korrekturen aus 8.12.2 und zusätzliche HTTP/2-Timeout-/
+  Pool-Kontextkorrekturen laut offizieller Releasebeschreibung.
+- Offizielle Registry `https://registry.npmjs.org/` vorab bestätigt. Zuerst rein
+  offline geprüft: alter Metadatencache lieferte noch 8.11.2, neuer Tarball fehlte.
+  Anschließend gezielte Metadatenauflösung und Frozen-Installation: 35 vorhandene
+  Pakete aus Cache wiederverwendet, genau ein Paket (undici) heruntergeladen.
+  Lifecycle-Skripte durchgehend mit `--ignore-scripts` deaktiviert.
+- Node v24.22.1 und pnpm 11.25.0 unverändert. undici verlangt >=22.19.0;
+  Projekt/jsdom verlangen ^22.22.2 || ^24.15.0 || >=26.0.0. Aktuelle Laufzeit passt.
+  Node-internes undici separat 7.30.1, nicht durch diesen Lockfile geändert.
+  Keine Behauptung eines allgemeinen Node-/System-Sicherheitsaudits.
+
+Offizielle Herstelleradvisories, am 03.11.2026 abgeglichen:
+
+| CVE | Hersteller-Advisory | Betroffene 8.x-Versionen / erste Korrektur |
+| --- | --- | --- |
+| CVE-2026-109869 | [GHSA-xjj6-f33q-929c](https://github.com/nodejs/undici/security/advisories/GHSA-xjj6-f33q-929c) | >=8.0.0,<8.12.2 / 8.12.2 |
+| CVE-2026-109383 | [GHSA-2m5v-pch6-74hx](https://github.com/nodejs/undici/security/advisories/GHSA-2m5v-pch6-74hx) | >=8.0.0,<8.12.2 / 8.12.2 |
+| CVE-2026-87018 | [GHSA-qrxm-fqhp-jwvm](https://github.com/nodejs/undici/security/advisories/GHSA-qrxm-fqhp-jwvm) | >=8.0.0,<8.12.2 / 8.12.2 |
+| CVE-2026-109932 | [GHSA-9fm3-97px-rjf6](https://github.com/nodejs/undici/security/advisories/GHSA-9fm3-97px-rjf6) | >=8.0.0,<8.12.2 / 8.12.2 |
+
+Offizielle Releases: [8.12.2](https://github.com/nodejs/undici/releases/tag/v8.12.2),
+[8.12.3](https://github.com/nodejs/undici/releases/tag/v8.12.3).
+Die neue Paketauflösung liegt außerhalb aller vier betroffenen Bereiche.
+
+Tatsächlich ausgeführte Validierung:
+
+1. `pnpm why undici`: vorher 8.11.2, nachher ausschließlich 8.12.3 über unverändertes
+   jsdom 30.1.2; auch aus dem installierten jsdom-Modulpfad geprüft.
+2. `pnpm install --offline --frozen-lockfile --lockfile-only --ignore-scripts`:
+   Manifest-/Lockfile-Konsistenz erfolgreich, vor Änderung installierter Pakete.
+3. Nach dem notwendigen gezielten Download erneut
+   `pnpm install --offline --frozen-lockfile --ignore-scripts --store-dir .gradle/s01-validation/pnpm-store`:
+   erfolgreich, Already up to date, ohne Netzwerk und ohne erneute Auflösung.
+4. `pnpm audit --json --registry https://registry.npmjs.org/`: Exit 0,
+   leere Advisories, **0 info/low/moderate/high/critical**, 36 Entwicklungs-
+   und 0 produktive npm-Abhängigkeiten. Keine der vier CVEs mehr gemeldet.
+   Dies ist ein aktueller Registry-Abgleich, keine Garantie zukünftiger Lückenfreiheit.
+5. Paket-Testskript und Testquellen vorab geprüft: ausschließlich
+   `node --test src/test/js/*.test.cjs`, Mock-Fetch und gesperrte externe Ressourcen;
+   keine Browser-/Listener-/Datenbank-/Scraperstarts. `pnpm run test:dom`:
+   **225 bestanden, 0 Fehler, 0 übersprungen**, sämtliche Assertions unverändert.
+6. `git diff --check` erfolgreich. Keine erneuten Java-/Gradle-/Integrationstests;
+   die bisherigen 462 Java-Ergebnisse sind historische T03-Nachweise, nicht neu ausgeführt.
+
+Nur pnpm-lock.yaml und dieser angehängte TESTING-Nachtrag wurden für diesen Auftrag
+verändert. Vorher-/Nachher-Dateihashes bestätigen alle übrigen bestehenden
+versionierten/unversionierten T03-Arbeiten, acht historischen Experimente und
+Manual-JARs unverändert. Alter TESTING-Inhalt bleibt byteidentischer Präfix.
+Branch weiterhin codex/t03-data-integrity, HEAD b7a2dbe; nichts gestagt/committet,
+kein Push/Merge. Keine Datenbankverbindung, Migration, Anwendung oder echte
+Browser-/Scraperausführung. Keine weiteren Auditbefunde im geprüften npm-Graphen.
+Lokale Prüfprotokolle unter .gradle/undici-security-20261103, nicht für Git bestimmt.
