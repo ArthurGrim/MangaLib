@@ -32,6 +32,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 /** Standalone MVC mit echten Host-/Origin-/Session-CSRF-Filtern und Service-Mocks.
  * Kein Boot-Kontext, keine DataSource, kein Listener, kein echter Scraper. */
 class WriteMvcValidationTest {
+
+    @ParameterizedTest @ValueSource(strings = {"", "0.001", "100000000", "abc"})
+    void invalidMoneyIsRejectedBeforeAnyWriteService(String price) throws Exception {
+        var input = seriesInput(); input.put("preisProBand", price);
+        bad("/addMangaReihe", input);
+        bad("/addToEinkaufsliste", input);
+        verifyNoInteractions(series, shopping);
+    }
     private MockMvc mvc;
     private MockHttpSession session;
     private String token;
@@ -44,6 +52,7 @@ class WriteMvcValidationTest {
     private VerlagService publishers;
     private TypService types;
     private FormatService formats;
+    private PurchaseService purchases;
 
     @BeforeEach void setup() {
         var main = new MainController(); var cart = new EinkaufslisteController();
@@ -60,6 +69,8 @@ class WriteMvcValidationTest {
         ReflectionTestUtils.setField(cart, "mangaReiheService", series);
         ReflectionTestUtils.setField(cart, "einkaufslisteService", shopping);
         ReflectionTestUtils.setField(cart, "einkaufslisteItemDetailsService", details);
+        purchases = mock(PurchaseService.class);
+        ReflectionTestUtils.setField(cart, "purchaseService", purchases);
         var csrf = new HttpSessionCsrfTokenRepository();
         var request = new MockHttpServletRequest(); session = new MockHttpSession(); request.setSession(session);
         var generated = csrf.generateToken(request); csrf.saveToken(generated, request, new MockHttpServletResponse());
@@ -92,7 +103,7 @@ class WriteMvcValidationTest {
         // Keine einzige Schreib-/Scraperinteraktion zulassen; alle übrigen Aufrufe ebenfalls prüfen.
         mockingDetails(series).getInvocations().forEach(i -> assertEquals("findById", i.getMethod().getName()));
         mockingDetails(bands).getInvocations().forEach(i -> assertEquals("findById", i.getMethod().getName()));
-        verifyNoInteractions(shopping, details, scraper, publishers, types, formats);
+        verifyNoInteractions(shopping, details, scraper, publishers, types, formats, purchases);
     }
     private void bad(String path, Map<String, Object> input) throws Exception {
         var result = mvc.perform(write(path).content(mapper.writeValueAsString(input))).andReturn();
@@ -132,8 +143,8 @@ class WriteMvcValidationTest {
         var response = mvc.perform(write("/addMangaReihe").content(mapper.writeValueAsString(input))).andReturn().getResponse();
         assertEquals(200, response.getStatus());
         verify(series).updateMangaReihe(eq(1L), isNull(), eq(1L), eq(1L), eq(1L), eq(1L), eq((String) input.get("titel")),
-                eq(2), eq(java.math.BigDecimal.ZERO), isNull(), isNull(), isNull(), isNull(), isNull(),
-                eq(new java.math.BigDecimal("-0.02")), eq(false), eq(0), eq(Map.of("istEdit", "true")));
+                eq(2), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq(new java.math.BigDecimal("-0.02")), eq(false), eq(0), eq(Map.of("istEdit", "true", "adjustmentEdited", "true")));
     }
 
     @Test void missingOptionalBandFieldsKeepNullAndZeroSemantics() throws Exception {
@@ -157,7 +168,7 @@ class WriteMvcValidationTest {
         assertEquals(42, mapper.readTree(response.getContentAsString()).get("id").intValue());
         assertEquals(input.get("titel"), mapper.readTree(response.getContentAsString()).get("titel").stringValue());
         verify(shopping).saveEinkaufslisteItem(isNull(), eq(1L), eq(1L), eq(1L), eq((String) input.get("titel")), eq(2),
-                eq(5.99d), isNull(), isNull(), isNull(), isNull(), eq(-0.02d), eq(java.time.LocalDate.of(2024, 2, 29)),
+                eq(new java.math.BigDecimal("5.99")), isNull(), isNull(), isNull(), isNull(), eq(new java.math.BigDecimal("-0.02")), eq(java.time.LocalDate.of(2024, 2, 29)),
                 eq(Map.of("istEdit", "false")));
     }
 
@@ -200,11 +211,14 @@ class WriteMvcValidationTest {
         verifyNoInteractions(bands, shopping, scraper);
     }
 
-    @Test void nullFlagsUrlsAndAbsentPricesKeepCreationSemantics() throws Exception {
+    @Test void creationRequiresKnownPriceWhileExplicitZeroKeepsNullFlagsAndUrls() throws Exception {
         var input = seriesInput(); input.remove("preisProBand"); input.remove("gesamtpreisAenderung");
         input.put("anilistUrl", ""); input.put("istVergriffen", null); input.put("istEbayPreis", null);
+        assertThrows(IllegalArgumentException.class, () -> WriteRequests.Series.from(input));
+        assertEquals(400, mvc.perform(write("/addMangaReihe").content(mapper.writeValueAsString(input))).andReturn().getResponse().getStatus());
+        input.put("preisProBand", "0");
         var parsed = WriteRequests.Series.from(input);
-        assertEquals(java.math.BigDecimal.ZERO, parsed.price()); assertEquals(java.math.BigDecimal.ZERO, parsed.adjustment());
+        assertEquals(0, java.math.BigDecimal.ZERO.compareTo(parsed.price())); assertEquals(0, java.math.BigDecimal.ZERO.compareTo(parsed.adjustment()));
         assertNull(parsed.outOfPrint()); assertNull(parsed.adjustedPrice()); assertEquals("", parsed.anilist());
         assertEquals(0, parsed.reread());
         assertEquals(200, mvc.perform(write("/addMangaReihe").content(mapper.writeValueAsString(input))).andReturn().getResponse().getStatus());
@@ -296,11 +310,8 @@ class WriteMvcValidationTest {
     }
 
     @Test void combinedPurchaseCountIsCheckedBeforeUpdateOrPurchaseMarker() throws Exception {
-        var item = new EinkaufslisteItem(); item.setId(1L); item.setMangaIndex(123); item.setAnzahlBaende(1);
-        var row = mock(MangaReihe.class, RETURNS_DEEP_STUBS);
-        when(row.getAnzahlBaende()).thenReturn(WriteValidation.MAX_VOLUMES);
-        when(shopping.findItemById(1L)).thenReturn(Optional.of(item));
-        when(series.findByMangaIndex(123)).thenReturn(List.of(row));
+        // Die tatsächliche Grenzberechnung steht zusätzlich in PurchaseServiceTest.
+        when(purchases.purchase(any())).thenThrow(new IllegalArgumentException("synthetic count limit"));
         var response = mvc.perform(write("/buyItemUpdate").content("{\"itemId\":\"1\"}")).andReturn().getResponse();
         assertEquals(400, response.getStatus());
         verify(series, never()).updateMangaReihe(any(), any(), any(), any(), any(), any(), any(), any(), any(),
@@ -345,12 +356,44 @@ class WriteMvcValidationTest {
     }
 
     @Test void unexpectedPurchaseExceptionIsNeutral500() throws Exception {
-        when(shopping.findItemById(1L)).thenThrow(new IllegalStateException("private-password-and-internal-path"));
+        when(purchases.purchase(any())).thenThrow(new IllegalStateException("private-password-and-internal-path"));
         for (String route : List.of("/buyItemUpdate", "/buyItemCreate")) {
             var response = mvc.perform(write(route).content("{\"itemId\":\"1\",\"statusId\":\"1\"}")).andReturn().getResponse();
             assertEquals(500, response.getStatus()); assertEquals("Anfrage konnte nicht verarbeitet werden.", response.getContentAsString());
         }
         verifyNoInteractions(series, details);
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"UNKNOWN_STATUS", "AMBIGUOUS_SERIES", "INCOMPATIBLE_SERIES", "BAND_CONFLICT", "INVALID_INVENTORY", "BUSY"})
+    void purchaseConflictHasFixedAllowlistedHeaderAndNeutralJson(String code) throws Exception {
+        when(purchases.purchase(any())).thenReturn(new PurchaseService.Result(PurchaseService.Outcome.valueOf(code), null, null, null));
+        for (String route : List.of("/buyItemUpdate", "/buyItemCreate")) {
+            var response = mvc.perform(write(route).content("{\"itemId\":\"7\",\"statusId\":\"1\"}")).andReturn().getResponse();
+            assertEquals(409, response.getStatus());
+            assertEquals(code, response.getHeader("X-MangaLib-Purchase-Outcome"));
+            assertTrue(response.getContentType().startsWith("application/json"));
+            assertEquals("Kaufübernahme erfordert eine Klärung.", mapper.readTree(response.getContentAsString()).get("message").stringValue());
+        }
+        verifyNoInteractions(series, shopping, details, scraper);
+    }
+
+    @Test void purchasePreviewKeepsIdAsStringAndRangeAsJsonNumbers() throws Exception {
+        when(purchases.purchase(any())).thenReturn(new PurchaseService.Result(PurchaseService.Outcome.CONFIRM_VOLUMES, 42L, 4, 5));
+        var response = mvc.perform(write("/buyItemUpdate").content("{\"itemId\":\"7\"}")).andReturn().getResponse();
+        assertEquals(200, response.getStatus());
+        var body = mapper.readTree(response.getContentAsString());
+        assertTrue(body.get("seriesId").isString()); assertEquals("42", body.get("seriesId").stringValue());
+        assertTrue(body.get("firstBand").isInt()); assertEquals(4, body.get("firstBand").intValue());
+        assertTrue(body.get("lastBand").isInt()); assertEquals(5, body.get("lastBand").intValue());
+    }
+
+    @Test void purchaseRoutesCannotBypassSessionCsrfHostOrOriginFilters() throws Exception {
+        for (String route : List.of("/buyItemUpdate", "/buyItemCreate")) {
+            assertEquals(403, mvc.perform(local(post(route)).contentType("application/json").content("{}")).andReturn().getResponse().getStatus());
+            assertEquals(403, mvc.perform(write(route).header("Origin", "http://evil.invalid").content("{}")).andReturn().getResponse().getStatus());
+            assertEquals(403, mvc.perform(post(route).header("Host", "evil.invalid:8080")).andReturn().getResponse().getStatus());
+        }
+        noWork();
     }
 
     @Test void securityFiltersStillRejectBeforeInputProcessing() throws Exception {

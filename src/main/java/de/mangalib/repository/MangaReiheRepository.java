@@ -16,6 +16,13 @@ import java.util.List;
 
 @Repository
 public interface MangaReiheRepository extends JpaRepository<MangaReihe, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.QueryHints({
+        @jakarta.persistence.QueryHint(name = "jakarta.persistence.lock.timeout", value = "5000"),
+        @jakarta.persistence.QueryHint(name = "jakarta.persistence.query.timeout", value = "5000")})
+    @Query("select m from MangaReihe m where m.id = :id")
+    java.util.Optional<MangaReihe> findByIdForPurchase(@Param("id") Long id);
+
     List<MangaReihe> findByStatus(Status status);
 
     List<MangaReihe> findByVerlag(Verlag verlag);

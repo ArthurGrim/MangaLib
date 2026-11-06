@@ -31,6 +31,14 @@ async function mangaLibFetch(path, options = {}) {
 const MangaLibFeedback = (() => {
   const states = new WeakMap();
   const labels = new WeakMap();
+  const purchaseConflicts = Object.freeze({
+    UNKNOWN_STATUS: "Der gespeicherte Kaufstatus ist unbekannt. Bitte kläre den Eintrag vor der Übernahme.",
+    AMBIGUOUS_SERIES: "Die Zielreihe ist nicht eindeutig. Es wurde nichts übernommen.",
+    INCOMPATIBLE_SERIES: "Die gefundene Ausgabe passt nicht zur Einkaufsposition. Es wurde nichts übernommen.",
+    BAND_CONFLICT: "Der bestätigte Bandbereich passt nicht mehr zum Bestand. Bitte lade die Seite neu.",
+    INVALID_INVENTORY: "Der vorhandene Bestand ist unvollständig oder widersprüchlich. Es wurde nichts übernommen.",
+    BUSY: "Eine andere Schreiboperation ist noch aktiv. Bitte versuche es später bewusst erneut."
+  });
   const messages = {
     400: "Einige Angaben sind ungültig. Bitte überprüfe deine Eingaben.",
     403: "Die Anfrage wurde aus Sicherheitsgründen abgewiesen. Bitte lade die Seite neu, bevor du es erneut versuchst.",
@@ -65,7 +73,14 @@ const MangaLibFeedback = (() => {
   }
   function error(status) { const e = new Error("Request rejected"); e.status = status; return e; }
   async function read(response, { empty = false, allow417 = false, validate } = {}) {
-    if (!response.ok && !(allow417 && response.status === 417)) throw error(response.status);
+    if (!response.ok && !(allow417 && response.status === 417)) {
+      const rejected = error(response.status);
+      if (response.status === 409) {
+        const code = response.headers.get("X-MangaLib-Purchase-Outcome");
+        if (Object.hasOwn(purchaseConflicts, code)) rejected.purchaseOutcome = code;
+      }
+      throw rejected;
+    }
     if (response.status === empty) return null; // Bekannte leere Verträge: Band-204 und Delete-200.
     const type = response.headers.get("Content-Type") || "";
     if (!/^application\/(?:json|[\w.+-]+\+json)(?:\s*;|$)/i.test(type)) throw error();
@@ -87,15 +102,19 @@ const MangaLibFeedback = (() => {
     try {
       const response = await mangaLibFetch(path, options);
       const data = await read(response, contract);
-      if (persist && button && response.status === 417) { states.delete(button); button.disabled = false; }
+      if (persist && button && (response.status === 417
+          || contract.allowConfirmation && data.message === "Bitte Bände bestätigen")) {
+        states.delete(button); button.disabled = false;
+      }
       return data;
     } catch (e) {
       const status = e?.status;
-      const message = messages[status] || (status >= 500 ? messages[500] : messages.unknown);
+      const purchaseMessage = e?.purchaseOutcome && purchaseConflicts[e.purchaseOutcome];
+      const message = purchaseMessage || messages[status] || (status >= 500 ? messages[500] : messages.unknown);
       show(container, message);
       // 5xx/Transport/Formatfehler können nach einer Speicherung auftreten.
       // Bis zum Neuladen gesperrt halten; niemals automatisch erneut schreiben.
-      if (persist && button && [400, 404, 405, 415, 422].includes(status)) {
+      if (persist && button && ([400, 404, 405, 415, 422].includes(status) || status === 409 && purchaseMessage)) {
         states.delete(button); button.disabled = false;
       } else if (persist && button) {
         states.set(button, message);

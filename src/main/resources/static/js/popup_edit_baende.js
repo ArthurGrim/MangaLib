@@ -21,7 +21,7 @@ function editBand(bandId) {
       document.getElementById("manga_reihe_id").textContent = data.id;
       document.getElementById("band_nr").textContent = data.bandNr;
       document.getElementById("band_index").value = data.bandIndex;
-      const money = value => value == null ? "" : Number(value).toFixed(2).replace(".", ",");
+      const money = value => value == null ? "" : String(value).replace(".", ",");
       document.getElementById("preis").value = money(data.preis);
       document.getElementById("aenderung_preis").value = money(data.aenderungPreis);
       document.getElementById("bild_url").value = data.bildUrl;
@@ -109,8 +109,8 @@ function saveBand() {
     id: bandIdElement.textContent,
     bandNr: bandNrElement.textContent,
     bandIndex: bandIndexElement.value,
-    preis: preis ? Number(preis).toFixed(2) : null,
-    aenderungPreis: aenderungPreis ? Number(aenderungPreis).toFixed(2) : null,
+    preis: preis || null,
+    aenderungPreis: aenderungPreis || null,
     bildUrl: bildUrlElement.value,
     mpUrl: mpUrlElement.value,
     istGelesen: istGelesenElement.checked,

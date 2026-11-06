@@ -30,6 +30,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * Mock-Mutationen sind kein Nachweis eines Datenbank-Commits oder Rollbacks.
  */
 class LegacyEditCharacterizationTest {
+
+    @ParameterizedTest @ValueSource(ints = {2, 5})
+    void pureCountCorrectionThroughSecuredMvcPreservesUnknownPrices(int declared) throws Exception {
+        row.setAnzahlBaende(declared); band.setPreis(null); row.setGesamtpreis(null);
+        var input = seriesForm(read("/getMangaReiheData/42"));
+        input.put("titel", row.getTitel()); input.put("extendVolumes", false);
+        assertEquals(200, write("/addMangaReihe", input).getStatus());
+        assertEquals(1, row.getAnzahlBaende()); assertNull(band.getPreis()); assertNull(row.getGesamtpreis());
+        verify(volumes, never()).save(any()); verify(detailRows, never()).save(any());
+    }
     private final JsonMapper json = new JsonMapper();
     private MangaReiheRepository rows;
     private BandRepository volumes;
@@ -209,9 +219,9 @@ class LegacyEditCharacterizationTest {
         verify(volumes, never()).save(any());
     }
 
-    @Test void clearingOptionalPriceKeepsExistingPriceInService() throws Exception {
+    @Test void clearingKnownPriceIsRejectedWithoutMutation() throws Exception {
         var input = bandForm(read("/getBand/11")); input.put("preis", "");
-        assertEquals(204, write("/editBand", input).getStatus());
+        assertEquals(400, write("/editBand", input).getStatus());
         assertEquals(new BigDecimal("6.99"), band.getPreis());
     }
 

@@ -128,8 +128,11 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("typ-edit").value = data.typId;
         document.getElementById("format-edit").value = data.formatId;
         document.getElementById("anzahl_baende-edit").value = data.anzahlBaende;
-        document.getElementById("preis_pro_band-edit").textContent =
-          data.preisProBand;
+        document.getElementById("preis_pro_band-edit").value = data.preisProBand ?? "";
+        for (const id of ["apply-price-edit", "apply-adjustment-edit", "extend-volumes-edit"]) {
+          const option = document.getElementById(id);
+          if (option) option.checked = false;
+        }
         document.getElementById("anilist_url-edit").value =
           data.anilistUrl ?? "";
         document.getElementById("coverUrl-edit").value = data.coverUrl ?? "";
@@ -142,8 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
           data.istEbayPreis;
         document.getElementById("istsammelband-edit").checked =
           data.istSammelband;
-        document.getElementById("gesamtpreis_aenderung-edit").textContent =
-          data.gesamtpreisAenderung;
+        document.getElementById("gesamtpreis_aenderung-edit").value = data.gesamtpreisAenderung ?? "";
         document.getElementById("sammelband_typ-edit").value =
           data.sammelbandTypId;
         console.log("SammelbandID " + data.sammelbandTypId);
@@ -346,6 +348,7 @@ document.addEventListener("DOMContentLoaded", function () {
       formatId,
       titel,
       anzahlBaende: parseInt(anzahlBaende, 10),
+      extendVolumes: document.getElementById("extend-volumes-edit")?.checked ?? false,
       istGelesen,
       istVergriffen,
       istEbayPreis,
@@ -361,6 +364,19 @@ document.addEventListener("DOMContentLoaded", function () {
       applyRereadToVolumes: document.getElementById("apply-reread-edit").checked,
       scrapedData: scrapedData,
     };
+    for (const [option, field, key] of [
+      ["apply-price-edit", "preis_pro_band-edit", "preisProBand"],
+      ["apply-adjustment-edit", "gesamtpreis_aenderung-edit", "gesamtpreisAenderung"],
+    ]) {
+      if (document.getElementById(option)?.checked) {
+        const value = document.getElementById(field).value.trim().replace(",", ".");
+        if (!/^[+-]?\d+(\.\d{1,2})?$/.test(value)) {
+          MangaLibFeedback.show(editpopupContainer, "Bitte geben Sie einen centgenauen Preis an.");
+          return;
+        }
+        mangaReiheData[key] = value;
+      }
+    }
 
     // Loggen der zu sendenden Daten
     console.log("Zu sendende Daten:", mangaReiheData);

@@ -12,6 +12,13 @@ import de.mangalib.entity.EinkaufslisteItem;
 
 @Repository
 public interface EinkaufslisteRepository extends JpaRepository<EinkaufslisteItem, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.QueryHints({
+        @jakarta.persistence.QueryHint(name = "jakarta.persistence.lock.timeout", value = "5000"),
+        @jakarta.persistence.QueryHint(name = "jakarta.persistence.query.timeout", value = "5000")})
+    @Query("select e from EinkaufslisteItem e where e.id = :id")
+    java.util.Optional<EinkaufslisteItem> findByIdForPurchase(@Param("id") Long id);
+
     List<EinkaufslisteItem> findByErscheinungsdatumBetween(LocalDate start, LocalDate end, Sort sort);
 
     @Query("SELECT FUNCTION('MONTH', e.erscheinungsdatum), SUM(e.anzahlBaende) " +

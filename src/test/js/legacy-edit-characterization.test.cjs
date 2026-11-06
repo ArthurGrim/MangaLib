@@ -199,6 +199,55 @@ test('Neue ungültige URL bleibt schon im Dialog abgewiesen', async t => {
   assert.match(e.scope.querySelector('.write-feedback').textContent, /gültige Bild-URL/);
 });
 
+test('Preisoptionen bleiben ohne ausdrückliche Auswahl aus dem Reihenpayload entfernt', async t => {
+  const e = await dialog(t, 'series'); await e.save();
+  assert.equal(Object.hasOwn(e.payload(), 'preisProBand'), false);
+  assert.equal(Object.hasOwn(e.payload(), 'gesamtpreisAenderung'), false);
+});
+
+test('Anzahlkorrektur bleibt ausdrücklich ohne Bandanlage; Erweiterung benötigt die Option', async t => {
+  const e = await dialog(t, 'series', { anzahlBaende: 5 });
+  assert.equal(e.d.getElementById('extend-volumes-edit').checked, false);
+  e.d.getElementById('anzahl_baende-edit').value = '3'; await e.save();
+  assert.equal(e.payload().anzahlBaende, 3); assert.equal(e.payload().extendVolumes, false);
+  assert.equal(Object.hasOwn(e.payload(), 'preisProBand'), false);
+  e.d.getElementById('extend-volumes-edit').checked = true;
+  e.d.getElementById('anzahl_baende-edit').value = '4'; await e.save();
+  const writes = e.calls.filter(call => call.options);
+  assert.equal(writes.length, 2);
+  const second = JSON.parse(writes[1].options.body);
+  assert.equal(second.extendVolumes, true); assert.equal(second.anzahlBaende, 4);
+  e.d.querySelector('.cancel-button-edit').click(); e.d.querySelector('.edit-button').click(); await settle();
+  assert.equal(e.d.getElementById('extend-volumes-edit').checked, false);
+});
+
+test('Ausdrücklicher Nullpreis und negative Anpassung werden exakt als Strings übertragen', async t => {
+  const e = await dialog(t, 'series');
+  e.d.getElementById('apply-price-edit').checked = true;
+  e.d.getElementById('preis_pro_band-edit').value = '0,00';
+  e.d.getElementById('apply-adjustment-edit').checked = true;
+  e.d.getElementById('gesamtpreis_aenderung-edit').value = '-0,02'; await e.save();
+  assert.equal(e.payload().preisProBand, '0.00'); assert.equal(e.payload().gesamtpreisAenderung, '-0.02');
+  e.d.querySelector('.cancel-button-edit').click(); e.d.querySelector('.edit-button').click(); await settle();
+  assert.equal(e.d.getElementById('apply-price-edit').checked, false);
+  assert.equal(e.d.getElementById('apply-adjustment-edit').checked, false);
+});
+
+for (const value of ['', '0.001', 'abc']) test(`Expliziter ungültiger Reihenpreis ${value} sendet keinen Request`, async t => {
+  const e = await dialog(t, 'series');
+  e.d.getElementById('apply-price-edit').checked = true;
+  e.d.getElementById('preis_pro_band-edit').value = value; await e.save();
+  assert.equal(e.calls.length, 1);
+  assert.match(e.scope.querySelector('.write-feedback').textContent, /centgenauen Preis/);
+});
+
+test('Bandpreis wird ohne JavaScript-Rundung übertragen und historische Genauigkeit angezeigt', async t => {
+  const e = await dialog(t, 'band', { preis: '6.991' });
+  assert.equal(e.d.getElementById('preis').value, '6,991');
+  e.d.getElementById('preis').value = '0,001'; await e.save();
+  assert.equal(e.payload().preis, '0.001'); // Server muss ablehnen; Client darf nicht 0.00 daraus machen.
+});
+
 for (const value of ['javascript:alert(1)', 'data:image/svg+xml,x', '//example.invalid/x', '/old.png',
   'https://user:synthetic@example.invalid/x', 'http://example.invalid:65536/x', 'http://example.invalid/a\\b']) {
   test(`Gemeinsame Bildzuweisung verwendet sicheren Platzhalter für ${value}`, async t => {

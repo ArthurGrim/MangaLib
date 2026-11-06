@@ -35,6 +35,7 @@ class ReadingStatusExtensionTest {
     private EinkaufslisteController cart;
     private EinkaufslisteRepository shoppingRepository;
     private EinkaufslisteService shopping;
+    private EinkaufslisteItemDetailsRepository shoppingDetails;
 
     @BeforeEach void setup() throws Exception {
         rows = mock(MangaReiheRepository.class); bands = mock(BandRepository.class);
@@ -88,6 +89,11 @@ class ReadingStatusExtensionTest {
         cart = new EinkaufslisteController();
         ReflectionTestUtils.setField(cart, "mangaReiheService", service);
         ReflectionTestUtils.setField(cart, "einkaufslisteService", shopping);
+        shoppingDetails = mock(EinkaufslisteItemDetailsRepository.class);
+        when(rows.findByIdForPurchase(42L)).thenReturn(Optional.of(row));
+        ReflectionTestUtils.setField(cart, "purchaseService", new PurchaseService(
+                new LibraryWriteCoordinator(new FakeLibraryTransactionManager()), shoppingRepository,
+                shoppingDetails, rows, bands, service));
     }
 
     private Map<Long, List<Object>> oldState() {
@@ -111,6 +117,7 @@ class ReadingStatusExtensionTest {
         data.put("mangaReiheId", "42"); data.put("mangaIndex", 123);
         data.put("statusId", "1"); data.put("verlagId", "1"); data.put("typId", "1"); data.put("formatId", "1");
         data.put("titel", "M06 geändert 漫画"); data.put("anzahlBaende", target);
+        data.put("extendVolumes", true);
         data.put("preisProBand", "7.49"); data.put("gesamtpreisAenderung", "-0.02");
         data.put("istGelesen", !details.isIstGelesen()); data.put("reread", 9);
         data.put("anilistUrl", "http://localhost:18080/metadata");
@@ -181,10 +188,21 @@ class ReadingStatusExtensionTest {
         details.setIstGelesen(first && second); var before = oldState();
         var item = new EinkaufslisteItem(); item.setId(77L); item.setMangaIndex(123); item.setTitel(row.getTitel());
         item.setAnzahlBaende(1); item.setPreis(new BigDecimal("8.49")); item.setAenderungGesamtpreis(BigDecimal.ZERO);
-        when(shoppingRepository.findById(77L)).thenReturn(Optional.of(item));
+        when(shoppingRepository.findByIdForPurchase(77L)).thenReturn(Optional.of(item));
         when(rows.findByMangaIndex(123)).thenReturn(indexMatch ? List.of(row) : List.of());
         when(rows.findByTitel(item.getTitel())).thenReturn(List.of(row));
-        var response = cart.buyItemUpdate(Map.of("itemId", "77"));
+        item.setVerlagId(row.getVerlag()); item.setTypId(row.getTyp()); item.setFormatId(row.getFormat());
+        if (!indexMatch) {
+            assertEquals(409, cart.buyItemUpdate(Map.of("itemId", "77")).getStatusCode().value());
+            assertOldState(before); assertEquals(2, stored.size());
+            assertEquals(first && second, details.isIstGelesen());
+            verify(shoppingRepository, never()).save(any()); return;
+        }
+        var preview = cart.buyItemUpdate(Map.of("itemId", "77"));
+        assertEquals(200, preview.getStatusCode().value());
+        assertEquals("CONFIRM_VOLUMES", preview.getHeaders().getFirst("X-MangaLib-Purchase-Outcome"));
+        assertOldState(before); verify(shoppingRepository, never()).save(any());
+        var response = cart.buyItemUpdate(Map.of("itemId", "77", "confirmedSeriesId", "42", "firstBand", 3, "lastBand", 3));
         assertEquals(200, response.getStatusCode().value()); assertEquals(Map.of("message", "Reihe aktualisiert"), response.getBody());
         assertOldState(before); assertFalse(details.isIstGelesen()); assertEquals(3, details.getReread());
         assertEquals(3, stored.size()); assertFalse(stored.get(2).isIstGelesen()); assertTrue(item.getGekauft());
@@ -196,10 +214,12 @@ class ReadingStatusExtensionTest {
     void purchaseWithMissingDetailsIsControlledAndDoesNotMarkBought(boolean indexMatch) {
         row.setMangaDetails(null);
         var item = new EinkaufslisteItem(); item.setId(77L); item.setMangaIndex(123); item.setTitel(row.getTitel());
-        when(shoppingRepository.findById(77L)).thenReturn(Optional.of(item));
+        when(shoppingRepository.findByIdForPurchase(77L)).thenReturn(Optional.of(item));
         when(rows.findByMangaIndex(123)).thenReturn(indexMatch ? List.of(row) : List.of());
         when(rows.findByTitel(item.getTitel())).thenReturn(List.of(row));
-        assertEquals(400, cart.buyItemUpdate(Map.of("itemId", "77")).getStatusCode().value());
+        item.setVerlagId(row.getVerlag()); item.setTypId(row.getTyp()); item.setFormatId(row.getFormat());
+        item.setAnzahlBaende(1); item.setPreis(new BigDecimal("6.99")); item.setAenderungGesamtpreis(BigDecimal.ZERO);
+        assertEquals(409, cart.buyItemUpdate(Map.of("itemId", "77")).getStatusCode().value());
         verify(shoppingRepository, never()).save(any()); verify(rows, never()).save(any()); verify(bands, never()).save(any());
         verify(detailsRepository, never()).save(any()); assertFalse(item.getGekauft());
     }
@@ -215,6 +235,7 @@ class ReadingStatusExtensionTest {
     @ParameterizedTest @ValueSource(booleans = {true, false})
     void normalEditWithoutAdditionalVolumesKeepsExistingExplicitBulkBehavior(boolean read) {
         var input = request(2); input.put("istGelesen", read); input.put("reread", 3);
+        input.put("extendVolumes", false);
         input.put("applyReadToVolumes", true); input.put("applyRereadToVolumes", true);
         assertEquals(200, main.addMangaReihe(input).getStatusCode().value());
         assertEquals(2, stored.size()); assertEquals(read, details.isIstGelesen());
@@ -268,8 +289,9 @@ class ReadingStatusExtensionTest {
         var item = new EinkaufslisteItem(); item.setId(77L); item.setTitel("Neue Kaufreihe"); item.setMangaIndex(123);
         item.setVerlagId(row.getVerlag()); item.setTypId(row.getTyp()); item.setFormatId(row.getFormat());
         item.setAnzahlBaende(2); item.setPreis(new BigDecimal("6.99")); item.setAenderungGesamtpreis(BigDecimal.ZERO);
-        when(shoppingRepository.findById(77L)).thenReturn(Optional.of(item));
-        var itemDetails = new EinkaufslisteItemDetails(); itemDetails.setId(77L);
+        when(shoppingRepository.findByIdForPurchase(77L)).thenReturn(Optional.of(item));
+        var itemDetails = new EinkaufslisteItemDetails(); itemDetails.setId(77L); itemDetails.setEinkaufslisteItem(item);
+        when(shoppingDetails.findById(77L)).thenReturn(Optional.of(itemDetails));
         var detailService = mock(EinkaufslisteItemDetailsService.class);
         when(detailService.findItemDetailsById(77L)).thenReturn(Optional.of(itemDetails));
         ReflectionTestUtils.setField(cart, "einkaufslisteItemDetailsService", detailService);

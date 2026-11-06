@@ -47,7 +47,7 @@ class WriteServiceSafetyTest {
         assertThrows(IllegalArgumentException.class, () -> bands.updateOrCreateBaende(new MangaReihe(), count,
                 BigDecimal.ONE, BigDecimal.ZERO, Map.of(), true));
         assertThrows(IllegalArgumentException.class, () -> shopping.saveEinkaufslisteItem(null, 1L, 1L, 1L,
-                "Test", count, 1d, null, null, null, null, 0d, null, Map.of()));
+                "Test", count, BigDecimal.ONE, null, null, null, null, BigDecimal.ZERO, null, Map.of()));
         verifyNoInteractions(rows, volumes, scraper);
     }
 
@@ -127,7 +127,7 @@ class WriteServiceSafetyTest {
         var format = new de.mangalib.entity.Format(); format.setFormatId(1L); row.setFormat(format);
         var omnibus = new de.mangalib.entity.Sammelband(); omnibus.setId(1L); detail.setSammelbaende(omnibus);
         detail.setId(1L);
-        var stored = new Band(); stored.setId(1L); stored.setMangaReihe(row); stored.setPreis(BigDecimal.ONE);
+        var stored = new Band(); stored.setId(1L); stored.setBandNr(1); stored.setMangaReihe(row); stored.setPreis(BigDecimal.ONE);
         stored.setAenderungPreis(BigDecimal.ZERO); stored.setBildUrl(oldUrl); stored.setMpUrl(oldUrl);
         var input = new Band(); input.setId(1L); input.setBildUrl(sameUrl); input.setMpUrl(newUrl);
         when(volumes.findById(1L)).thenReturn(Optional.of(stored));
@@ -142,7 +142,7 @@ class WriteServiceSafetyTest {
         var publishers = mock(VerlagService.class);
         ReflectionTestUtils.setField(shopping, "verlagService", publishers);
         assertThrows(IllegalArgumentException.class, () -> shopping.saveEinkaufslisteItem(null, 123L, 1L, 1L,
-                "Test", 1, 5.99d, null, null, null, null, -0.02d, null, Map.of()));
+                "Test", 1, new BigDecimal("5.99"), null, null, null, null, new BigDecimal("-0.02"), null, Map.of()));
         verify(publishers).getVerlagById(123L);
         verifyNoInteractions(ReflectionTestUtils.getField(shopping, "einkaufslisteRepository"));
     }
@@ -157,7 +157,7 @@ class WriteServiceSafetyTest {
         ReflectionTestUtils.setField(shopping, "typService", types); ReflectionTestUtils.setField(shopping, "formatService", formats);
         ReflectionTestUtils.setField(shopping, "sammelbaendeService", omnibuses);
         assertThrows(IllegalArgumentException.class, () -> shopping.saveEinkaufslisteItem(null, 1L, 1L, 1L,
-                "Test", 1, 5.99d, null, null, null, 123L, -0.02d, null, Map.of()));
+                "Test", 1, new BigDecimal("5.99"), null, null, null, 123L, new BigDecimal("-0.02"), null, Map.of()));
         verify(omnibuses).findById(123L);
         verifyNoInteractions(ReflectionTestUtils.getField(shopping, "einkaufslisteRepository"));
     }

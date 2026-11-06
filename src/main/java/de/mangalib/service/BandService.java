@@ -26,6 +26,35 @@ import java.util.regex.Pattern;
 @Service
 public class BandService {
 
+    /** Vollständiger Preisplan vor dem ersten Save; ungültige Imports sind kein Fallbackauftrag. */
+    static List<BigDecimal> newPrices(int first, int last, BigDecimal fallback, Map<String, String> imported) {
+        var prices = new ArrayList<BigDecimal>();
+        BigDecimal total = BigDecimal.ZERO;
+        for (int number = first; number <= last; number++) {
+            String raw = imported.get("Band " + number + " Preis");
+            BigDecimal price = raw == null ? Money.amount(fallback)
+                    : Money.amount(new BigDecimal(raw.replace("€", "").trim().replace(",", ".")));
+            prices.add(price); total = total.add(price);
+        }
+        Money.amount(total);
+        return prices;
+    }
+
+    /** Prüft auch die spätere Aggregatsumme vor Mutationen an Reihe oder Bänden. */
+    static void validateMoneyPlan(List<Band> existing, int target, BigDecimal price, BigDecimal adjustment,
+            boolean changePrice, boolean changeAdjustment, Map<String, String> imported) {
+        var newValues = newPrices(existing.size() + 1, target, price, imported);
+        var distributed = Money.distribute(adjustment == null ? BigDecimal.ZERO : adjustment,
+                target > existing.size() ? target - existing.size() : Math.max(1, existing.size()));
+        BigDecimal total = BigDecimal.ZERO;
+        for (Band band : existing) {
+            total = total.add(Money.amount(changePrice ? price : band.getPreis()))
+                    .add(Money.amount(changeAdjustment ? distributed.get(band.getBandNr() - 1) : band.getAenderungPreis()));
+        }
+        for (int i = 0; i < newValues.size(); i++) total = total.add(newValues.get(i)).add(distributed.get(i));
+        Money.amount(total);
+    }
+
     @Autowired
     private ScraperGateway scraperGateway;
 
@@ -60,6 +89,10 @@ public class BandService {
     public Band saveBand(Band baende) {
         if (baende == null) {
             throw new IllegalArgumentException("Baende darf nicht null sein");
+        }
+        if (baende.getId() == null) {
+            Money.amount(baende.getPreis());
+            Money.amount(baende.getAenderungPreis());
         }
         return bandRepository.save(baende);
     }
@@ -115,8 +148,10 @@ public class BandService {
             throw new IllegalArgumentException("ID und Änderung des Preises dürfen nicht null sein");
         }
         return bandRepository.findById(bandId).map(band -> {
-            band.setAenderungPreis(aenderungPreis);
-            return bandRepository.save(band);
+            Band input = new Band(); input.setId(bandId); input.setBildUrl(null);
+            input.setIstGelesen(band.isIstGelesen()); input.setAenderungPreis(aenderungPreis);
+            updateBand(input);
+            return band;
         });
     }
 
@@ -206,6 +241,9 @@ public class BandService {
             BigDecimal gesamtpreisAenderung, Map<String, String> scrapedData) {
         WriteValidation.volumes(anzahlBaende);
         scrapedData = WriteValidation.scrapedData(scrapedData);
+        var prices = newPrices(1, anzahlBaende, preisProBand, scrapedData);
+        var adjustments = Money.distribute(gesamtpreisAenderung, anzahlBaende);
+        Money.amount(prices.stream().reduce(BigDecimal.ZERO, BigDecimal::add).add(gesamtpreisAenderung));
         System.out.println("createAndSaveBaende Aenderung Gesamtpreis: " + gesamtpreisAenderung);
         for (int i = 1; i <= anzahlBaende; i++) {
             Band band = new Band();
@@ -248,7 +286,7 @@ public class BandService {
                 // Fuege den Preis ein, wenn vorhanden
                 if (scrapedData.containsKey(preisKey)) {
                     try {
-                        band.setPreis(new BigDecimal(scrapedData.get(preisKey)));
+                        band.setPreis(prices.get(i - 1));
                     } catch (NumberFormatException e) {
                         band.setPreis(preisProBand);
                     }
@@ -258,8 +296,7 @@ public class BandService {
 
                 // Setzt AenderungGesamtpreis, wenn vorhanden
                 if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
-                    BigDecimal aenderungPreis = gesamtpreisAenderung.divide(BigDecimal.valueOf(anzahlBaende), 2,
-                            RoundingMode.HALF_UP);
+                    BigDecimal aenderungPreis = adjustments.get(i - 1);
                     band.setAenderungPreis(aenderungPreis);
                     System.out.println("Änderung Preis: " + aenderungPreis + " für Band: " + i);
                 } else {
@@ -283,9 +320,8 @@ public class BandService {
         BigDecimal aenderungGesamtpreis = BigDecimal.ZERO;
         for (Band band : baende) {
             BigDecimal aenderungPreis = band.getAenderungPreis();
-            if (aenderungPreis != null) {
-                aenderungGesamtpreis = aenderungGesamtpreis.add(aenderungPreis);
-            }
+            WriteValidation.require(aenderungPreis != null);
+            aenderungGesamtpreis = aenderungGesamtpreis.add(aenderungPreis);
         }
         return aenderungGesamtpreis;
     }
@@ -301,9 +337,10 @@ public class BandService {
         List<Band> baende = bandRepository.findByMangaReiheId(mangaReihe.getId());
         BigDecimal gesamtpreis = BigDecimal.ZERO;
         for (Band band : baende) {
-            gesamtpreis = gesamtpreis.add(band.getPreis());
+            WriteValidation.require(band.getPreis() != null && band.getAenderungPreis() != null);
+            gesamtpreis = gesamtpreis.add(band.getPreis()).add(band.getAenderungPreis());
         }
-        gesamtpreis = gesamtpreis.add(mangaReihe.getAenderungGesamtpreis());
+        // Gespeicherte Reihenaggregate können veraltet sein und sind keine Summenquelle.
         return gesamtpreis;
     }
 
@@ -344,7 +381,26 @@ public class BandService {
     private void updateOrCreateBaende(MangaReihe mangaReihe, Integer anzahlBaende, BigDecimal preisProBand,
             BigDecimal gesamtpreisAenderung, Map<String, String> scrapedData, boolean anzahlBaendeChanged,
             List<Band> existierendeBaende, boolean appendOnly) {
-        int existierendeAnzahl = existierendeBaende.size();
+        var inventory = BandInventory.indexed(mangaReihe, existierendeBaende);
+        int existierendeAnzahl = inventory.size();
+        WriteValidation.require(anzahlBaende >= existierendeAnzahl);
+        boolean changePrice = !appendOnly && !anzahlBaendeChanged && preisProBand != null;
+        boolean changeAdjustment = !appendOnly && !anzahlBaendeChanged && gesamtpreisAenderung != null;
+        if (gesamtpreisAenderung == null) gesamtpreisAenderung = BigDecimal.ZERO;
+        if (changePrice) Money.amount(preisProBand);
+        var adjustments = Money.distribute(gesamtpreisAenderung == null ? BigDecimal.ZERO : gesamtpreisAenderung,
+                Math.max(1, anzahlBaende > existierendeAnzahl ? anzahlBaende - existierendeAnzahl : anzahlBaende));
+        var prices = newPrices(existierendeAnzahl + 1, anzahlBaende, preisProBand, scrapedData);
+        if (changePrice || changeAdjustment) {
+            BigDecimal total = BigDecimal.ZERO;
+            for (Band stored : inventory.values()) {
+                BigDecimal price = Money.amount(stored.getPreis());
+                BigDecimal adjustment = Money.amount(stored.getAenderungPreis());
+                total = total.add(changePrice ? preisProBand : price)
+                        .add(changeAdjustment ? adjustments.get(stored.getBandNr() - 1) : adjustment);
+            }
+            Money.amount(total);
+        }
         System.out.println("Anzahl existierender Bände: " + existierendeAnzahl);
         System.out.println("Anzahl Bände: " + anzahlBaende);
 
@@ -352,15 +408,15 @@ public class BandService {
             Band band;
             if (i <= existierendeAnzahl) {
                 // Aktualisieren eines existierenden Bandes
-                band = existierendeBaende.get(i - 1);
+                band = inventory.get(i);
                 System.out.println("Aktualisiere existierenden Band: " + band.getBandNr());
                 // Aktualisieren des Preises, wenn die Anzahl der Bände sich nicht geändert hat
                 if (!anzahlBaendeChanged) {
-                    if (preisProBand.compareTo(BigDecimal.ZERO) != 0) {
+                    if (changePrice) {
                         band.setPreis(preisProBand);
                     }
-                    if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
-                        band.setAenderungPreis(gesamtpreisAenderung.divide(new BigDecimal(anzahlBaende)));
+                    if (changeAdjustment) {
+                        band.setAenderungPreis(adjustments.get(i - 1));
                     }
                 }
             } else {
@@ -420,7 +476,7 @@ public class BandService {
                     // Fuege den Preis ein, wenn vorhanden
                     if (scrapedData.containsKey(preisKey)) {
                         try {
-                            band.setPreis(new BigDecimal(scrapedData.get(preisKey).replace(",", ".")));
+                            band.setPreis(prices.get(i - existierendeAnzahl - 1));
                         } catch (NumberFormatException e) {
                             band.setPreis(preisProBand);
                             System.out.println("Fehler beim Setzen des Preises für Band " + i);
@@ -437,8 +493,7 @@ public class BandService {
                     System.out.println("GesamtpreisAenderung: " + gesamtpreisAenderung + " größer als 0: "
                             + (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0));
                     if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
-                        BigDecimal aenderungPreis = gesamtpreisAenderung
-                                .divide(BigDecimal.valueOf(anzahlBaende - existierendeAnzahl), 2, RoundingMode.HALF_UP);
+                        BigDecimal aenderungPreis = adjustments.get(i - existierendeAnzahl - 1);
                         band.setAenderungPreis(aenderungPreis);
                         System.out.println("Änderung Preis: " + aenderungPreis + " für Band: " + i);
                     } else {
@@ -479,10 +534,17 @@ public class BandService {
      */
     public void updateBand(Band bandData) {
         WriteValidation.reread(bandData.getReread());
+        if (bandData.getPreis() != null) Money.amount(bandData.getPreis());
+        if (bandData.getAenderungPreis() != null) Money.amount(bandData.getAenderungPreis());
         Optional<Band> optionalBand = bandRepository.findById(bandData.getId());
         if (optionalBand.isPresent()) {
             Band band = optionalBand.get();
             WriteValidation.editableRelations(band.getMangaReihe());
+            var inventory = BandInventory.indexed(band.getMangaReihe(),
+                    bandRepository.findByMangaReiheId(band.getMangaReihe().getId()));
+            WriteValidation.require(inventory.values().stream().anyMatch(b -> Objects.equals(b.getId(), band.getId())));
+            // Eine Einzelbearbeitung ist keine implizite Umnummerierung des Bestands.
+            WriteValidation.require(bandData.getBandNr() == null || Objects.equals(bandData.getBandNr(), band.getBandNr()));
             if (bandData.getBildUrl() != null) WriteValidation.editedUrl(bandData.getBildUrl().toExternalForm(),
                     () -> band.getBildUrl() == null ? null : band.getBildUrl().toExternalForm());
             if (bandData.getMpUrl() != null) WriteValidation.editedUrl(bandData.getMpUrl().toExternalForm(),
@@ -493,6 +555,15 @@ public class BandService {
                     .allMatch(b -> (Objects.equals(b.getId(), band.getId()) && bandData.getPreis() != null || b.getPreis() != null)
                             && (Objects.equals(b.getId(), band.getId()) && bandData.getAenderungPreis() != null || b.getAenderungPreis() != null));
             WriteValidation.require(!financialChange || knownPrices);
+            if (financialChange) {
+                BigDecimal total = BigDecimal.ZERO;
+                for (Band stored : inventory.values()) {
+                    boolean target = Objects.equals(stored.getId(), band.getId());
+                    total = total.add(Money.amount(target && bandData.getPreis() != null ? bandData.getPreis() : stored.getPreis()))
+                            .add(Money.amount(target && bandData.getAenderungPreis() != null ? bandData.getAenderungPreis() : stored.getAenderungPreis()));
+                }
+                Money.amount(total);
+            }
             WriteValidation.require(!financialChange || band.getMangaReihe().getAnzahlBaende() != null
                     && band.getMangaReihe().getAnzahlBaende() > 0);
 
@@ -554,8 +625,7 @@ public class BandService {
                 if (preisChanged) {
                     System.out.println("Preis Pro Band wird neu berechnet");
                     mangaReihe.setPreisProBand(
-                            neuerGesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2,
-                                    RoundingMode.HALF_UP));
+                            Money.mean(neuerGesamtpreis, inventory.size()));
                 }
 
                 if (neueAenderungGesamtpreis.compareTo(BigDecimal.ZERO) != 0) {

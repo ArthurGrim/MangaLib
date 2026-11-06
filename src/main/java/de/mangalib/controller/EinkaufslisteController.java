@@ -30,6 +30,7 @@ import de.mangalib.entity.Typ;
 import de.mangalib.entity.Verlag;
 import de.mangalib.service.EinkaufslisteItemDetailsService;
 import de.mangalib.service.EinkaufslisteService;
+import de.mangalib.service.PurchaseService;
 import de.mangalib.service.FormatService;
 import de.mangalib.service.MangaReiheService;
 import de.mangalib.service.SammelbandService;
@@ -147,9 +148,9 @@ public class EinkaufslisteController {
         try {
             var input = WriteRequests.Shopping.from(requestData);
             EinkaufslisteItem saved = einkaufslisteService.saveEinkaufslisteItem(input.index(), input.publisher(),
-                    input.type(), input.format(), input.title(), input.volumes(), input.price().doubleValue(),
+                    input.type(), input.format(), input.title(), input.volumes(), input.price(),
                     input.outOfPrint(), input.adjustedPrice(), input.anilist(), input.omnibus(),
-                    input.adjustment().doubleValue(), input.date(), input.scraped());
+                    input.adjustment(), input.date(), input.scraped());
             return ResponseEntity.ok(saved);
         } catch (IllegalArgumentException | java.time.DateTimeException e) {
             return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
@@ -168,160 +169,64 @@ public class EinkaufslisteController {
         }
     }
 
-    // Controller-Methode zum finden und updaten von MangaReihen
+    @Autowired
+    private PurchaseService purchaseService;
+
     @PostMapping("/buyItemUpdate")
-    public ResponseEntity<?> buyItemUpdate(@RequestBody Map<String, Object> itemId) {
-        try {
-            Long id = WriteRequests.purchaseId(itemId, "itemId");
-            if (id <= 0) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
-            Map<String, String> purchaseData = Map.of("itemId", id.toString());
-            // Item aus der Einkaufsliste holen
-            Optional<EinkaufslisteItem> itemOptional = einkaufslisteService
-                    .findItemById(id);
-            if (!itemOptional.isPresent()) {
-                System.out.println("Keine Reihe mit der ID gefunden");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
-            }
-            EinkaufslisteItem item = itemOptional.get();
-
-            // Versuchen, eine MangaReihe anhand des MangaIndex zu finden
-            List<MangaReihe> reihen = mangaReiheService
-                    .findByMangaIndex(item.getMangaIndex() != null ? item.getMangaIndex() : 0);
-            System.out.println(reihen.isEmpty());
-            if (!reihen.isEmpty()) {
-                // Update der vorhandenen Reihe
-                MangaReihe reihe = reihen.get(0);
-                WriteValidation.require(reihe.getMangaDetails() != null);
-
-                mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
-                        reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
-                        reihe.getTitel(), combinedVolumeCount(reihe.getAnzahlBaende(), item.getAnzahlBaende()), item.getPreis(),
-                        reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
-                        reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
-                        item.getAenderungGesamtpreis(), false, reihe.getMangaDetails().getReread(), purchaseData);
-
-                einkaufslisteService.updateGekauft(item.getId(), true);
-
-                return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
-
-            }
-
-            // Suche anhand des vollen Titels
-            List<MangaReihe> reihenMitGleichemTitel = mangaReiheService.findByFullTitel(item.getTitel());
-            if (!reihenMitGleichemTitel.isEmpty()) {
-                // Update der gefundenen Reihe
-                MangaReihe reihe = reihenMitGleichemTitel.get(0);
-                WriteValidation.require(reihe.getMangaDetails() != null);
-
-                mangaReiheService.updateMangaReihe(reihe.getId(), reihe.getMangaIndex(), reihe.getStatus().getStatusId(),
-                        reihe.getVerlag().getVerlagId(), reihe.getTyp().getTypId(), reihe.getFormat().getFormatId(),
-                        reihe.getTitel(), combinedVolumeCount(reihe.getAnzahlBaende(), item.getAnzahlBaende()), item.getPreis(),
-                        reihe.getIstVergriffen(), reihe.getIstEbayPreis(), reihe.getMangaDetails().getAnilistUrl(),
-                        reihe.getMangaDetails().getCoverUrl(), reihe.getMangaDetails().getSammelbaende().getId(),
-                        item.getAenderungGesamtpreis(), false, reihe.getMangaDetails().getReread(), purchaseData);
-
-                einkaufslisteService.updateGekauft(item.getId(), true);
-
-                return ResponseEntity.ok(Collections.singletonMap("message", "Reihe aktualisiert"));
-
-            }
-
-            System.out.println("Die Reihe existiert noch nicht");
-            // Ansonsten Aufforderung zur Auswahl des Status für eine neue Reihe
-            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
-                    .body(Collections.singletonMap("message", "Bitte Status für neue Reihe auswählen"));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Anfrage konnte nicht verarbeitet werden.");
-        }
+    public ResponseEntity<?> buyItemUpdate(@RequestBody Map<String, Object> data) {
+        return purchase(data, false);
     }
 
-    private static int combinedVolumeCount(Integer existing, Integer added) {
-        WriteValidation.volumes(existing);
-        WriteValidation.volumes(added);
-        int total = Math.addExact(existing, added);
-        WriteValidation.volumes(total);
-        return total;
-    }
-
-    // Controller-Methode zum erzeugen von MangaReihen
     @PostMapping("/buyItemCreate")
-    public ResponseEntity<?> buyItemCreate(@RequestBody Map<String, Object> requestBody) {
-        System.out.println(
-                "------------------------------ Methode buyItemCreate gestartet ----------------------------------");
+    public ResponseEntity<?> buyItemCreate(@RequestBody Map<String, Object> data) {
+        return purchase(data, true);
+    }
+
+    private ResponseEntity<?> purchase(Map<String, Object> data, boolean create) {
         try {
-            Long itemId = WriteRequests.purchaseId(requestBody, "itemId");
-            Long statusId = WriteRequests.purchaseId(requestBody, "statusId");
-            WriteValidation.require(statusId > 0);
-            if (itemId <= 0) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
-
-            // Item aus der Einkaufsliste holen
-            Optional<EinkaufslisteItem> itemOptional = einkaufslisteService.findItemById(itemId);
-            if (!itemOptional.isPresent()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
-            }
-            EinkaufslisteItem item = itemOptional.get();
-
-            // Details aus der Einkaufsliste holen
-            Optional<EinkaufslisteItemDetails> detailsOptional = einkaufslisteItemDetailsService
-                    .findItemDetailsById(itemId);
-            if (!detailsOptional.isPresent()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keine Details mit dieser ID gefunden");
-            }
-            EinkaufslisteItemDetails details = detailsOptional.get();
-
-            // Daten aus dem Einkaufslisten-Item extrahieren
-            Integer mangaIndex = item.getMangaIndex(); // Annahme: mangaIndex ist Integer
-            Long verlagId = item.getVerlagId().getVerlagId(); // Annahme: verlagId ist verfügbar
-            Long typId = item.getTypId().getTypId(); // Annahme: typId ist verfügbar
-            Long formatId = item.getFormatId().getFormatId(); // Annahme: formatId ist verfügbar
-            String titel = item.getTitel();
-            Integer anzahlBaende = item.getAnzahlBaende();
-            WriteValidation.volumes(anzahlBaende);
-            BigDecimal preisProBand = item.getPreis();
-            Boolean istVergriffen = item.getIstVergriffen();
-            Boolean istEbayPreis = item.getIstEbayPreis();
-            String anilistUrl = details.getAnilistUrl() != null ? details.getAnilistUrl() : null;
-            Long sammelbandTypId = (details.getSammelbaendeId() != null) ? details.getSammelbaendeId().getId() : 1L;
-            BigDecimal gesamtpreisAenderung = item.getAenderungGesamtpreis();
-            System.out.println("EinkaufslisteController Aenderung Gesamtpreis: " + gesamtpreisAenderung);
-
-            // ScrapedData von item verwenden, falls erforderlich
-            Map<String, String> scrapedData = new HashMap<>();
-            scrapedData.put("Deutsche Ausgabe Status", details.getStatusDe() != null ? details.getStatusDe() : null);
-            scrapedData.put("Band 1 Bild Url", details.getCoverUrl() != null ? details.getCoverUrl() : null);
-            scrapedData.put("Deutsche Ausgabe Bände",
-                    details.getAnzahlBaendeDe() != null ? String.valueOf(details.getAnzahlBaendeDe()) : null);
-            scrapedData.put("Deutsche Ausgabe Status", details.getStatusDe() != null ? details.getStatusDe() : null);
-            scrapedData.put("Erstveröffentlichung Status",
-                    details.getStatusErstv() != null ? details.getStatusErstv() : null);
-            scrapedData.put("Erstveröffentlichung Herkunft",
-                    details.getHerkunft() != null ? details.getHerkunft() : null);
-            scrapedData.put("Erstveröffentlichung Startjahr",
-                    details.getStartJahr() != null ? String.valueOf(details.getStartJahr()) : null);
-            scrapedData.put("Erstveröffentlichung Bände",
-                    details.getAnzahlBaendeErstv() != null ? String.valueOf(details.getAnzahlBaendeErstv()) : null);
-
-            // Neue MangaReihe erstellen und speichern
-            MangaReihe neueReihe = mangaReiheService.saveMangaReihe(
-                    mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende, preisProBand,
-                    istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, false, scrapedData);
-
-            if (neueReihe != null) {
-                einkaufslisteService.updateGekauft(item.getId(), true);
-                Map<String, String> response = new HashMap<>();
-                response.put("message", "Neue MangaReihe erfolgreich gespeichert");
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Fehler beim Speichern der neuen MangaReihe");
-            }
-        } catch (IllegalArgumentException e) {
+            long id = WriteRequests.purchaseId(data, "itemId");
+            Long status = create ? WriteRequests.purchaseId(data, "statusId") : null;
+            WriteValidation.require(status == null || status > 0);
+            if (id <= 0) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
+            Long confirmed = data.containsKey("confirmedSeriesId") ? WriteRequests.purchaseId(data, "confirmedSeriesId") : null;
+            var request = new PurchaseService.Request(id, status, confirmed,
+                    rangeNumber(data, "firstBand"), rangeNumber(data, "lastBand"));
+            return purchaseResponse(purchaseService.purchase(request));
+        } catch (IllegalArgumentException invalid) {
             return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
-        } catch (Exception e) {
+        } catch (Exception failure) {
             return ResponseEntity.internalServerError().body("Anfrage konnte nicht verarbeitet werden.");
         }
+    }
+
+    private static Integer rangeNumber(Map<String, Object> data, String field) {
+        Object value = data.get(field);
+        WriteValidation.require(!data.containsKey(field) || value instanceof Integer);
+        return (Integer) value;
+    }
+
+    private static ResponseEntity<?> purchaseResponse(PurchaseService.Result result) {
+        var outcome = result.outcome();
+        String message = switch (outcome) {
+            case UPDATED -> "Reihe aktualisiert";
+            case CREATED -> "Neue MangaReihe erfolgreich gespeichert";
+            case ALREADY_PURCHASED -> "Kauf bereits übernommen";
+            case STATUS_REQUIRED -> "Bitte Status für neue Reihe auswählen";
+            case CONFIRM_VOLUMES -> "Bitte Bände bestätigen";
+            case NOT_FOUND -> "Keinen Item mit dieser ID gefunden";
+            case DETAILS_NOT_FOUND -> "Keine Details mit dieser ID gefunden";
+            default -> "Kaufübernahme erfordert eine Klärung.";
+        };
+        int status = switch (outcome) {
+            case UPDATED, CREATED, ALREADY_PURCHASED, CONFIRM_VOLUMES -> 200;
+            case STATUS_REQUIRED -> 417;
+            case NOT_FOUND, DETAILS_NOT_FOUND -> 404;
+            default -> 409;
+        };
+        Object body = outcome == PurchaseService.Outcome.CONFIRM_VOLUMES
+                ? Map.of("message", message, "seriesId", result.seriesId().toString(),
+                        "firstBand", result.firstBand(), "lastBand", result.lastBand())
+                : status == 404 ? message : Map.of("message", message);
+        return ResponseEntity.status(status).header("X-MangaLib-Purchase-Outcome", outcome.name()).body(body);
     }
 }

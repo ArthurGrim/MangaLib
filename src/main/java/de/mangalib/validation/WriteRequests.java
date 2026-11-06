@@ -1,6 +1,7 @@
 package de.mangalib.validation;
 
 import de.mangalib.entity.Band;
+import de.mangalib.service.Money;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
@@ -37,9 +38,16 @@ public final class WriteRequests {
             String title = string(data, "titel", true);
             WriteValidation.title(title);
             Boolean read = bool(data, "istGelesen", edit);
+            scraped.remove("extendVolumes");
+            Boolean extend = bool(data, "extendVolumes", false);
+            if (extend != null) scraped.put("extendVolumes", extend.toString());
+            // Abwesend bedeutet bei Bearbeitung unverändert; vorhandene 0 ist ein Betrag.
+            scraped.remove("priceEdited"); scraped.remove("adjustmentEdited");
+            if (edit && data.containsKey("preisProBand")) scraped.put("priceEdited", "true");
+            if (edit && data.containsKey("gesamtpreisAenderung")) scraped.put("adjustmentEdited", "true");
             return new Series(id, index, stringId(data, "statusId", true), stringId(data, "verlagId", true),
                     stringId(data, "typId", true), stringId(data, "formatId", true), title, count,
-                    absentZeroMoney(data, "preisProBand"), read, reread == null ? 0 : reread,
+                    edit ? editMoney(data, "preisProBand") : Money.amount(WriteValidation.money(string(data, "preisProBand", true))), read, reread == null ? 0 : reread,
                     bool(data, "istVergriffen", false), bool(data, "istEbayPreis", false),
                     WriteValidation.editedUrl(string(data, "anilistUrl", false), () -> {
                         var row = edit ? stored.get() : null;
@@ -49,7 +57,8 @@ public final class WriteRequests {
                         var row = edit ? stored.get() : null;
                         return row == null || row.getMangaDetails() == null ? null : row.getMangaDetails().getCoverUrl();
                     }),
-                    stringId(data, "sammelbandTypId", false), absentZeroMoney(data, "gesamtpreisAenderung"),
+                    stringId(data, "sammelbandTypId", false), edit ? editMoney(data, "gesamtpreisAenderung")
+                            : Money.amount(absentZeroMoney(data, "gesamtpreisAenderung")),
                     scraped, edit);
         }
     }
@@ -66,10 +75,10 @@ public final class WriteRequests {
             WriteValidation.title(title);
             String date = string(data, "erscheinungsdatum", false);
             return new Shopping(index, stringId(data, "verlagId", true), stringId(data, "typId", true),
-                    stringId(data, "formatId", true), title, count, WriteValidation.money(string(data, "preisProBand", true)),
+                    stringId(data, "formatId", true), title, count, Money.amount(WriteValidation.money(string(data, "preisProBand", true))),
                     bool(data, "istVergriffen", false), bool(data, "istEbayPreis", false),
                     WriteValidation.optionalUrl(string(data, "anilistUrl", false)), stringId(data, "sammelbandTypId", false),
-                    WriteValidation.money(string(data, "gesamtpreisAenderung", true)),
+                    Money.amount(WriteValidation.money(string(data, "gesamtpreisAenderung", true))),
                     date == null ? null : LocalDate.parse(date), WriteValidation.scrapedData(data.get("scrapedData")));
         }
     }
@@ -83,8 +92,8 @@ public final class WriteRequests {
         band.setBandNr(positiveInt(string(data, "bandNr", true)));
         String index = string(data, "bandIndex", false);
         band.setBandIndex(index == null || index.isEmpty() ? null : positiveInt(index));
-        band.setPreis(optionalMoney(data, "preis"));
-        band.setAenderungPreis(optionalMoney(data, "aenderungPreis"));
+        band.setPreis(bandMoney(data, "preis", stored));
+        band.setAenderungPreis(bandMoney(data, "aenderungPreis", stored));
         band.setBildUrl(editedBandUrl(string(data, "bildUrl", false), stored, true));
         band.setMpUrl(editedBandUrl(string(data, "mpUrl", false), stored, false));
         String reread = string(data, "reread", false);
@@ -161,5 +170,23 @@ public final class WriteRequests {
     private static BigDecimal optionalMoney(Map<String, ?> data, String name) {
         String value = string(data, name, false);
         return value == null || value.isEmpty() ? null : WriteValidation.money(value);
+    }
+
+    private static BigDecimal editMoney(Map<String, ?> data, String name) {
+        return data.containsKey(name) ? Money.amount(WriteValidation.money(string(data, name, true))) : null;
+    }
+
+    private static BigDecimal bandMoney(Map<String, ?> data, String name, java.util.function.Supplier<Band> stored) {
+        if (!data.containsKey(name)) return null;
+        String value = string(data, name, false);
+        Band old = stored.get();
+        BigDecimal previous = old == null ? null : name.equals("preis") ? old.getPreis() : old.getAenderungPreis();
+        if (value == null || value.isEmpty()) {
+            WriteValidation.require(previous == null);
+            return null;
+        }
+        BigDecimal amount = WriteValidation.money(value);
+        if (WriteValidation.sameMoney(previous, amount)) return null;
+        return Money.amount(amount);
     }
 }

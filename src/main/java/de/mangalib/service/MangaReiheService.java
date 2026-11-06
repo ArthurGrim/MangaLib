@@ -100,6 +100,7 @@ public class MangaReiheService {
         if (mangaReihe == null) {
             throw new IllegalArgumentException("MangaReihe darf nicht null sein");
         }
+        validateNewIdentity(mangaReihe);
         return mangaReiheRepository.save(mangaReihe);
     }
 
@@ -159,6 +160,9 @@ public class MangaReiheService {
         WriteValidation.reread(reread);
         scrapedData = WriteValidation.scrapedData(scrapedData);
         System.out.println("SaveMangaReihe gestartet");
+        Money.amount(preisProBand);
+        BandService.validateMoneyPlan(List.of(), anzahlBaende, preisProBand, gesamtpreisAenderung, false, false, scrapedData);
+        Money.distribute(gesamtpreisAenderung, anzahlBaende);
 
         // --- Stammdaten-Entities laden (damit die Relationen gesetzt werden können)
         // ---
@@ -193,6 +197,8 @@ public class MangaReiheService {
         mangaReihe.setVerlag(verlag);
         mangaReihe.setTyp(typ);
         mangaReihe.setFormat(format);
+
+        validateNewIdentity(mangaReihe);
 
         MangaReihe savedMangaReihe = mangaReiheRepository.save(mangaReihe);
 
@@ -361,23 +367,62 @@ public class MangaReiheService {
         // Tatsächlichen Bestand vor jeder Mutation erfassen. Eine bloße Korrektur
         // der deklarierten Anzahl ist kein Nachweis für neu anzulegende Bände.
         List<Band> existing = bandRepository.findByMangaReiheId(mangaReiheId);
+        String extendValue = scrapedData.get("extendVolumes");
+        WriteValidation.require(extendValue == null || extendValue.equals("true") || extendValue.equals("false"));
+        var operation = BandInventory.operation(mangaReihe, existing, anzahlBaende,
+                extendValue == null ? null : Boolean.valueOf(extendValue));
+        if (operation == BandInventory.Operation.CORRECTION) {
+            // Reine Deklarationskorrektur: kein impliziter Metadaten-/Massenauftrag.
+            WriteValidation.require(Objects.equals(mangaIndex, mangaReihe.getMangaIndex())
+                    && Objects.equals(statusId, mangaReihe.getStatus().getStatusId())
+                    && Objects.equals(verlagId, mangaReihe.getVerlag().getVerlagId())
+                    && Objects.equals(typId, mangaReihe.getTyp().getTypId())
+                    && Objects.equals(formatId, mangaReihe.getFormat().getFormatId())
+                    && (sammelbandTypId == null || Objects.equals(sammelbandTypId,
+                            oldDetails.getSammelbaende() == null ? null : oldDetails.getSammelbaende().getId()))
+                    && Objects.equals(titel, mangaReihe.getTitel())
+                    && Objects.equals(istVergriffen, mangaReihe.getIstVergriffen())
+                    && Objects.equals(istEbayPreis, mangaReihe.getIstEbayPreis())
+                    && (anilistUrl == null || Objects.equals(anilistUrl, oldDetails.getAnilistUrl()))
+                    && (coverUrl == null || Objects.equals(coverUrl, oldDetails.getCoverUrl()))
+                    && (istGelesen == null || istGelesen == oldDetails.isIstGelesen())
+                    && Objects.equals(effectiveReread, oldDetails.getReread())
+                    && preisProBand == null && gesamtpreisAenderung == null
+                    && !applyRead && !applyReread
+                    && scrapedData.keySet().stream().noneMatch(k -> k.startsWith("Band ")));
+            mangaReihe.setAnzahlBaende(anzahlBaende);
+            return Optional.of(mangaReiheRepository.save(mangaReihe));
+        }
         boolean knownPrices = existing.stream().allMatch(b -> b.getPreis() != null && b.getAenderungPreis() != null);
-        boolean extension = anzahlBaende > existing.size()
-                || mangaReihe.getAnzahlBaende() != null && anzahlBaende > mangaReihe.getAnzahlBaende();
+        boolean extension = operation == BandInventory.Operation.EXTENSION;
         if (extension) {
             validateExtension(mangaReihe, existing, anzahlBaende);
         }
         // Bei unbekannten Altpreisen keine neue Summen-/Nullpreisregel erfinden.
         // Metadaten sind unabhängig bearbeitbar; finanzielle Operationen kontrolliert sperren.
         boolean anzahlBaendeChanged = !Objects.equals(mangaReihe.getAnzahlBaende(), anzahlBaende);
-        boolean financialChange = preisProBand.signum() != 0 && (mangaReihe.getPreisProBand() == null
-                || preisProBand.compareTo(mangaReihe.getPreisProBand()) != 0)
-                || gesamtpreisAenderung != null && gesamtpreisAenderung.signum() != 0
-                && (mangaReihe.getAenderungGesamtpreis() == null
-                    || gesamtpreisAenderung.compareTo(mangaReihe.getAenderungGesamtpreis()) != 0);
+        boolean priceEdited = "true".equals(scrapedData.get("priceEdited"));
+        boolean adjustmentEdited = "true".equals(scrapedData.get("adjustmentEdited"));
+        boolean priceChange = preisProBand != null && (priceEdited
+                || !WriteValidation.sameMoney(preisProBand, mangaReihe.getPreisProBand()));
+        boolean adjustmentChange = gesamtpreisAenderung != null && (adjustmentEdited
+                || !WriteValidation.sameMoney(gesamtpreisAenderung, mangaReihe.getAenderungGesamtpreis()));
+        boolean financialChange = priceChange || adjustmentChange;
         boolean bandImport = scrapedData.keySet().stream().anyMatch(k -> k.startsWith("Band "));
         boolean importedPrices = scrapedData.keySet().stream().anyMatch(k -> k.matches("Band \\d+ Preis"));
+        // Bei unveränderter, aber zu hoher Deklaration sind Metadaten möglich;
+        // Finanz-/Importaktionen dürfen daraus keine versteckte Erweiterung machen.
+        WriteValidation.require(extension || anzahlBaende == existing.size() || !financialChange && !bandImport);
+        if (bandImport || financialChange) BandInventory.indexed(mangaReihe, existing);
         WriteValidation.require(knownPrices || !extension && !anzahlBaendeChanged && !financialChange && !importedPrices);
+        if (extension) BandService.newPrices(existing.size() + 1, anzahlBaende, preisProBand, scrapedData);
+        if (financialChange) {
+            if (preisProBand != null) Money.amount(preisProBand);
+            Money.distribute(gesamtpreisAenderung == null ? BigDecimal.ZERO : gesamtpreisAenderung,
+                    extension ? anzahlBaende - existing.size() : existing.size());
+        }
+        if (extension || financialChange) BandService.validateMoneyPlan(existing, anzahlBaende, preisProBand,
+                gesamtpreisAenderung, !extension && priceChange, !extension && adjustmentChange, scrapedData);
         if (!Objects.equals(mangaReihe.getStatus().getStatusId(), statusId))
             WriteValidation.require(statusService.getStatusById(statusId).isPresent());
         if (!Objects.equals(mangaReihe.getVerlag().getVerlagId(), verlagId))
@@ -391,6 +436,8 @@ public class MangaReiheService {
         updateMangaReiheAttributes(mangaReihe, mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
                 preisProBand, istVergriffen, istEbayPreis,
                 gesamtpreisAenderung != null ? gesamtpreisAenderung : BigDecimal.ZERO);
+        if (priceEdited) mangaReihe.setPreisProBand(preisProBand);
+        if (adjustmentEdited) mangaReihe.setAenderungGesamtpreis(gesamtpreisAenderung);
 
         System.out.println("MangaReihe Objekt geupdated");
 
@@ -418,7 +465,8 @@ public class MangaReiheService {
         if (extension) {
             bandService.appendBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData, existing);
         } else if (anzahlBaendeChanged || financialChange || bandImport) {
-            bandService.updateOrCreateBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData,
+            bandService.updateOrCreateBaende(mangaReihe, anzahlBaende, priceChange ? preisProBand : null,
+                    adjustmentChange ? gesamtpreisAenderung : null, scrapedData,
                     anzahlBaendeChanged);
         }
 
@@ -444,10 +492,13 @@ public class MangaReiheService {
             BigDecimal gesamtpreis = bandService.calculateGesamtpreis(mangaReihe);
             mangaReihe.setGesamtpreis(gesamtpreis);
 
-            // Nur aktualisieren, wenn sich die Anzahl der Bände geändert hat
-            if (anzahlBaendeChanged) {
+            // Auch Einzelpreis-/Importänderungen ändern den Mittelwert.
+            // Reine Deklarationskorrekturen sind bereits ohne Neuberechnung beendet.
+            if (anzahlBaendeChanged || financialChange || importedPrices) {
+                int aggregateCount = extension || anzahlBaendeChanged ? mangaReihe.getAnzahlBaende() : existing.size();
+                WriteValidation.require(aggregateCount > 0);
                 mangaReihe.setPreisProBand(
-                        gesamtpreis.divide(BigDecimal.valueOf(mangaReihe.getAnzahlBaende()), 2, RoundingMode.HALF_UP));
+                        gesamtpreis.divide(BigDecimal.valueOf(aggregateCount), 2, RoundingMode.HALF_UP));
             }
         }
         mangaReihe.setAktualisiertAm(Timestamp.valueOf(LocalDateTime.now()));
@@ -472,15 +523,7 @@ public class MangaReiheService {
                 && Objects.equals(row.getId(), details.getId())
                 && details.getMangaReihe() != null
                 && Objects.equals(row.getId(), details.getMangaReihe().getId()));
-        Set<Long> ids = new HashSet<>();
-        Set<Integer> numbers = new HashSet<>();
-        for (Band band : existing) {
-            WriteValidation.require(band != null && band.getId() != null && band.getId() > 0
-                    && ids.add(band.getId()) && band.getBandNr() != null
-                    && band.getBandNr() >= 1 && band.getBandNr() <= existing.size()
-                    && numbers.add(band.getBandNr()) && band.getMangaReihe() != null
-                    && Objects.equals(row.getId(), band.getMangaReihe().getId()));
-        }
+        BandInventory.indexed(row, existing);
     }
 
     /**
@@ -537,7 +580,7 @@ public class MangaReiheService {
         if (!Objects.equals(mangaReihe.getIstEbayPreis(), istEbayPreis)) {
             mangaReihe.setIstEbayPreis(istEbayPreis);
         }
-        if (preisProBand.compareTo(BigDecimal.ZERO) != 0) {
+        if (preisProBand != null && preisProBand.compareTo(BigDecimal.ZERO) != 0) {
             mangaReihe.setPreisProBand(preisProBand);
         }
         if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
@@ -670,6 +713,9 @@ public class MangaReiheService {
             throw new IllegalArgumentException("ID und Anzahl der Bände dürfen nicht null sein");
         }
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
+            WriteValidation.editableRelations(mangaReihe);
+            var operation = BandInventory.operation(mangaReihe, bandRepository.findByMangaReiheId(mangaReiheId), neueAnzahl, false);
+            WriteValidation.require(operation != BandInventory.Operation.EXTENSION);
             mangaReihe.setAnzahlBaende(neueAnzahl);
             return mangaReiheRepository.save(mangaReihe);
         });
@@ -682,14 +728,12 @@ public class MangaReiheService {
      * @param neuerPreis   Der PreisProBand der MangaReihe.
      * @return Die aktualisierte MangaReihe, falls gefunden, sonst Optional.empty().
      */
-    public Optional<MangaReihe> updateMangaReihePreisProBand(Long mangaReiheId, Double neuerPreis) {
+    public Optional<MangaReihe> updateMangaReihePreisProBand(Long mangaReiheId, BigDecimal neuerPreis) {
         if (mangaReiheId == null || neuerPreis == null) {
             throw new IllegalArgumentException("ID und Preis pro Band dürfen nicht null sein");
         }
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
-            BigDecimal preisProBandBigDecimal = neuerPreis != null ? BigDecimal.valueOf(neuerPreis) : BigDecimal.ZERO;
-            mangaReihe.setPreisProBand(preisProBandBigDecimal);
-            return mangaReiheRepository.save(mangaReihe);
+            return updateFinancialValues(mangaReihe, neuerPreis, null);
         });
     }
 
@@ -705,6 +749,9 @@ public class MangaReiheService {
             throw new IllegalArgumentException("ID und Gesamtpreis dürfen nicht null sein");
         }
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
+            // Ein abgeleitetes Aggregat ist kein Auftrag zur Umverteilung von Altpreisen.
+            Money.amount(neuerGesamtpreis);
+            WriteValidation.require(WriteValidation.sameMoney(neuerGesamtpreis, bandService.calculateGesamtpreis(mangaReihe)));
             mangaReihe.setGesamtpreis(neuerGesamtpreis);
             return mangaReiheRepository.save(mangaReihe);
         });
@@ -724,9 +771,21 @@ public class MangaReiheService {
             throw new IllegalArgumentException("ID und Änderung des Gesamtpreises dürfen nicht null sein");
         }
         return mangaReiheRepository.findById(mangaReiheId).map(mangaReihe -> {
-            mangaReihe.setAenderungGesamtpreis(aenderungGesamtpreis);
-            return mangaReiheRepository.save(mangaReihe);
+            return updateFinancialValues(mangaReihe, null, aenderungGesamtpreis);
         });
+    }
+
+    private MangaReihe updateFinancialValues(MangaReihe row, BigDecimal price, BigDecimal adjustment) {
+        var inventory = BandInventory.indexed(row, bandRepository.findByMangaReiheId(row.getId()));
+        WriteValidation.require(!inventory.isEmpty() && Objects.equals(row.getAnzahlBaende(), inventory.size()));
+        BandService.validateMoneyPlan(new ArrayList<>(inventory.values()), inventory.size(), price, adjustment,
+                price != null, adjustment != null, Map.of());
+        bandService.updateOrCreateBaende(row, inventory.size(), price, adjustment,
+                Map.of("priceEdited", Boolean.toString(price != null), "adjustmentEdited", Boolean.toString(adjustment != null)), false);
+        row.setGesamtpreis(bandService.calculateGesamtpreis(row));
+        row.setAenderungGesamtpreis(bandService.calculateAenderungGesamtpreis(row));
+        row.setPreisProBand(Money.mean(row.getGesamtpreis(), inventory.size()));
+        return mangaReiheRepository.save(row);
     }
 
     /**
@@ -1072,6 +1131,7 @@ public class MangaReiheService {
     }
 
     public MangaReihe createMangaReihe(MangaReihe mangaReihe) {
+        validateNewIdentity(mangaReihe);
         // Erstellen eines neuen MangaDetails Objekts
         MangaDetails mangaDetails = new MangaDetails();
         mangaDetails.setMangaReihe(mangaReihe); // Setzen der Beziehung
@@ -1081,6 +1141,30 @@ public class MangaReiheService {
 
         // Speichern der MangaReihe (und automatisch der MangaDetails)
         return mangaReiheRepository.save(mangaReihe);
+    }
+
+    /** Unter dem gemeinsamen Schreib-Advisor erneut prüfen: auch normale Anlagen
+     * dürfen einen gleichzeitig übernommenen identischen Bestand nicht duplizieren.
+     * Historische Dubletten bleiben unverändert; unterschiedliche Editionen ohne
+     * gemeinsamen externen Index dürfen weiter ausdrücklich angelegt werden. */
+    private void validateNewIdentity(MangaReihe row) {
+        if (row.getId() != null) {
+            // Rohe Entity-Speicherwege dürfen die geprüfte Anzahloperation nicht umgehen.
+            WriteValidation.volumes(row.getAnzahlBaende());
+            WriteValidation.require(row.getAnzahlBaende() == BandInventory.indexed(row,
+                    bandRepository.findByMangaReiheId(row.getId())).size());
+            return;
+        }
+        Money.amount(row.getPreisProBand());
+        if (row.getMangaIndex() != null && !mangaReiheRepository.findByMangaIndex(row.getMangaIndex()).isEmpty())
+            throw new IllegalArgumentException("Reihenidentität bereits vorhanden.");
+        boolean sameEdition = mangaReiheRepository.findByTitel(row.getTitel()).stream().anyMatch(old ->
+                old.getVerlag() != null && row.getVerlag() != null && old.getTyp() != null && row.getTyp() != null
+                && old.getFormat() != null && row.getFormat() != null
+                && Objects.equals(old.getVerlag().getVerlagId(), row.getVerlag().getVerlagId())
+                && Objects.equals(old.getTyp().getTypId(), row.getTyp().getTypId())
+                && Objects.equals(old.getFormat().getFormatId(), row.getFormat().getFormatId()));
+        if (sameEdition) throw new IllegalArgumentException("Reihenidentität bereits vorhanden.");
     }
 
     // ------------------------------Sortieren--------------------------------

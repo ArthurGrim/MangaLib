@@ -811,10 +811,13 @@
           <div class="input-group">
             <label for="anzahl_baende-edit">Anzahl Bände</label>
             <input type="number" id="anzahl_baende-edit" name="anzahl_baende" min="0"/>
+            <label><input type="checkbox" id="extend-volumes-edit" /> Neue Bände ausdrücklich ergänzen</label>
+            <small>Vorhandene Bände werden nie reduziert. Eine Anzahlkorrektur auf den tatsächlichen Bestand bitte ohne weitere Änderungen speichern.</small>
           </div>
           <div class="input-group">
             <label for="preis_pro_band-edit">Preis pro Band in €</label>
-            <label id="preis_pro_band-edit" name="preis_pro_band" class="id-label"></label>
+            <input id="preis_pro_band-edit" name="preis_pro_band" type="text" inputmode="decimal" />
+            <label><input id="apply-price-edit" type="checkbox" /> Preis ausdrücklich für neue bzw. alle vorhandenen Bände setzen</label>
           </div>
           <div class="input-group">
             <label for="reread-edit">Reread</label>
@@ -858,7 +861,8 @@
           </div>
           <div class="input-group">
             <label for="gesamtpreis_aenderung-edit">Änderung Preis in €</label>
-            <label id="gesamtpreis_aenderung-edit" name="gesamtpreis_aenderung" class="id-label"></label>
+            <input id="gesamtpreis_aenderung-edit" name="gesamtpreis_aenderung" type="text" inputmode="decimal" />
+            <label><input id="apply-adjustment-edit" type="checkbox" /> Anpassung ausdrücklich auf neue bzw. alle vorhandenen Bände verteilen</label>
           </div>
           <div class="input-group">
             <label for="sammelband_typ-edit">Sammelband Typ</label>

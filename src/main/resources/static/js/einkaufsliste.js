@@ -426,10 +426,20 @@ document.addEventListener("DOMContentLoaded", function () {
       MangaLibFeedback.request("/buyItemUpdate", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId: itemId })
-      }, feedback, { button, allow417: true,
-        validate: data => ["Reihe aktualisiert", "Bitte Status für neue Reihe auswählen"].includes(data.message) })
+      }, feedback, { button, allow417: true, allowConfirmation: true, validate: validPurchaseResponse })
         .then(async data => {
-          if (data.message === "Reihe aktualisiert") {
+          if (data.message === "Kauf bereits übernommen") {
+            MangaLibFeedback.show(feedback, "Kauf bereits übernommen. Es wurde nichts erneut hinzugefügt.");
+            button.disabled = true;
+            return;
+          }
+          if (data.message === "Bitte Bände bestätigen") {
+            button.disabled = true;
+            const completed = await askForVolumeRange(itemId, null, data, button);
+            if (completed) window.location.reload();
+            return;
+          }
+          if (["Reihe aktualisiert", "Neue MangaReihe erfolgreich gespeichert"].includes(data.message)) {
             button.disabled = true;
             window.location.reload();
             return;
@@ -473,12 +483,21 @@ document.addEventListener("DOMContentLoaded", function () {
         if (selectedStatus) {
           attempted = true;
           try {
-            await MangaLibFeedback.request("/buyItemCreate", {
+            const data = await MangaLibFeedback.request("/buyItemCreate", {
               method: "POST", headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ itemId: itemId, statusId: selectedStatus })
-            }, statusPopup, { button: confirmButton,
-              validate: result => result.message === "Neue MangaReihe erfolgreich gespeichert" });
+            }, statusPopup, { button: confirmButton, allowConfirmation: true,
+              validate: data => data.message !== "Bitte Status für neue Reihe auswählen" && validPurchaseResponse(data) });
             cleanUp();
+            if (data.message === "Kauf bereits übernommen") {
+              MangaLibFeedback.show(document.querySelector("main"), "Kauf bereits übernommen. Es wurde nichts erneut hinzugefügt.");
+              resolve(false);
+              return;
+            }
+            if (data.message === "Bitte Bände bestätigen") {
+              resolve(await askForVolumeRange(itemId, selectedStatus, data, buyButton));
+              return;
+            }
             resolve(true);
           } catch { /* Fehlermeldung, Werte und Dialog bleiben erhalten. */ }
         } else {
@@ -495,6 +514,54 @@ document.addEventListener("DOMContentLoaded", function () {
 
       confirmButton.addEventListener("click", onConfirm);
       cancelButton.addEventListener("click", onCancel);
+    });
+  }
+
+  function validPurchaseResponse(data) {
+    if (data.message === "Bitte Bände bestätigen") {
+      return typeof data.seriesId === "string" && /^[1-9][0-9]{0,18}$/.test(data.seriesId)
+        && Number.isInteger(data.firstBand) && Number.isInteger(data.lastBand)
+        && data.firstBand > 0 && data.lastBand >= data.firstBand && data.lastBand <= 10000;
+    }
+    return ["Reihe aktualisiert", "Neue MangaReihe erfolgreich gespeichert", "Kauf bereits übernommen",
+      "Bitte Status für neue Reihe auswählen"].includes(data.message);
+  }
+
+  // Ein bewusster zweiter Benutzerauftrag, kein automatischer Retry des ersten Requests.
+  function askForVolumeRange(itemId, statusId, preview, buyButton) {
+    return new Promise(resolve => {
+      const popup = document.createElement("div");
+      popup.className = "ask-for-status-popup purchase-range-popup";
+      popup.style.visibility = "visible";
+      const panel = document.createElement("div"); panel.className = "ask-panel";
+      panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Kaufbände bestätigen");
+      const text = document.createElement("p");
+      text.textContent = `Bände ${preview.firstBand}–${preview.lastBand} in die vorhandene Reihe übernehmen? Bereits vorhandene Bände bleiben erhalten.`;
+      const confirm = document.createElement("button"); confirm.type = "button";
+      confirm.className = "ask-panel-confirm-button"; confirm.textContent = "Bände übernehmen";
+      const cancel = document.createElement("button"); cancel.type = "button";
+      cancel.className = "ask-panel-cancel-button"; cancel.textContent = "Abbrechen";
+      panel.append(text, confirm, cancel); popup.append(panel); document.body.append(popup);
+      let attempted = false;
+      cancel.addEventListener("click", () => { popup.remove(); if (!attempted) buyButton.disabled = false; resolve(false); });
+      confirm.addEventListener("click", async () => {
+        if (confirm.disabled) return;
+        attempted = true;
+        const body = { itemId, confirmedSeriesId: preview.seriesId, firstBand: preview.firstBand, lastBand: preview.lastBand };
+        if (statusId !== null) body.statusId = statusId;
+        try {
+          const data = await MangaLibFeedback.request(statusId === null ? "/buyItemUpdate" : "/buyItemCreate", {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+          }, popup, { button: confirm, validate: result => ["Reihe aktualisiert", "Neue MangaReihe erfolgreich gespeichert",
+            "Kauf bereits übernommen"].includes(result.message) });
+          popup.remove();
+          if (data.message === "Kauf bereits übernommen") {
+            MangaLibFeedback.show(document.querySelector("main"), "Kauf bereits übernommen. Es wurde nichts erneut hinzugefügt.");
+            resolve(false);
+          } else resolve(true);
+        } catch { /* Nach unbestätigter Speicherung gesperrt halten, nie automatisch wiederholen. */ }
+      });
+      confirm.focus();
     });
   }
 });

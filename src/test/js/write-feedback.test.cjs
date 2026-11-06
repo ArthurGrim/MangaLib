@@ -21,6 +21,7 @@ async function setup(t, script = 'popup_add_reihe.js', config = {}) {
     resources: { dispatcher: { dispatch(options) { resources.push(options.origin); throw new Error('Netzwerk gesperrt'); } } }
   });
   const w = dom.window, d = w.document;
+  if (shopping) d.querySelectorAll('.buy-button').forEach(button => { button.dataset.id = '7'; });
   await new Promise(r => d.addEventListener('DOMContentLoaded', r, { once: true }));
   w.Headers = Headers; w.alert = value => alerts.push(value); w.confirm = () => true;
   w.console = { log() {}, error: (...args) => errors.push(args.join(' ')) };
@@ -48,7 +49,8 @@ async function setup(t, script = 'popup_add_reihe.js', config = {}) {
     calls.push({ url, options });
     if (config.network) throw new w.DOMException('private transport detail', config.network);
     return { status: config.status ?? 200, ok: (config.status ?? 200) < 300,
-      headers: new Headers({ 'Content-Type': config.type ?? 'application/json' }),
+      headers: new Headers({ 'Content-Type': config.type ?? 'application/json',
+        ...(config.outcome ? { 'X-MangaLib-Purchase-Outcome': config.outcome } : {}) }),
       json: async () => { parsed++; if (config.malformed || config.emptyBody) throw new SyntaxError('private parse detail'); return config.data === undefined ? { id: 3 } : config.data; },
       text: async () => { textRead++; return '<script>private SQLException secret</script>'; }
     };
@@ -242,3 +244,102 @@ test('Unklarer Kauf-Create lässt Statusdialog offen; auch nach Cancel kein zwei
   assert.equal(e.d.getElementById('status').value, '1');
   e.d.getElementById('cancelStatus').click(); await settle(); buy.click(); await settle(); assert.equal(e.calls.length, 2);
 });
+
+// T03: Konflikte stammen ausschließlich aus der festen Header-Allowlist, nie aus Fehlerbodys.
+for (const outcome of ['UNKNOWN_STATUS', 'AMBIGUOUS_SERIES', 'INCOMPATIBLE_SERIES', 'BAND_CONFLICT', 'INVALID_INVENTORY', 'BUSY']) {
+  test(`Kauf-409 ${outcome}: fester Text, kein Replay und kein Fehlerbody`, async t => {
+    const e = await setup(t, 'einkaufsliste.js', { status: 409, outcome, data: { message: 'private secret' } });
+    const buy = e.d.querySelector('.buy-button'); buy.click(); await settle();
+    assert.equal(e.calls.length, 1); assert.equal(e.parsed(), 0); assert.equal(e.textRead(), 0);
+    assert.equal(e.reloads.length, 0); assert.equal(buy.disabled, false);
+    const text = e.d.querySelector('main > .write-feedback').textContent;
+    assert.doesNotMatch(text, /private|secret|SQLException/); assert.ok(text.length > 20);
+    await settle(); assert.equal(e.calls.length, 1);
+  });
+}
+for (const outcome of [undefined, '<img onerror=alert(1)>', '__proto__']) {
+  test(`Unbekannter Kauf-409 ${outcome}: keine Bestätigung, bis Reload gesperrt`, async t => {
+    const e = await setup(t, 'einkaufsliste.js', { status: 409, outcome });
+    const buy = e.d.querySelector('.buy-button'); buy.click(); await settle(); buy.click(); await settle();
+    assert.equal(e.calls.length, 1); assert.equal(buy.disabled, true);
+    assert.equal(e.parsed(), 0); assert.equal(e.textRead(), 0); assert.equal(e.reloads.length, 0);
+  });
+}
+const rangePreview = { message: 'Bitte Bände bestätigen', seriesId: '42', firstBand: 4, lastBand: 5 };
+const purchaseResponse = (data, status = 200, outcome) => ({ status, ok: status >= 200 && status < 300,
+  headers: new Headers({ 'Content-Type': 'application/json', ...(outcome ? { 'X-MangaLib-Purchase-Outcome': outcome } : {}) }),
+  json: async () => data,
+  text: async () => { throw new Error('Fehlerbody darf nicht gelesen werden'); } });
+
+test('Bandbereich: Vorschau schreibt nicht erneut; Cancel erlaubt neue bewusste Vorschau', async t => {
+  const e = await setup(t, 'einkaufsliste.js', { data: rangePreview });
+  const buy = e.d.querySelector('.buy-button'); buy.click(); await settle();
+  let popup = e.d.querySelector('.purchase-range-popup'); assert.ok(popup);
+  assert.match(popup.textContent, /Bände 4–5/); assert.equal(e.calls.length, 1); assert.equal(buy.disabled, true);
+  popup.querySelector('.ask-panel-cancel-button').click(); await settle();
+  assert.equal(e.calls.length, 1); assert.equal(buy.disabled, false); assert.equal(e.d.querySelector('.purchase-range-popup'), null);
+  buy.click(); await settle(); assert.equal(e.calls.length, 2); assert.ok(e.d.querySelector('.purchase-range-popup'));
+});
+
+test('Bandbereich: nur ausdrückliche Bestätigung sendet Serien-ID und Nummern mit CSRF genau einmal', async t => {
+  const e = await setup(t, 'einkaufsliste.js', { data: rangePreview });
+  e.d.querySelector('.buy-button').click(); await settle();
+  let release;
+  e.w.fetch = async (url, options) => { e.calls.push({ url, options }); return new Promise(r => { release = r; }); };
+  const confirm = e.d.querySelector('.purchase-range-popup .ask-panel-confirm-button');
+  confirm.click(); confirm.click(); await settle(); assert.equal(e.calls.length, 2);
+  assert.deepEqual(JSON.parse(e.calls[1].options.body), { itemId: e.d.querySelector('.buy-button').dataset.id,
+    confirmedSeriesId: '42', firstBand: 4, lastBand: 5 });
+  assert.equal(new URL(e.calls[1].url).pathname, '/buyItemUpdate'); assert.equal(e.calls[1].options.headers.get('X-CSRF-TOKEN'), 'synthetic-token');
+  release(purchaseResponse({ message: 'Reihe aktualisiert' })); await settle();
+  assert.equal(e.reloads.length, 1); assert.equal(e.d.querySelector('.purchase-range-popup'), null);
+});
+
+test('Veralteter Bandbereich bleibt kontrollierter 409, kein automatischer Retry oder Reload', async t => {
+  const e = await setup(t, 'einkaufsliste.js', { data: rangePreview });
+  e.d.querySelector('.buy-button').click(); await settle();
+  e.w.fetch = async (url, options) => { e.calls.push({ url, options }); return purchaseResponse(null, 409, 'BAND_CONFLICT'); };
+  const popup = e.d.querySelector('.purchase-range-popup'); popup.querySelector('.ask-panel-confirm-button').click(); await settle();
+  assert.equal(e.calls.length, 2); assert.equal(e.reloads.length, 0);
+  assert.match(popup.querySelector('.write-feedback').textContent, /Bandbereich.*Bestand.*neu/);
+  assert.equal(popup.querySelector('.ask-panel-confirm-button').disabled, false);
+});
+
+test('Unbestätigter Bandkauf bleibt nach 500 und Cancel bis Reload gesperrt', async t => {
+  const e = await setup(t, 'einkaufsliste.js', { data: rangePreview });
+  const buy = e.d.querySelector('.buy-button'); buy.click(); await settle();
+  e.w.fetch = async (url, options) => { e.calls.push({ url, options }); return purchaseResponse(null, 500); };
+  const popup = e.d.querySelector('.purchase-range-popup'), confirm = popup.querySelector('.ask-panel-confirm-button');
+  confirm.click(); await settle(); confirm.click(); await settle(); assert.equal(e.calls.length, 2); assert.equal(confirm.disabled, true);
+  popup.querySelector('.ask-panel-cancel-button').click(); await settle(); buy.click(); await settle();
+  assert.equal(e.calls.length, 2); assert.equal(buy.disabled, true); assert.equal(e.reloads.length, 0);
+});
+
+test('Bereits gekauft zeigt feste Rückmeldung ohne Statusdialog oder Reload', async t => {
+  const e = await setup(t, 'einkaufsliste.js', { data: { message: 'Kauf bereits übernommen' } });
+  const buy = e.d.querySelector('.buy-button'); buy.click(); await settle(); buy.click(); await settle();
+  assert.equal(e.calls.length, 1); assert.equal(e.reloads.length, 0); assert.equal(buy.disabled, true);
+  assert.match(e.d.querySelector('main > .write-feedback').textContent, /bereits übernommen/);
+  assert.equal(e.d.querySelector('.purchase-range-popup'), null);
+});
+
+test('Nach Statusauswahl erneut gefundene Reihe verlangt dieselbe ausdrückliche Bereichsbestätigung', async t => {
+  const e = await setup(t, 'einkaufsliste.js', { status: 417, data: { message: 'Bitte Status für neue Reihe auswählen' } });
+  e.d.querySelector('.buy-button').click(); await settle(); e.d.getElementById('status').value = '1';
+  e.w.fetch = async (url, options) => { e.calls.push({ url, options }); return purchaseResponse(rangePreview); };
+  e.d.getElementById('confirmStatus').click(); await settle();
+  assert.equal(e.calls.length, 2); assert.ok(e.d.querySelector('.purchase-range-popup'));
+  e.w.fetch = async (url, options) => { e.calls.push({ url, options }); return purchaseResponse({ message: 'Reihe aktualisiert' }); };
+  e.d.querySelector('.purchase-range-popup .ask-panel-confirm-button').click(); await settle();
+  assert.equal(e.calls.length, 3); assert.equal(new URL(e.calls[2].url).pathname, '/buyItemCreate');
+  assert.equal(JSON.parse(e.calls[2].options.body).statusId, '1'); assert.equal(e.reloads.length, 1);
+});
+
+for (const preview of [{ ...rangePreview, seriesId: '<img>' }, { ...rangePreview, firstBand: 0 }, { ...rangePreview, lastBand: 10001 }, { message: 'unbekannter Erfolg' }]) {
+  test(`Ungültige Kaufvorschau ${JSON.stringify(preview)} öffnet keinen Dialog`, async t => {
+    const e = await setup(t, 'einkaufsliste.js', { data: preview });
+    const buy = e.d.querySelector('.buy-button'); buy.click(); await settle(); buy.click(); await settle();
+    assert.equal(e.calls.length, 1); assert.equal(buy.disabled, true);
+    assert.equal(e.d.querySelector('.purchase-range-popup'), null); assert.equal(e.reloads.length, 0);
+  });
+}

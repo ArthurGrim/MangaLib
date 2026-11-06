@@ -171,15 +171,13 @@ public class EinkaufslisteService {
      */
     @Transactional
     public EinkaufslisteItem saveEinkaufslisteItem(Integer mangaIndex, Long verlagId, Long typId, Long formatId,
-            String titel, Integer anzahlBaende, Double preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
-            String anilistUrl, Long sammelbandTypId, Double gesamtpreisAenderung, LocalDate erscheinungsdatum, Map<String, String> scrapedData) {
+            String titel, Integer anzahlBaende, BigDecimal preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
+            String anilistUrl, Long sammelbandTypId, BigDecimal gesamtpreisAenderung, LocalDate erscheinungsdatum, Map<String, String> scrapedData) {
         WriteValidation.volumes(anzahlBaende);
-        WriteValidation.require(preisProBand != null && Double.isFinite(preisProBand));
-        WriteValidation.require(gesamtpreisAenderung == null || Double.isFinite(gesamtpreisAenderung));
-        WriteValidation.money(BigDecimal.valueOf(preisProBand));
-        WriteValidation.money(gesamtpreisAenderung == null ? BigDecimal.ZERO : BigDecimal.valueOf(gesamtpreisAenderung));
-        WriteValidation.money(BigDecimal.valueOf(preisProBand).multiply(BigDecimal.valueOf(anzahlBaende))
-                .add(gesamtpreisAenderung == null ? BigDecimal.ZERO : BigDecimal.valueOf(gesamtpreisAenderung)));
+        Money.amount(preisProBand);
+        Money.amount(gesamtpreisAenderung == null ? BigDecimal.ZERO : gesamtpreisAenderung);
+        Money.amount(preisProBand.multiply(BigDecimal.valueOf(anzahlBaende))
+                .add(gesamtpreisAenderung == null ? BigDecimal.ZERO : gesamtpreisAenderung));
         scrapedData = WriteValidation.scrapedData(scrapedData);
         // Erstellen der MangaReihe
         EinkaufslisteItem einkaufslisteItem = new EinkaufslisteItem();
@@ -198,10 +196,10 @@ public class EinkaufslisteService {
         einkaufslisteItem.setIstVergriffen(istVergriffen);
 
         // Berechnen des Gesamtpreises
-        BigDecimal preisProBandBigDecimal = BigDecimal.valueOf(preisProBand);
+        BigDecimal preisProBandBigDecimal = preisProBand;
         einkaufslisteItem.setPreis(preisProBandBigDecimal);
         BigDecimal gesamtpreisAenderungBigDecimal = gesamtpreisAenderung != null
-                ? BigDecimal.valueOf(gesamtpreisAenderung)
+                ? gesamtpreisAenderung
                 : BigDecimal.ZERO;
         BigDecimal anzahlBaendeBigDecimal = BigDecimal.valueOf(anzahlBaende);
 
