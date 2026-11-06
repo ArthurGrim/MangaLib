@@ -12675,6 +12675,212 @@ Ausgangsbasis versioniert; ihre Entfernung bereinigt den aktuellen Baum, keine
 History-Umschreibung. Indexprüfung und git diff --cached --check erfolgreich.
 Die lokale Musterprüfung ersetzt keinen vollständigen Historien-Secret-Scanner.
 
+## Nachtrag 02.11.2026 – T03-0 ausschließlich datenbankfreie Charakterisierung
+
+Ausgangszustand exakt bestätigt: Branch codex/t02-security-hardening, HEAD
+b7a2dbe, kein geänderter verfolgter Inhalt, acht bekannte unversionierte historische
+Prototypdateien. Danach ausdrücklich freigegebenen Branch codex/t03-data-integrity
+direkt ab b7a2dbe erstellt. Kein Reset/Stash/Clean, keine Änderung des T02-Branches.
+
+Neue Tests: service/PurchaseFlowCharacterizationTest (24 Fälle) und
+service/BandIntegrityCharacterizationTest (29 Fälle), gemeinsame synthetische
+T03Fixtures. Echte Controller/Services, ausschließlich Repository-/Servicemocks
+und begrenzte zwei Java-Threads mit deterministischer Barrier. Keine Spring-
+Kontexte, Proxys, JDBC oder Netzwerkfunktion. Fake-Mutationen sind kein Nachweis
+von DB-Commits/Rollbacks oder tatsächlich wirksamen SQL-Locks.
+
+53 neue Fälle dokumentieren Ist-Abweichungen als erfolgreiche Charakterisierung:
+Bibliotheksaufruf vor fehlerhafter Kaufmarkierung, erneute/gleichzeitige Übernahme,
+erster mehrdeutiger Index-/Titeltreffer, NULL-Index als 0, ignoriertes leeres
+Updateergebnis, Rundung 0,01/−0,01/0,02 auf drei Bände, ArithmeticException im
+Bestandsupdate, Listenpositionszuordnung, Reduktion ohne Löschung mit unpassendem
+Aggregat und unterschiedliche NULL-/0-Semantik. Bestehende M06-/T02-Grenzen und
+korrekte Pfade separat positiv geprüft. Kein Fehlverhalten dadurch behoben;
+keine deaktivierten/absichtlich roten Tests. Fachentscheidungen im T03-Plan.
+
+Abschließender tatsächlicher Lauf: 280 bestanden, 0 Fehler, 0 übersprungen:
+24 Kauf- + 29 Bandcharakterisierungen, 40 ReadingStatusExtensionTest,
+51 LegacyEditCharacterizationTest, 38 WriteServiceSafetyTest und
+98 WriteMvcValidationTest (Standalone-MockMvc mit aktiven T02-Filtern).
+Vor jedem Gradle-Aufruf identischer Taskplan mit --dry-run, stets --offline
+--no-daemon. Nur Compile/Resources/testClasses/test im Taskplan, kein BootRun,
+JavaExec, manuelles JAR oder Integrationsfilter. Erfolgreiche Offline-Kompilierung.
+
+Reproduzierbare Auswahl (erst identisch mit zusätzlichem --dry-run prüfen):
+
+```powershell
+.\gradlew.bat --offline --no-daemon test `
+  --tests de.mangalib.service.PurchaseFlowCharacterizationTest `
+  --tests de.mangalib.service.BandIntegrityCharacterizationTest `
+  --tests de.mangalib.service.ReadingStatusExtensionTest `
+  --tests de.mangalib.validation.LegacyEditCharacterizationTest `
+  --tests de.mangalib.validation.WriteServiceSafetyTest `
+  --tests de.mangalib.validation.WriteMvcValidationTest
+```
+
+Frühere eigene Testaufbaufehler korrigiert: expliziter Long-Typ für JUnit-
+Argumentassertions; Mockito doThrow statt Aufruf eines bestehenden Answers beim
+Neustubben; Fixturehelper sendet auch bei fehlenden Details ein gültiges
+synthetisches Requestmodell statt selbst NPE zu werfen. Keine Produktionslogik,
+bestehenden Assertions oder Sicherheitskonfigurationen dafür verändert. Nach
+Korrekturen vollständige obige Auswahl grün. Berichte lokal ignoriert unter
+.gradle/t03-characterization-20261102/; keine historischen Evidenzen überschrieben.
+Bekannter HotSpot-CDS-Hinweis, keine Kompilierungswarnung neu verursacht.
+
+Keine DB-/Spring-Boot-Integration, Vollsuite, clean, Anwendung, Listener, Browser,
+Native-Probe oder Live-Scraper; keine Downloads/Installationen. Keine Fingerabdrücke
+oder DB-Zustände neu erhoben. Vorhandener Manual-JAR und historische unversionierte
+Dateien unverändert. Kein Staging, Commit, Push oder Merge. Produktion vollständig
+unverändert, T03-1 nicht begonnen. Vor echter DB-/Parallelitätsabnahme neue,
+konkrete Freigabe erforderlich, insbesondere für committed synthetische Fixtures
+und deren eng begrenzte Entfernung. Bestehende Rollbackfreigaben nicht ausweiten.
+
+
+## Nachtrag 02.11.2026 – T03-1/T03-2 datenbankfrei implementiert
+
+Status `IMPLEMENTED_DB_FREE_VERIFIED`; keine echte Commit-/JPA-/Browserabnahme.
+Maßgebliche Regeln/Schreibpfadinventar: T03_IMPLEMENTATION_PLAN.md, Abschnitt 11.
+D1–D6 wurden vom Eigentümer entschieden; zusätzlich fester 200-/409-Vertrag und
+explizite Bestätigung des neuen Bandnummernbereichs freigegeben.
+
+Beide Kaufwege delegieren an PurchaseService. Gemeinsamer JVM-Mutex VOR eigener
+TransactionTemplate-Transaktion; Einkaufslock vor Reihenlock. Bestehende öffentliche
+Schreibmethoden der fünf Bibliotheks-/Einkaufsservices werden über einen äußeren
+Spring-Infrastruktur-Advisor koordiniert. Normale Neuanlage darf den Mutex und die
+Dublettenprüfung nicht umgehen. Keine Netzwerkarbeit im Mutex. Unbestätigtes
+Transaktionsende sperrt weitere koordinierte Writes; keine automatische Wiederholung.
+
+Endgültiger selektiver Lauf: **462 bestanden, 0 Fehler, 0 übersprungen**.
+
+| Klasse | Bestanden | Fehler | Übersprungen |
+| --- | ---: | ---: | ---: |
+| LocalSecurityPolicyTest | 61 | 0 | 0 |
+| BandIntegrityCharacterizationTest | 29 | 0 | 0 |
+| LibraryWriteConfigurationTest | 8 | 0 | 0 |
+| LibraryWriteCoordinatorTest | 12 | 0 | 0 |
+| PurchaseFlowCharacterizationTest | 27 | 0 | 0 |
+| PurchaseServiceTest | 46 | 0 | 0 |
+| ReadingStatusExtensionTest | 40 | 0 | 0 |
+| TestDatabaseGuardTest | 44 | 0 | 0 |
+| LegacyEditCharacterizationTest | 51 | 0 | 0 |
+| WriteMvcValidationTest | 106 | 0 | 0 |
+| WriteServiceSafetyTest | 38 | 0 | 0 |
+
+Ausgeführt nach identischem erfolgreichem Offline-Dry-Run und statischer Prüfung
+aller ausgewählten Klassen/Tasks. JAVA_HOME nur für Java 21 gesetzt, kein Passwort
+benötigt/verwendet. Keine Boot-Testkontexte oder DataSource-Beans in dieser Auswahl.
+Der kleine AOP-Test verwendet GenericApplicationContext, echte Spring-Proxys und
+einen Fake-Transaktionsmanager, ohne Autokonfiguration, JPA oder JDBC.
+
+```powershell
+.\gradlew.bat --offline --no-daemon test `
+  --tests de.mangalib.service.LibraryWriteCoordinatorTest `
+  --tests de.mangalib.service.LibraryWriteConfigurationTest `
+  --tests de.mangalib.service.PurchaseServiceTest `
+  --tests de.mangalib.service.PurchaseFlowCharacterizationTest `
+  --tests de.mangalib.service.BandIntegrityCharacterizationTest `
+  --tests de.mangalib.service.ReadingStatusExtensionTest `
+  --tests de.mangalib.validation.WriteMvcValidationTest `
+  --tests de.mangalib.validation.WriteServiceSafetyTest `
+  --tests de.mangalib.validation.LegacyEditCharacterizationTest `
+  --tests de.mangalib.security.LocalSecurityPolicyTest `
+  --tests de.mangalib.testsupport.TestDatabaseGuardTest
+```
+
+Vor jedem tatsächlichen Gradle-Aufruf exakt dieser Aufruf mit angehängtem
+`--dry-run`. Plan: compileProductionOwnerJava, processProductionOwnerResources,
+productionOwnerClasses, compileJava, processResources, classes, compileTestJava,
+processTestResources, testClasses, test. Keine JAR-, Manual-, Host-, Windows-,
+Scraper- oder Integrationstesttasks. Compile/Test erfolgreich. Nur die bekannte
+Mockito/HotSpot-CDS-Warnung; zwischenzeitlich im neuen Test verwendeten veralteten
+TransactionInterceptor-Konstruktor ersetzt, im endgültigen Lauf kein entsprechender
+Deprecation-Hinweis mehr.
+
+Zusätzlich **225 DOM-Tests bestanden**, 0 Fehler/übersprungen, mit
+`pnpm run test:dom` (bestehende jsdom-Abhängigkeit, keine Installation).
+19 neue DOM-Fälle: sechs feste 409-Kürzel, unbekannte/maliziöse Header, Vorschau
+und Cancel, explizite Bestätigung mit CSRF und Doubleclick-Sperre, veraltete Bereiche,
+unbekannter 500-Erfolg mit Sperre, bereits gekauft, 417->Bestätigung und ungültige
+Antwortfelder. Fehlerbodys werden nicht gelesen. Beide geänderten JS-Dateien
+zusätzlich `node --check` erfolgreich. Keine echten Browser-/Netzwerkzugriffe.
+
+Die anfänglichen Fehlläufe wurden untersucht: zwei neue Neuanlage-Fixtures ohne
+Status-/Verlags-/Typ-/Format-Repository-Stubs (danach vollständig ergänzt), eine
+JUnit-Generik-Kompilierung korrigiert sowie zwei neue DOM-Erwartungen an Fixture-ID
+und absolute Fetch-URL korrigiert. Zusätzlich einen deterministischen Konkurrenzfall zweier unterschiedlicher Käufe
+derselben neuen Reihe ergänzt: genau eine Neuanlage, zweiter Kauf erst nach Commit
+als ausdrückliche Append-Vorschau. Sein anfänglich fehlerhaftes Mockito-Restubbing
+und die synthetische MapsId-/Inverse-Ladung korrigiert; endgültig erfolgreich.
+Keine fachlichen Assertions geschwächt und keine
+Fehler übersprungen. Historische T03-0-Reports unverändert; frühere IST-Kauffehler
+zu expliziten Sollfällen weiterentwickelt, globale Band-/Preisfehler weiterhin
+als IST dokumentiert. Lokale aktuelle Reports unter
+`.gradle/t03-purchase-20261102/`, nicht für Git bestimmt.
+
+**Noch nicht ausgeführt / zwingende Nachweisgrenzen:**
+
+- Keine vollständige `test`-/`clean test`-/Buildsuite, keine Datenbank-Fingerabdrücke
+  und keine Verbindung zu irgendeiner Datenbank. Frühere Integrationszahlen sind
+  keine erneute Bestätigung dieses Arbeitsstands.
+- Mutex-/Transaktions-Fakes beweisen Aufruf- und Completionreihenfolge, nicht die
+  Wiederherstellung von RAM-Objekten oder echte DB-Commits/Rowlocks/Rollbacks.
+- Der Coordinator weist fremde äußere Transaktionen vor Writes ab. Bestehende
+  `@Transactional`-Schreibtests (ServiceTest, Kauf-/M06-MVC-Fälle) müssen VOR der
+  nächsten Vollsuite auf die echte eigene Commit-Grenze abgestimmt werden.
+  Nicht einfach die Annotation entfernen: dauerhafte Fixtures wären die Folge.
+  Kein Guard-/Testprofil-Sonderbypass und keine Abschwächung vorhandener Assertions.
+- T03-6 erhält einen gesonderten Opt-in-Plan mit wenigen neuen synthetischen IDs,
+  echten unabhängigen Transaktionen, Flush/Clear/Reload und Parallelität. Gesonderte
+  Eigentümerfreigabe ausschließlich mangalib_test erforderlich; keine automatische
+  Bereinigung/Entfernung oder Änderungen vorhandener Zeilen.
+- Keine Browser-/Anwendungs-/HTTP-/Scraper-/nativen Windowsstarts, keine Downloads,
+  Migrationen, neuen Abhängigkeiten, Staging- oder Commitaktionen.
+- Acht historische unversionierte Experimente und alle drei bestehenden Manual-JAR-
+  Hashes unverändert überprüft. T02-Guards/Filter und historische Evidenzen erhalten.
+
+Für die neue manuelle Bedienabnahme siehe MANUAL_TESTING.md, T03-1/T03-2-Nachtrag.
+T03-3/4/5 und T04/T05/T06 nicht als abgeschlossen darstellen.
+
+
+### Dateiumfang und Abschlusskontrolle dieses Arbeitsstands
+
+Vollständige Liste der 23 T03-Projektdateien gegenüber T02-HEAD b7a2dbe
+(einschließlich der erhaltenen uncommitteten T03-0-Arbeiten):
+
+- `MANUAL_TESTING.md`
+- `ROADMAP.md`
+- `T03_IMPLEMENTATION_PLAN.md`
+- `TESTING.md`
+- `src/main/java/de/mangalib/controller/EinkaufslisteController.java`
+- `src/main/java/de/mangalib/repository/EinkaufslisteRepository.java`
+- `src/main/java/de/mangalib/repository/MangaReiheRepository.java`
+- `src/main/java/de/mangalib/service/MangaReiheService.java`
+- `src/main/resources/static/js/einkaufsliste.js`
+- `src/main/resources/static/js/security.js`
+- `src/test/java/de/mangalib/service/ReadingStatusExtensionTest.java`
+- `src/test/java/de/mangalib/validation/WriteMvcValidationTest.java`
+- `src/test/js/write-feedback.test.cjs`
+- `src/main/java/de/mangalib/service/LibraryWriteConfiguration.java`
+- `src/main/java/de/mangalib/service/LibraryWriteCoordinator.java`
+- `src/main/java/de/mangalib/service/PurchaseService.java`
+- `src/test/java/de/mangalib/service/BandIntegrityCharacterizationTest.java`
+- `src/test/java/de/mangalib/service/FakeLibraryTransactionManager.java`
+- `src/test/java/de/mangalib/service/LibraryWriteConfigurationTest.java`
+- `src/test/java/de/mangalib/service/LibraryWriteCoordinatorTest.java`
+- `src/test/java/de/mangalib/service/PurchaseFlowCharacterizationTest.java`
+- `src/test/java/de/mangalib/service/PurchaseServiceTest.java`
+- `src/test/java/de/mangalib/service/T03Fixtures.java`
+
+
+`git diff --check` erfolgreich, Staging-Bereich leer. Git meldet lediglich die
+bestehende Windows-LF/CRLF-Konvertierung, keinen Diff-Whitespacefehler. Zusätzlich
+alle neuen unversionierten Java-Dateien auf UTF-8-BOM und Zeilenend-Whitespace
+geprüft: keine neuen Befunde. Historisch vorhandene Whitespacezeilen im unveränderten
+Umfeld von MangaReiheService nicht nebenbei bereinigt. Acht historische Dateien
+unter experiments/windows-job-prototype weiterhin unverändert/unversioniert.
+Branch codex/t03-data-integrity, HEAD b7a2dbe; kein Staging, Commit, Push oder Merge.
+
+
 ## Nachtrag 03.11.2026 – gezieltes undici-Sicherheitsupdate
 
 Status **SECURITY_FIX_VERIFIED** für die npm-Projektauflösung. Eigenständiger
@@ -12739,3 +12945,747 @@ Branch weiterhin codex/t03-data-integrity, HEAD b7a2dbe; nichts gestagt/committe
 kein Push/Merge. Keine Datenbankverbindung, Migration, Anwendung oder echte
 Browser-/Scraperausführung. Keine weiteren Auditbefunde im geprüften npm-Graphen.
 Lokale Prüfprotokolle unter .gradle/undici-security-20261103, nicht für Git bestimmt.
+
+## Nachtrag 04.11.2026 – T03-3 stabile Bandidentitäten und Aggregate
+
+`IMPLEMENTED_DB_FREE_VERIFIED`: 417 Java-Tests bestanden, 0 Fehler, 0 übersprungen.
+Branch codex/t03-data-integrity, Ausgangs-HEAD c20c213. Bestehende T03-Arbeiten
+erhalten; kein Staging/Commit/Push. Keine Datenbank, Anwendung, Browser, Scraper,
+Migration oder Downloads. Historische Ergebnisse sind keine neue DB-Abnahme.
+
+Auswahl: BandInventoryTest (16), BandIntegrityCharacterizationTest (29),
+ReadingStatusExtensionTest (40), PurchaseServiceTest (46),
+PurchaseFlowCharacterizationTest (27), LibraryWriteCoordinatorTest (12),
+LibraryWriteConfigurationTest (8), LegacyEditCharacterizationTest (51),
+WriteServiceSafetyTest (38), WriteMvcValidationTest (106), TestDatabaseGuardTest (44).
+Alle ausschließlich Unit-/Mock-/Fake-/Standalone-Kontexte, keine Boot-/JPA-Kontexte.
+
+Vor jedem Lauf identischer Aufruf mit --dry-run, stets --offline --no-daemon.
+Plan ausschließlich compileProductionOwnerJava/processProductionOwnerResources,
+productionOwnerClasses, compileJava/processResources/classes, compileTestJava,
+processTestResources/testClasses/test. Keine JAR-/JavaExec-/Integrationstasks.
+Java 21; Kompilierung und finale Auswahl erfolgreich. Nur bekannte HotSpot-CDS-
+Warnung. Sandbox-Cachezugriff erforderte erhöhte Dateiberechtigung, keine Downloads.
+
+16 neue Fälle prüfen sämtliche sechs Listenpermutationen, doppelte/fehlende
+Nummern oder IDs, fremde Zuordnung, unzulässige Umnummerierung, tatsächliche
+Bestandsgröße im Mittelwert, veraltetes Reihenpreisaggregat und Finanzänderung
+bei gleicher Anzahl. Bestehende falsche Positionszuordnung zu positiver Soll-
+Assertion weiterentwickelt. Unbekannte Anpassungen jetzt kontrolliert abgewiesen;
+keine Nullpreise erfunden. Übrige IST-Cent-/Reduktionsfälle bleiben bewusst grün.
+Erster Lauf: 415 Fälle, ein Fixturefehler im URL-/DNS-Test (fehlende Bandnummer).
+Gültige Nummer ergänzt, sämtliche Sicherheitsassertions erhalten. Anschließend
+416 erfolgreich; nach zusätzlicher Mittelwertkorrektur final 417 erfolgreich.
+
+M06- und Kaufregressionen prüfen unveränderte Altwerte, Bestätigungen und Mutex- /
+Transaktionsgrenzen auf Fakeebene. Das ist kein echter Commit-/Rollbacknachweis.
+DOM-Suite nicht erneut ausgeführt: keine Frontendänderung. Integrationstests nicht
+ausgeführt: Coordinator lehnt deren äußere Schreibtransaktionen bewusst ab.
+Konkrete Anpassungsmatrix in T03_IMPLEMENTATION_PLAN.md Abschnitt 12; keine
+Rollback-Annotation entfernt und keine Assertions abgeschwächt. T03-4/5/6 offen.
+Acht historische Dateien gegen vorhandene Hashliste unverändert; drei Manual-JARs
+entsprechen weiterhin ihren dokumentierten SHA-256-Werten. git diff --check
+erfolgreich; bestehende Windows-LF/CRLF-Hinweise sind keine Whitespacefehler.
+
+## Nachtrag 04.11.2026 – T03-4 / exakte Geldberechnung
+
+D5 Variante C auf Implementierungsebene umgesetzt: bekannter Pflichtpreis bei
+Neuanlage, ausdrückliche 0 als Preis, keine neue NULL-Erzeugung durch Leeren,
+historische NULL-Werte bei unbeteiligten Änderungen erhalten. Rechenkern Money
+gemeinsam für Anlage, Erweiterung und PurchaseService; Finanzgrundlagen und
+Preispläne vor Mutation geprüft. Verträge/Inventar: T03_IMPLEMENTATION_PLAN.md §13.
+
+Auswahl ausschließlich datenbankfreier Klassen: MoneyTest,
+BandInventoryTest, BandIntegrityCharacterizationTest, ReadingStatusExtensionTest,
+PurchaseServiceTest, PurchaseFlowCharacterizationTest, LibraryWriteCoordinatorTest,
+LibraryWriteConfigurationTest, LegacyEditCharacterizationTest,
+WriteServiceSafetyTest, WriteMvcValidationTest, TestDatabaseGuardTest.
+Vor jedem Lauf identischer --dry-run, stets --offline --no-daemon, Java 21.
+Taskplan nur Compile/Resources/Klassen und gefiltertes test; kein JAR-, JavaExec-,
+Boot-/JPA-/DB-/Browser-/Scrapertask. Vorhandener Gradle-Cache erforderte erhöhte
+Dateiberechtigung. Keine Downloads/Installationen. Bekannter HotSpot-CDS-Hinweis.
+
+Historische Centverlust-/ArithmeticException-Fälle wurden zu positiven
+Summenerhaltungsfällen weiterentwickelt, nicht entfernt. Leeren eines bekannten
+Bandpreises jetzt als 400 statt stillem Keep abgesichert. Pflichtpreis statt
+fehlender Preis=0; unveränderte optionale Preise bei Bearbeitung jetzt Java-null.
+Ein erster Lauf hatte 11 erwartete Abweichungen von bisherigen IST-Assertions;
+danach Sollassertions und BigDecimal-Scale-Vergleich gezielt angepasst. Nach
+weiteren Ergänzungen Zwischenlauf 445 bestanden/0 Fehler/0 übersprungen.
+
+Geldtests prüfen signierte Restcents, 20/3, 1 bis 10.000 Zielbände, technische
+Werte-/Skalengrenzen, Determinismus, vollständige Summe, ungültigen letzten Import
+vor erstem Save, ausdrückliche Nullpreise, individuelle Altpreise und Setter-
+Aggregate. Standalone-MockMvc ergänzt ungültige Centpreise vor Serviceaufruf;
+bisherige Guard-, M06-, Mutex-, Kaufkonflikt- und Sicherheitsassertions erhalten.
+
+DOM-Suite: **231 bestanden, 0 Fehler, 0 übersprungen** (pnpm run test:dom), sechs
+neue Fälle für ausgeschaltete Preisoptionen, explizite 0/negative Anpassung,
+Dialogreset, leere/ungültige Beträge und fehlende clientseitige Rundung. jsdom
+ohne Browser, mit gesperrten Ressourcen/Netzwerk-Doubles. Keine Installation.
+Lokales aktuelles Protokoll .gradle/t03-money-dom.txt, nicht für Git vorgesehen.
+
+Keine Datenbankverbindung, kein clean test/Integrationstest, keine Migration,
+Anwendung, echter Browser/Scraper oder native Probe. T03-6 bleibt gesondert
+freizugeben; Fake-Transaktionen beweisen keinen echten Datenbankrollback.
+Acht historische Experimente anhand vorhandener Hashliste unverändert; alle drei
+Manual-JAR-Hashes unverändert. undici-Sicherheitsfix unangetastet. Kein Staging,
+Commit, Push oder sonstige Änderung an der Historie. T03-5 nicht implementiert.
+
+Abschließender Lauf nach Ergänzung der Neuanlageguards:
+**446 bestanden, 0 Fehler, 0 übersprungen**, Kompilierung erfolgreich.
+25 MoneyTest, 16 BandInventoryTest, 29 BandIntegrityCharacterizationTest,
+40 ReadingStatusExtensionTest, 46 PurchaseServiceTest,
+27 PurchaseFlowCharacterizationTest, 12 LibraryWriteCoordinatorTest,
+8 LibraryWriteConfigurationTest, 51 LegacyEditCharacterizationTest,
+38 WriteServiceSafetyTest, 110 WriteMvcValidationTest, 44 TestDatabaseGuardTest.
+JavaScript-Syntaxprüfungen beider geänderter Dialogskripte und git diff --check
+erfolgreich. Status `IMPLEMENTED_DB_FREE_VERIFIED` für T03-4, keine DB-Abnahme.
+
+Dateiumfang dieses Teilauftrags (bestehende übrige T03-Arbeiten erhalten):
+Money.java (neu), BandService.java, MangaReiheService.java,
+EinkaufslisteService.java, PurchaseService.java, EinkaufslisteController.java,
+WriteRequests.java, home.html, popup_edit_reihe.js, popup_edit_baende.js,
+MoneyTest.java (neu), BandIntegrityCharacterizationTest.java,
+LegacyEditCharacterizationTest.java, WriteMvcValidationTest.java,
+WriteServiceSafetyTest.java, legacy-edit-characterization.test.cjs,
+T03_IMPLEMENTATION_PLAN.md, TESTING.md, ROADMAP.md.
+
+## Nachtrag 04.11.2026 – T03-5 sichere Bandanzahloperationen
+
+BandInventory entscheidet anhand geprüfter tatsächlicher Bände zwischen Keep,
+reiner Korrektur und Erweiterung. Reduktion unter N oder Teilkorrektur ohne Anlage
+wird vor Mutation abgewiesen. Reine Korrektur speichert nur die Deklaration;
+Bandwerte, Details, Timestamps, gespeicherte Preisaggregate und NULLs bleiben erhalten.
+Verträge und Ist-/Soll-Matrix: T03_IMPLEMENTATION_PLAN.md Abschnitt 14.
+
+Neue BandCountTest-Fälle verwenden echte Services mit synthetischen Repository-
+Fakes; keine Spring-Boot-/JPA-/JDBC-Kontexte. Zusätzliche Standalone-MockMvc-Fälle
+in LegacyEditCharacterizationTest prüfen echte Controller/Services mit aktiven
+CSRF-, Host-/Origin- und Größenfiltern. Keine Netzwerk-/Scraperfunktion.
+C15 von falschem Mittelwert/Reduktion zu aktiver Ablehnungsassertion überführt.
+M06-Erweiterungsfixtures erhalten extendVolumes=true; normale Massenbearbeitung
+false. Keine fachliche Assertion entfernt oder abgeschwächt.
+
+Erster Java-Lauf: 463 Fälle, zwei fehlerhafte Fixtures (normale Bearbeitung mit
+ausdrücklicher Anlageabsicht). Korrigiert und erneut geprüft; weitere Fälle für
+abwesende optionale Sammelbandwerte, unveränderte zu hohe Deklaration und rohe
+Entity-Speicherwege ergänzt. Erster neuer DOM-Fall scheiterte an seinem eigenen
+Ein-Request-Payloadhelper nach zwei bewussten Klicks; zweite Antwort nun ausdrücklich
+aus dem zweiten Mockrequest geprüft, keine automatische Wiederholung eingeführt.
+
+DOM-Suite **232 bestanden, 0 Fehler, 0 übersprungen**; Protokoll lokal unter
+.gradle/t03-count-dom.txt. Neuer Fall: Korrektur ohne Bandanlage, ausdrückliche
+Erweiterung, Preisfelder bleiben unberührt, Optionsreset. JavaScript-Syntaxprüfung
+erfolgreich. Kein echter Browser oder HTTP-Listener.
+
+Vor jedem Gradle-Lauf identischer --dry-run, ausschließlich --offline --no-daemon
+mit Java 21. Geprüfter Plan nur Compile/Resources/Klassen und gefiltertes test;
+keine JAR-, Boot-, JavaExec-, DB- oder Live-Scrapertasks. Vorhandener Cache erforderte
+erhöhte Dateiberechtigung. Nur bekannter HotSpot-CDS-Hinweis, keine Downloads.
+Keine Datenbankverbindung, Migration, Anwendung, Browser oder echte Scraper;
+kein clean test und keine Integrationstests. Echte Commit-/Rollback-/Konkurrenz-
+und Browsernachweise bleiben T03-6 und benötigen eigene ausdrückliche Freigabe.
+Acht historische Dateihashes und drei Manual-JAR-Hashes unverändert überprüft;
+undici-Fix unangetastet. Keine Staging-/Commit-/Push-Aktion.
+
+Abschließender Lauf: **468 Java-Tests bestanden, 0 Fehler, 0 übersprungen**.
+Enthalten: 20 BandCountTest, 29 BandIntegrityCharacterizationTest,
+16 BandInventoryTest, 25 MoneyTest, 40 ReadingStatusExtensionTest,
+46 PurchaseServiceTest, 27 PurchaseFlowCharacterizationTest,
+12 LibraryWriteCoordinatorTest, 8 LibraryWriteConfigurationTest,
+53 LegacyEditCharacterizationTest, 110 WriteMvcValidationTest,
+38 WriteServiceSafetyTest und 44 TestDatabaseGuardTest.
+Vor dem endgültigen Lauf wurde noch eine falsche neue Testannahme korrigiert:
+unveränderte Metadatenbearbeitung darf Details speichern, reine Anzahlkorrektur
+dagegen nicht. Sämtliche Band-Nebenwirkungsassertions bleiben erhalten. Finaler
+Offline-Lauf einschließlich Kompilierung erfolgreich, JavaScript-Syntax und
+git diff --check erfolgreich. `IMPLEMENTED_DB_FREE_VERIFIED`, keine DB-Abnahme.
+
+Dateiumfang dieses Teilauftrags: BandInventory.java, BandService.java,
+MangaReiheService.java, WriteRequests.java, home.html, popup_edit_reihe.js,
+BandCountTest.java (neu), BandIntegrityCharacterizationTest.java,
+ReadingStatusExtensionTest.java, LegacyEditCharacterizationTest.java,
+legacy-edit-characterization.test.cjs, T03_IMPLEMENTATION_PLAN.md,
+TESTING.md und ROADMAP.md. Übrige uncommittete T03-Arbeiten erhalten.
+
+## Nachtrag 04.11.2026 – T03-6A / Integrationsvorbereitung
+
+Keine DB-/Boot-/Browserausführung. Inventar und spätere Freigaben in
+T03_INTEGRATION_INVENTORY.md und T03_6B_APPROVAL.md. 13 Bootklassen/75 Methoden;
+auch LegacyEditIntegrationTest und positiver RequestLimits-Bandedit mit äußerer
+Testtransaktion kollidieren mit dem Coordinator. Keine bestehende Assertion oder
+Annotation entfernt; keine Tests zum Grünmachen ausgeschlossen.
+
+Neue Infrastruktur: separater Source-Set t03Integration, Task t03CommitTest.
+Runtime übernimmt bestehende test-Ressourcen/Guardfactory, keine Profilvariante
+oder alternative DataSource. Task nur mit ausdrücklicher Property und neuer
+UUID-Laufkennung; atomare Verzeichnisreservierung im doFirst vor Testworkerstart.
+Nicht an test/check/build gekoppelt, eigene testClassesDirs. maxParallelForks=1,
+failFast, keine Up-to-date-Wiederverwendung. Testklassen ohne äußere @Transactional.
+Journal hat keine Cleanupfunktion und persistiert keine Datenbankfeldwerte.
+
+Nur KOMPILIERT, nicht ausgeführt: T03CommitAcceptanceTest mit drei geordneten
+Fällen (Commit/Reload, Rollback nach Bandsave, bestätigter Kauf parallel zweimal).
+Die vollständige E1–E6-Matrix ist dadurch noch nicht real implementiert/abgenommen;
+Restfälle und Altvertragsanpassungen bleiben ausdrücklich in der Freigabevorlage.
+SHOW GRANTS/alle SELECT-/DML-Anweisungen der neuen Klasse sind ausschließlich
+vorbereiteter Quellcode und wurden in 6A nicht ausgeführt.
+
+Aktuelle datenbankfreie Auswahl: bisherige 468 Klassenfälle plus T03PreparationTest
+(Journalexklusivität und Rechte, alte/neue Zeilen, unregistrierte/gelöschte/veränderte
+Zeilen, Fremd-ID-Registrierung, Schema/Stammdaten und Tasktrennung). Kein Spring-
+Kontext, JPA-/JDBC-/DNS-/Netzwerkobjekt in diesen neuen Unitfällen.
+Erster Lauf mit sechs neuen Fällen erfolgreich; danach Serverrechteparser und
+Tabellenzahl-Vorprüfung ergänzt und finale Auswahl erneut geprüft.
+
+Vor jedem realen Gradle-Aufruf identischer --dry-run; ausschließlich --offline
+--no-daemon, Java 21. Geprüfter Taskplan: Compile/Resources/Klassen, insbesondere
+compileT03IntegrationJava, und ausschließlich gefiltertes test. t03CommitTest ist
+darin NICHT enthalten. Separater check --dry-run zeigte keine Opt-in-Tasks;
+t03CommitTest --dry-run zeigte nur seine Compile-/Resources-/Klassenkette und den
+übersprungenen Task, kein normales test. Ein Dry-Run allein ersetzt nicht die
+zusätzlich durchgeführte statische Klassen-/Lifecycle-/Guardprüfung.
+DOM-Suite nicht erneut ausgeführt: keine Frontendänderung, 232 bleibt historisch.
+Keine Integration, kein clean test/ungefiltertes test/check/build ausgeführt.
+Keine Downloads/Installationen, kein neuer Manual-JAR, kein Git-Commit/Push/Staging.
+
+Endgültiger Lauf: **475 bestanden, 0 Fehler, 0 übersprungen** (468 bestehende
+ausgewählte Fälle + 7 neue T03PreparationTest). compileT03IntegrationJava erfolgreich;
+die drei dortigen Commitfälle NICHT ausgeführt. Nur vorhandene HotSpot-CDS-Warnung.
+git diff --check erfolgreich; bestehende Windows-LF/CRLF-Hinweise unverändert.
+Alle drei Manual-JAR-Hashes und acht historische Dateihashes identisch überprüft.
+Status `T03_6A_READY_FOR_APPROVAL` für die ausdrücklich abgegrenzte erste Stufe;
+keine vollständige T03-6B-/T03-Abnahme oder Freigabe einer ungefilterten Suite.
+
+Dateiumfang ausschließlich dieser Vorbereitung: build.gradle.kts,
+src/t03Integration/java/de/mangalib/T03CommitAcceptanceTest.java,
+src/test/java/de/mangalib/T03PreparationTest.java, T03Preservation.java,
+T03RunJournal.java, T03ServerRights.java (alle vier im gleichen Testpackage),
+T03_INTEGRATION_INVENTORY.md, T03_6B_APPROVAL.md, T03_IMPLEMENTATION_PLAN.md,
+TESTING.md und ROADMAP.md. Keine Produktivcodeänderung in T03-6A.
+
+## Nachtrag 04.11.2026 – lesende T03-6B-Vorprüfung ausschließlich vorbereitet
+
+Eigener Opt-in-Task t03ReadOnlyTest mit fester Allowlist ausschließlich
+T03ReadOnlyPreflightTest; t03CommitTest ebenfalls auf seine bisherige einzelne
+Klasse begrenzt. Keine Kopplung oder gemischte Ausführung. Bestehende Guards und
+Konfigurationsdateien unverändert. Neue reine T03ReadOnlyPolicy bindet den Zustand
+an zehn InnoDB-Tabellen, 78 Stammdaten, leere Geschäftstabellen und den historischen
+Fingerprint ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570.
+Abweichung bedeutet STOP, keine automatische Neubasierung/Korrektur.
+
+Geplante Laufzeit: ausschließlich SELECT/SHOW über vorhandenen geschützten EM,
+zwei unabhängige read-only Transaktionen, keine Fixtures oder Servicewrites.
+Ausgaben nur Hash/Counts/neutraler Status. T03Preservation-Gleichheitsassertions
+ebenfalls auf neutrale Fehler umgestellt, damit keine Fremdzeilen in Reports
+erscheinen; Prüfkriterien unverändert. Keine Änderungen an Produktivcode.
+Prozessvariable MANGALIB_TEST_DB_PASSWORD vorhanden/nicht leer geprüft; kein Wert
+ausgegeben. Relevante Overridevariablen derzeit nicht vorhanden. Spätere effektive
+Konfiguration weiterhin vor jeder Verbindung zwingend durch bestehenden Guard prüfen.
+
+Tatsächlich geprüft: t03ReadOnlyTest --dry-run (Task ausschließlich SKIPPED),
+compileT03IntegrationJava nach identischem --dry-run, stets offline/no-daemon,
+keine Testausführung oder Verbindung. Neue vier synthetische Policy-/Trennungsfälle
+T03ReadOnlyPreparationTest nur vorbereitet/kompiliert. Keine erneuten Guard-,
+Java-, DOM- oder Integrationstestläufe; 475/232 sind historische Ergebnisse.
+Freigabevorlage und vollständige spätere Befehle: T03_6B_APPROVAL.md Abschnitt 7.
+Keine neue DB-Freigabe aus dieser Vorbereitung ableiten.
+
+Abschluss der Vorbereitung: reine Offline-Kompilierung erfolgreich (einschließlich
+der neuen Policy-/Vorprüfungsquellen), git diff --check erfolgreich. Kein Testworker
+gestartet. Vorhandene acht historische Experimente und drei Manual-JARs erneut
+hashgleich; Guardquellen, application-test.properties und undici-Lockfile unverändert.
+Geänderte Dateien dieses Auftrags: build.gradle.kts, T03_6B_APPROVAL.md, TESTING.md,
+T03Preservation.java (nur neutrale Fehlerdarstellung), T03ReadOnlyPolicy.java (neu),
+T03ReadOnlyPreparationTest.java (neu), T03ReadOnlyPreflightTest.java (neu).
+Branch codex/t03-data-integrity, HEAD c20c213, Staging leer. Keine Datenbankverbindung,
+SQL-Ausführung, Fixture, Bereinigung, Anwendung, Browser oder Scraper ausgeführt.
+
+## Nachtrag 05.11.2026 – freigegebene lesende T03-6B-Vorprüfung fehlgeschlagen
+
+Status **FAILED**, keine Wiederholung. Branch codex/t03-data-integrity / HEAD
+c20c213 unverändert. Passwortvariable vorhanden/nicht leer; keine relevanten
+Profil-/Datasource-/JPA-/JVM-Overridevariablen gefunden, keine Werte ausgegeben.
+Bestehende Guards, Testprofil und Klassen-Allowlist statisch unverändert geprüft.
+
+Tatsächliche Befehlsfolge wie T03_6B_APPROVAL.md Abschnitt 7, Java 21, immer
+--offline --no-daemon mit jeweils identischem vorherigem --dry-run:
+
+- test --tests de.mangalib.testsupport.TestDatabaseGuardTest: 44 bestanden,
+  0 Fehler, 0 übersprungen.
+- test --tests de.mangalib.T03PreparationTest --tests de.mangalib.T03ReadOnlyPreparationTest:
+  7 + 4 bestanden, 0 Fehler, 0 übersprungen.
+- t03ReadOnlyTest -Pt03ReadOnlyApproval=READ_ONLY_MANGALIB_TEST: genau einmal
+  ausgeführt; 1 Test fehlgeschlagen, 0 übersprungen. Taskplan enthielt ausschließlich
+  die Compile-/Ressourcenfolge und den lesenden Task, weder test noch t03CommitTest.
+
+Der erste Guard-Dry-Run konnte wegen Sandboxzugriff auf die vorhandene externe
+Gradle-Cache-Lockdatei nicht starten; derselbe Dry-Run war mit erweitertem
+Cachezugriff erfolgreich. Kein Download, keine zusätzliche DB-Ausführung.
+
+Nachgewiesener Fehler: Spring konnte LiveScraperGateway bei der Verarbeitung
+von Konfigurationsbedingungen nicht introspektieren; NoClassDefFoundError /
+ClassNotFoundException für de.mangalib.windowsadapter.ProductionScraperClient.
+Die Klasse gehört zum productionOwner-Source-Set, fehlt aber auf der wirksamen
+Laufzeit-Classpath dieses Tasks. Compile war UP-TO-DATE. Die Task-Classpath wird
+vor der späteren Neuzuweisung von t03Integration.runtimeClasspath gesetzt;
+diese Bindungsreihenfolge ist der gezielt zu prüfende Infrastrukturverdacht.
+Keine Reparatur oder erneute Ausführung in dieser begrenzten Abnahme vorgenommen.
+
+Abbruch vor Singleton-/JPA-Initialisierung und vor der Prüfmethode; keine
+T03_READ_ONLY-Marker oder JPA-Initialisierungsmarker im Bericht. Keine
+Datenbankverbindung und keine SELECT-/SHOW-/DML-/DDL-Ausführung durch diesen Lauf.
+Tatsächliche DB-/Accountidentität, Rechte, Tabellen und Fingerabdruck bleiben
+UNGEPRÜFT. Der historische Hash ist kein neu gemessener Befund.
+Keine Fixtures, Bereinigung, Migration, Anwendung, Listener, Browser oder Scraper.
+
+Bericht: build/reports/tests/t03ReadOnlyTest/index.html sowie zugehöriges lokales
+JUnit-XML. Die 55 datenbankfreien Fälle sind erfolgreich; daraus keine reale
+DB-Freigabeprüfung ableiten. Commit-/Konkurrenztests bleiben gesperrt. Nach einer
+gezielten datenbankfreien Classpathkorrektur ist eine neue ausdrückliche Freigabe
+für einen weiteren lesenden Lauf erforderlich. Keine Git-Schreiboperationen.
+
+## Nachtrag 05.11.2026 – gezielte Classpathkorrektur, datenbankfrei verifiziert
+
+Status **CLASSPATH_FIX_DB_FREE_VERIFIED**. Der vorangegangene FAILED-Lauf bleibt
+historisch unverändert; keine Wiederholung der Datenbankvorprüfung.
+
+Ursache bestätigt: Beide früh registrierten Testtasks übernahmen die damalige
+FileCollection von t03Integration.runtimeClasspath. Die spätere Neuzuweisung des
+Source-Set-Attributs ersetzt diese Referenz nicht rückwirkend in bereits
+konfigurierten Tasks. Vor der Korrektur meldete die effektive lesende Task-Classpath
+168 Einträge und fehlenden productionOwner-Klassen-/Ressourcenoutput sowie
+jna-5.17.0.jar gegenüber der abschließenden Source-Set-Classpath. Beide Tasks
+verwendeten dieselbe fehlerhafte Zuweisung. Kompilierung war nicht betroffen,
+weil deren Classpath separat um productionOwner ergänzt war.
+
+Minimale Korrektur: Beide Task-Classpaths verwenden jetzt
+files(providers.provider { t03Integration.runtimeClasspath }). Damit wird die
+abschließende gemeinsame Runtime-Classpath erst bei Auflösung gelesen. Diese
+besteht unverändert aus der regulären Test-Runtime (main/test, productionOwner,
+vorhandene Runtime-Dependencies einschließlich gepinntem JNA) und ausschließlich
+zusätzlichem t03Integration-Output. Keine neue Dependency, kein neues Profil,
+keine Produktiv-/Guard-/Manual-Paketierungsänderung.
+
+Neuer expliziter Regressionstask t03ClasspathCheck: abhängig ausschließlich von
+compileT03IntegrationJava samt Compile-/Ressourcenfolge, nicht von Testtasks.
+Er prüft die tatsächlich aufgelösten Classpaths beider Opt-in-Tasks auf exakte
+Dateimengengleichheit, die festen getrennten Klassen-Allowlists und Testklassen-
+Verzeichnisse. Pro Task isolierter URLClassLoader mit Plattform-Elternloader:
+neun Klassen (Gateway, Client, Owner/Wire/native Adapter, JNA Native/Pointer,
+GuardedTestDataSource) samt Methodensignaturen/Konstruktoren/Feldern auflösbar.
+Class.forName(..., false, ...) verhindert Klasseninitialisierung. Kein Bean,
+kein disabled()/Konstruktor-/Native-/Workeraufruf. Zwei Negativkontrollen ohne
+Owner-Output reproduzieren gezielt NoClassDefFoundError für ProductionScraperClient.
+Eine Klasse für die Spring-Typauflösung verfügbar zu machen aktiviert keinen Import;
+die unveränderte test-Profil-Factory bleibt deaktiviert und die Opt-in-Klassen
+ersetzen ScraperGateway weiterhin durch MockitoBean.
+
+Weitere automatisierte Assertions: kein Opt-in-Output im regulären test, keine
+Opt-in-Abhängigkeit/Finalisierung von test/check/build, getrennte main-/Opt-in-
+Outputs, aktuelle manualBootJar-Classpath ohne Owner-Output/JNA/Selenium.
+Vor Korrektur schlug die neue Diagnose wie erwartet mit fehlendem Owner fehl;
+nach Korrektur beide Tasks exakt 165 Runtime-Einträge, missing=[], alle positiven
+und negativen Checks erfolgreich. Ein anfänglicher Kotlin-Skriptfehler im neuen
+Diagnosetask (URLClassLoader-Import) wurde vor der Diagnoseausführung korrigiert.
+
+Tatsächlich ausgeführt, jeweils Java 21, --offline --no-daemon und identischer
+erfolgreicher --dry-run vor Ausführung:
+
+- t03ClasspathCheck: endgültig BUILD SUCCESSFUL, einschließlich erfolgreicher
+  compileT03IntegrationJava-Prüfung (UP-TO-DATE); keine Opt-in-Testausführung.
+- test --tests de.mangalib.testsupport.TestDatabaseGuardTest
+  --tests de.mangalib.T03PreparationTest --tests de.mangalib.T03ReadOnlyPreparationTest:
+  **55 bestanden (44 + 7 + 4), 0 Fehler, 0 übersprungen**. Nur bekannte CDS-Warnung.
+- git diff --check erfolgreich; bekannte LF/CRLF-Hinweise bleiben bestehen.
+
+Vorhandene Manual-JARs nur als ZIP gelesen und gehasht, nicht neu gebaut:
+der gepatchte Tomcat-11.0.27-Abnahmekandidat ohne Live-Gateway/Scraper/Windowsadapter,
+Selenium oder JNA. Zwei ältere historische JARs enthalten unverändert
+BOOT-INF/lib/jna-5.13.0.jar, jedoch keine Live-Scraper-/Windowsadapterklassen.
+Diese Altartefakte nicht als aktuellen paketbereinigten Kandidaten verwenden.
+Keine Änderung durch diese Korrektur; die aktuelle Paketkonfiguration unverändert.
+
+Geänderte Dateien dieses Auftrags: build.gradle.kts, TESTING.md,
+T03_6B_APPROVAL.md. Keine Datenbank-/Spring-Kontext-/HTTP-/Browser-/Scraper-/
+Worker-/native Windows-Ausführung. Guards/Testprofil/Factory und historische
+Experimente unverändert; Manual-JAR-Hashes unverändert nachgeprüft.
+Keine Staging-/Commit-/Pushaktionen. Verbleibende Nachweisgrenze: kaltes Laden
+beweist weder Spring-Kontextstart noch reale DB-Prüfung. Neue ausdrückliche
+Freigabe für genau einen weiteren lesenden Lauf erforderlich; Commit- und
+Konkurrenzstufe unverändert gesperrt.
+
+## Nachtrag 05.11.2026 – erneuter einmalig freigegebener lesender Lauf: FAILED
+
+Nach separater erneuter Eigentümerfreigabe genau ein t03ReadOnlyTest ausgeführt.
+Branch codex/t03-data-integrity / HEAD c20c213, Staging leer. Passwortvariable
+vorhanden/nicht leer, keine relevanten Profil-/Datasource-/JPA-/JVM-Overrides
+gefunden. Guards und test-Konfiguration unverändert; keine Werte ausgegeben.
+
+Tatsächliche Befehle unter Java 21, jeweils --offline --no-daemon und identischer
+erfolgreicher --dry-run vor Ausführung:
+
+- test --tests de.mangalib.testsupport.TestDatabaseGuardTest
+  --tests de.mangalib.T03PreparationTest --tests de.mangalib.T03ReadOnlyPreparationTest:
+  zunächst UP-TO-DATE, daher kein neuer Testnachweis aus diesem ersten Aufruf.
+- Derselbe gefilterte test-Aufruf mit zusätzlichem Taskargument --rerun, nach
+  erneutem identischem --dry-run: 44 + 7 + 4 = **55 bestanden, 0 Fehler, 0 Skips**.
+- t03ClasspathCheck: erfolgreich, beide Tasks 165 Runtime-Einträge, missing=[],
+  je neun Klassen ohne Initialisierung auflösbar; Trennung/Negativkontrollen grün.
+- t03ReadOnlyTest -Pt03ReadOnlyApproval=READ_ONLY_MANGALIB_TEST: genau einmal,
+  **1 fehlgeschlagen, 0 Skips**; keine Wiederholung.
+
+Die Classpathkorrektur wirkt: Spring-/JPA-Kontext erfolgreich aufgebaut, Hibernate
+im bestehenden validate-Modus, GuardedTestDataSource vor Verbindung aktiv.
+Tatsächlich ermittelter CURRENT_USER(): mangalib_test_user@localhost. Anschließend
+SHOW GRANTS FOR CURRENT_USER() ausgeführt; T03ServerRights.verify verweigert eine
+nicht unterstützte Grantdarstellung mit „Unbekannte Testrechte/Role: STOP.“
+(T03ServerRights.java:15, T03ReadOnlyPreflightTest.java:60). Dies beweist weder
+zulässige noch tatsächlich überhöhte Rechte; möglich sind unbekannte Syntax,
+Rollen oder abweichende Zielnotation. Grantrohdaten werden absichtlich nicht
+geloggt; die konkrete Serverdarstellung ist daher nicht rekonstruierbar.
+Keine weitere Verbindung oder Diagnoseabfrage nach dem Abbruch.
+
+Das feste JDBC-Ziel mangalib_test/localhost:3306 ist durch den unveränderten
+Guard vor und bei jeder Verbindung erzwungen. Die zusätzliche SELECT database()-
+Assertion im Snapshot wurde wegen der vorgeschalteten Rechteprüfung NICHT erreicht.
+Ebenso keine vollständige Tabellen-/FK-/Stammdatenprüfung und kein Vorher-/Nachher-
+Fingerprint: null T03_READ_ONLY_BEFORE/AFTER_FINGERPRINT-Marker. Historische zehn
+Tabellen/78 Stammdaten/Hash bleiben in diesem Lauf nicht als Gesamtzustand bestätigt.
+Hibernate-Schemavalidierung ersetzt den vollständigen Snapshot ausdrücklich nicht.
+
+Keine fachliche DML, DDL, Fixtures, Migrationen, Bereinigung oder Schreibservices.
+Nur freigegebener Mock-Testkontext, Verbindungs-/Transaktionssteuerung, Metadaten
+und SELECT/SHOW; keine Anwendung/Listener/Browser/Scraper/Worker gestartet.
+Keine Produktiv-/Manual-DB-Verbindung. Kontext wurde am Laufende geschlossen.
+Beobachtete Warnungen: bekannte CDS-/Open-in-View-Hinweise sowie
+BeanPostProcessorChecker zu früh erzeugten Beans im Umfeld localWebServerFactoryGuard
+(auch Coordinator/Transaktionsmanager). Der lesende Lauf belegt deshalb keine
+korrekte Schreibservice-Advisorreihenfolge; vor Commitabnahme gezielt klären.
+
+Status **FAILED**, technische Ausführungserlaubnis für diesen einen Lauf genutzt.
+Kein Parser-/Guard-/Konfigurationsfix und kein weiterer DB-Lauf in diesem Auftrag.
+Bericht build/reports/tests/t03ReadOnlyTest/index.html, lokales JUnit-XML daneben.
+Nächster Schritt: Rechteprüfer/zulässige Grantnotation gezielt datenbankfrei
+untersuchen; bei fehlender Evidenz separate eng begrenzte lesende Diagnose
+freigeben lassen. Keine automatische Zulassung unbekannter Grants oder Änderung
+der DB-Rechte. Commit-/Konkurrenztests und Vollsuite bleiben gesperrt.
+
+## Nachtrag 05.11.2026 – Rechteparser/AOP-Warnungen datenbankfrei untersucht
+
+Gesamtstatus **DIAGNOSIS_REQUIRED**: Parserkorrektur und ihre Sicherheitsgrenzen
+sind datenbankfrei geprüft; der tatsächliche Granttext des fehlgeschlagenen
+Serverlaufs ist nicht vorhanden. Deshalb weder Serverrechte als sicher noch
+Maskierung als bewiesene reale Abbruchursache ausgeben. Kein neuer DB-Lauf.
+
+Nachgewiesene Parserprobleme: Die bisherige Regex verweigert die gültige
+MySQL-Darstellung `mangalib\_test`.*. Gleichzeitig akzeptierte sie unmaskiertes
+`mangalib_test`.*, obwohl _ bei Schema-Grants ohne partial_revokes=ON eine
+Wildcard ist. Backticks heben diese Grantmuster-Semantik nicht auf. Der reale
+Fehler ist mit diesem Befund vereinbar, aber nicht abschließend erklärt.
+Offizielle Quellen (nur Dokumentationsabrufe, keine Projektdaten übertragen):
+https://dev.mysql.com/doc/refman/8.4/en/grant.html und
+https://dev.mysql.com/doc/refman/8.4/en/partial-revokes.html.
+
+T03ServerRights akzeptiert jetzt ausschließlich ausdrücklich maskiertes
+mangalib\_test.* (mit oder ohne Backticks), genau SELECT/INSERT/UPDATE/DELETE
+und global ausschließlich USAGE. Teilgrants können nur diese vier Rechte
+ergänzen. Kein Schema-Casefolding, kein allgemeines Backslash-Unescaping,
+kein Entfernen beliebiger Endklauseln. Zusätzliche Schemas, Wildcards, Tabellen-
+Grants, DDL/Adminrechte, Rollen/REVOKE, GRANT OPTION und unbekannte Syntax bleiben
+STOP. Unmaskiertes mangalib_test.* ist ohne separat bewiesenen Servermodus
+AMBIGUOUS_SCHEMA_PATTERN, nicht automatisch sicher. Auch bei tatsächlich sicherem
+partial_revokes=ON wird diese Darstellung vorerst konservativ abgelehnt.
+Keine Servermodusabfrage oder Änderung der Serverrechte implementiert/ausgeführt.
+
+Fehler enthalten nur feste Reason-Kategorien (UNSUPPORTED_FORMAT,
+FORBIDDEN_PRIVILEGE, FORBIDDEN_SCOPE, AMBIGUOUS_SCHEMA_PATTERN, MISSING_DML),
+keinen Granttext/Accountsuffix/Secret und keine Rohdaten als Ursache. Die bestehende
+positive T03PreparationTest-Probe verwendet nun das explizit maskierte Zielschema;
+negative Assertions bleiben erhalten. T03ServerRightsTest ergänzt 40 synthetische
+positive/negative Fälle, einschließlich Endklauseln, doppelten/fehlenden Rechten,
+NULL, fremden Schemas, maskierten/unmaskierten Wildcards und Ausgaberestriktion.
+
+Spring-Warnungen: LibraryWriteBootstrapTest verwendet die echte
+LibraryWriteConfiguration mit @EnableTransactionManagement und die echte statische
+Factory localWebServerFactoryGuard, jedoch keine vollständige Security-/Boot-
+Konfiguration. Ausschließlich RAM-Entities, Mockito-Repositories/Kollaboratoren,
+FakeLibraryTransactionManager; explizit keine DataSource. Der erste neue Lauf
+hatte zwei fehlgeschlagene Fälle wegen fehlender Test-Doubles für Feldinjektion;
+diese Testverdrahtung korrigiert, keine Produktivänderung/Assertionsabschwächung.
+
+Die beiden finalen Bootstrapfälle reproduzieren vier BeanPostProcessorChecker-
+Warnungen: frühe Erzeugung von Advisor-Konfiguration/Coordinator/Manager im Umfeld
+des Guard-BPP ist möglich. Die getesteten Reihen-/Einkaufsservices werden dennoch
+zu AOP-Proxys; LibraryWriteAdvisor liegt vor dem Transaktionsadvisor. Zwei äußere
+Schreibaufrufe ergeben genau zwei Transaktionsbeginne, Commit bzw. Rollback und
+Cleanup bleiben aktiv. Früh erzeugte Infrastrukturtypen liegen außerhalb des
+Writer-Pointcuts; sie benötigen nicht selbst diesen Schreibadvisor. Kein belegter
+Grund für eine Produktiv-/Architekturkorrektur oder bloßes Unterdrücken der Warnung.
+Relevante Spring-Dokumentation:
+https://docs.spring.io/spring-framework/reference/core/beans/factory-extension.html.
+Nachweisgrenze: keine Aussage über sämtliche Beans/Autokonfiguration im vollständigen
+Boot-/JPA-Kontext. Vor echten Commitfällen dort die tatsächlich injizierten Writer-
+Proxys und Advisorreihenfolge prüfen; Warnungsfreiheit allein wäre kein Nachweis.
+
+Finale reale Testauswahl, Java 21, --offline --no-daemon, jeweils identischer
+erfolgreicher --dry-run vor Ausführung:
+test --rerun mit Filtern auf T03ServerRightsTest (40), T03PreparationTest (7),
+T03ReadOnlyPreparationTest (4), TestDatabaseGuardTest (44),
+LibraryWriteBootstrapTest (2), LibraryWriteConfigurationTest (8),
+LibraryWriteCoordinatorTest (12), LocalSecurityPolicyTest (61):
+**178 bestanden, 0 Fehler, 0 übersprungen**. Bekannte HotSpot-CDS-Warnung.
+t03ClasspathCheck ebenfalls erfolgreich: beide effektiven Opt-in-Classpaths
+165 Einträge/missing=[], je neun Klassen ohne Initialisierung auflösbar,
+Allowlist-/Lifecycle-/Manual-Classpathtrennung unverändert. Dabei opt-in-Quellen
+erfolgreich neu kompiliert, keine opt-in-Tests ausgeführt. git diff --check grün.
+
+Dateien dieses Auftrags: T03ServerRights.java, T03PreparationTest.java,
+T03ServerRightsTest.java (neu), service/LibraryWriteBootstrapTest.java (neu),
+TESTING.md und T03_6B_APPROVAL.md. Keine T03-Fachlogik-/Gradle-/Guardänderung,
+keine Datenbank-, SQL-, Anwendungs-, Listener-, Browser-, Scraper- oder Worker-
+Ausführung. Historische Datenbankfehlläufe bleiben FAILED. Keine Git-Schreibaktion.
+
+Datensparsamer Diagnosevorschlag und nötige neue Freigabe: siehe
+T03_6B_APPROVAL.md Abschnitt 11. Unbekannte Grants bleiben bis dahin STOP.
+
+## Nachtrag 05.11.2026 – einmalige reale Rechte-Diagnose: RIGHTS_CONFIGURATION_BLOCKED
+
+Nach ausdrücklicher Freigabe eigener isolierter Task t03RightsDiagnosisTest mit
+fester einzelner Klassen-Allowlist, verzögerter bestehender T03-Runtime-Classpath,
+maxParallelForks=1/failFast und expliziter Approval-Property plus Kontextinitializer.
+Nicht an test/check/build oder andere Opt-in-Tasks gekoppelt. Vorhandene Guard-
+Factory/DataSource/test-Profil unverändert, ScraperGateway als MockitoBean.
+WebEnvironment.MOCK, read-only TransactionTemplate, kein HTTP-Listener.
+
+Diagnoseklasse enthält exakt SELECT DATABASE(), SELECT CURRENT_USER(),
+SELECT @@GLOBAL.partial_revokes und SHOW GRANTS FOR CURRENT_USER(). Keine Geschäfts-
+oder Stammdatenabfragen/Fixtures/Snapshots. Boot/JPA benötigt weiterhin seine
+vorhandene Schema-Metadatenvalidierung vor dem Test; keine Schemaerzeugung.
+Identität wird vor Ergebnisprotokollierung exakt geprüft, nur EXPECTED-Kategorien
+ausgegeben. T03RightsDiagnosis speichert ausschließlich abgeleitete feste Enums,
+Counts und Parser-Reason im Ergebnis; keine Grantzeilen/Accountnamen/fremde
+Schemanamen in Ergebnisobjekt oder Logs. Historischer Parser nur zum Vergleich,
+niemals als Admissionprüfung. T03ServerRights.GRANT ist dafür paketintern wieder-
+verwendbar; zulässige Rechte und Ablehnungslogik unverändert.
+
+Vorprüfungen, jeweils Java 21, --offline --no-daemon, identischer erfolgreicher
+--dry-run vor Ausführung:
+- test --rerun mit TestDatabaseGuardTest (44), T03PreparationTest (7),
+  T03ReadOnlyPreparationTest (4), T03ServerRightsTest (40),
+  T03RightsDiagnosisPreparationTest (12 neu): **107 bestanden, 0 Fehler, 0 Skips**.
+- t03ClasspathCheck: alle drei Opt-in-Tasks exakt 165 Runtime-Einträge/missing=[],
+  Klassenauflösung ohne Initialisierung, Allowlists/Tasktrennung grün; neue
+  Diagnosequelle erfolgreich kompiliert. Keine DB-Ausführung dieser Vorstufen.
+- t03RightsDiagnosisTest -Pt03RightsApproval=DIAGNOSE_TEST_RIGHTS_ONCE nach
+  identischem --dry-run: **genau ein realer Lauf**, 1 fehlgeschlagen, 0 Skips.
+
+Tatsächlicher sicher kategorisierter Befund:
+- Profil test; Spring-/JPA-Kontext erfolgreich aufgebaut und anschließend geschlossen.
+- Datenbank exakt mangalib_test, CURRENT_USER exakt mangalib_test_user@localhost.
+- partial_revokes=OFF; zwei Grantzeilen.
+- Geltungsbereiche GLOBAL_USAGE und EXACT_ESCAPED_TEST_SCHEMA.
+- Erkannte Privilegkategorien SELECT, INSERT, UPDATE, DELETE, USAGE, **DDL, OTHER**.
+- Keine Rollen/unerkannten Anweisungsformen und kein GRANT OPTION erkannt.
+- Historischer Parser: abgewiesen; korrigierter Parser: **FORBIDDEN_PRIVILEGE**.
+
+Damit liegt NICHT nur ein Formatproblem vor: Neben der vom historischen Parser
+nicht unterstützten maskierten Schemanotation existieren tatsächlich Rechte
+außerhalb der zulässigen vier DML-Rechte. DDL/OTHER-Kategorien beweisen einen
+Konfigurationsblocker; die Diagnose nennt absichtlich keine konkreten fremden
+Namen oder vollständigen Granttexte. Die Parserkorrektur funktioniert fail-closed.
+Eine weitere Parserlockerung wäre keine Lösung. Keine Rechte-/Serveränderung.
+
+Genau vier fachliche Diagnoseanweisungen ausgeführt, keine DML/DDL/Fixtures,
+Migrationen, Bereinigung oder Dateninhalte. Kein t03ReadOnlyTest/t03CommitTest,
+keine Vollsuite, kein weiterer DB-Lauf, keine Anwendung/Browser/Worker/Scraper.
+Passwort ausschließlich Prozessvariable; relevante Overrides nicht vorhanden.
+Reale Baseline (zehn Tabellen/78 Stammdaten/Fingerprint) bleibt ungeprüft, da
+keine Geschäfts-/Stammdaten gelesen wurden. Keine automatische Fortsetzung.
+Bekannte BPP-/Open-in-View-/CDS-Warnungen ohne Änderung der Produktivarchitektur.
+
+Erforderlich: Eigentümer/DB-Administrator muss den Testaccount separat prüfen und
+auf die dokumentierten minimalen Rechte begrenzen; keine automatische Rechte-
+korrektur oder SQL-Empfehlung ohne Prüfung des administrativen Kontexts. Danach
+neue ausdrückliche Freigabe für Rechteprüfung/vollständige lesende Vorprüfung.
+Vor dieser bestätigten Korrektur keine neue vollständige Vorprüfung empfehlen.
+Commit-/Konkurrenzstufe bleibt gesperrt.
+
+Dateien dieses Auftrags: build.gradle.kts, T03ServerRights.java (nur Sichtbarkeit
+des Grammatikmusters), T03RightsDiagnosis.java (neu),
+T03RightsDiagnosisPreparationTest.java (neu),
+src/t03Integration/java/de/mangalib/T03RightsDiagnosisTest.java (neu), TESTING.md,
+T03_6B_APPROVAL.md. Keine T03-Fachlogik-/Guard-/Profiländerung, kein Git-Staging,
+Commit/Push/Merge. Historische fehlgeschlagene Läufe bleiben unverändert FAILED.
+
+## Nachtrag 05.11.2026 – Rechte nach administrativer Korrektur bestätigt
+
+Status **RIGHTS_DIAGNOSIS_VERIFIED**. Der Eigentümer meldete die separat von ihm
+ausgeführte und geprüfte Rechtebegrenzung und beauftragte die Fortsetzung. Codex
+führte daraufhin ausschließlich die bestehende vierteilige Rechte-Diagnose erneut
+einmal aus, keine vollständige Datenbankvorprüfung und keine Schreibtests.
+
+Branch codex/t03-data-integrity / HEAD c20c213; Guards/Testprofil unverändert,
+Passwortvariable vorhanden/nicht leer, keine relevanten Overrides. Java 21,
+alle Gradle-Aufrufe --offline --no-daemon mit identischem erfolgreichem --dry-run:
+- test --rerun mit TestDatabaseGuardTest, T03PreparationTest,
+  T03ReadOnlyPreparationTest, T03ServerRightsTest, T03RightsDiagnosisPreparationTest:
+  **107 bestanden, 0 Fehler, 0 übersprungen**.
+- t03ClasspathCheck: erfolgreich, alle drei Opt-in-Tasks getrennt und vollständig.
+- t03RightsDiagnosisTest -Pt03RightsApproval=DIAGNOSE_TEST_RIGHTS_ONCE:
+  **1 bestanden, 0 Fehler, 0 übersprungen**, genau ein realer Diagnoselauf.
+
+Spring-/JPA-Kontext erfolgreich gestartet/geschlossen. Datenbank mangalib_test und
+Account mangalib_test_user@localhost exakt bestätigt. partial_revokes OFF, zwei
+Grantzeilen, GLOBAL_USAGE und EXACT_ESCAPED_TEST_SCHEMA; ausschließlich SELECT,
+INSERT, UPDATE, DELETE und USAGE. Keine DDL-/OTHER-Rechtekategorie, Rollen,
+unbekannte Grantdarstellung oder GRANT OPTION erkannt. Historischer Parser lehnt
+die maskierte Notation weiterhin ab; korrigierter Parser ACCEPTED.
+Keine Grantrohtexte, Passwörter oder fremden Namen ausgegeben.
+
+Der zuvor nachgewiesene Rechteblocker ist damit im geprüften Umfang behoben;
+die historischen Fehlläufe bleiben unverändert. Keine Rechteänderung durch Codex,
+keine DML/DDL, Fixtures, Geschäftsdaten-/Stammdatenabfragen oder Bereinigung.
+Schema-/Datenfingerabdruck nicht erhoben. Vollständige lesende Vorprüfung sowie
+Commit-/Konkurrenztests bleiben getrennte, neu freizugebende Schritte. Keine
+Anwendungs-/Listener-/Browser-/Worker-/Scraperstarts, keine Git-Schreibaktionen.
+Nur TESTING.md und T03_6B_APPROVAL.md durch Nachträge geändert.
+
+## Nachtrag 05.11.2026 – vollständige lesende T03-6B-Vorprüfung bestanden
+
+Status **T03_6B_READ_ONLY_VERIFIED**. Nach neuer ausdrücklicher Eigentümerfreigabe
+genau ein t03ReadOnlyTest ausgeführt, keine anderen Datenbanktests. Historische
+FAILED-/BLOCKED-Befunde bleiben als damalige Ergebnisse erhalten.
+
+Voraussetzungen erneut bestätigt: Branch codex/t03-data-integrity / HEAD c20c213,
+Staging leer; bestehende Guards/test-Profil unverändert, Passwortvariable vorhanden
+und nicht leer, keine relevanten Overridevariablen. Java 21; ausschließlich
+--offline --no-daemon, jeder tatsächliche Gradle-Aufruf nach identischem
+erfolgreichem --dry-run. Tatsächliche Auswahl:
+
+- test --rerun --tests de.mangalib.testsupport.TestDatabaseGuardTest
+  --tests de.mangalib.T03PreparationTest --tests de.mangalib.T03ReadOnlyPreparationTest
+  --tests de.mangalib.T03ServerRightsTest --tests de.mangalib.T03RightsDiagnosisPreparationTest:
+  **107 bestanden, 0 Fehler, 0 übersprungen**.
+- t03ClasspathCheck: erfolgreich, vollständige Classpaths und getrennte Allowlists
+  aller drei Opt-in-Tasks, keine Kopplung an Standardtest/Build.
+- t03ReadOnlyTest -Pt03ReadOnlyApproval=READ_ONLY_MANGALIB_TEST:
+  **1 bestanden, 0 Fehler, 0 übersprungen**, genau ein realer Lauf.
+
+Geschützter Spring-/JPA-Kontext erfolgreich aufgebaut und geschlossen. Über feste
+Guard-URL localhost:3306/mangalib_test und tatsächliche SELECT-Identitätsprüfungen
+mangalib_test sowie mangalib_test_user@localhost bestätigt. SHOW-GRANTS-Prüfung in
+beiden unabhängigen read-only Transaktionen bestanden: nur eigene maskierte
+Schema-DML-Rechte und global USAGE; keine weiteren Rechte/Rollen/GRANT OPTION
+akzeptiert. Keine Rohgrants oder Datenzeilen ausgegeben.
+
+Zehn erwartete InnoDB-Tabellen. Fünf Stammdatentabellen: formate=3, sammelbaende=5,
+status=4, typen=4, verlage=62, insgesamt **78**. Fünf Geschäftstabellen baende,
+einkaufsliste, einkaufslistedetails, mangadetails und mangareihe jeweils **0**.
+Vollständige Snapshot-Metadaten umfassen Tabellen, Spalten, Indizes,
+Fremdschlüssel und Schlüsselspalten. Historischer Gesamthash ist in beiden
+unabhängigen Transaktionen exakt bestätigt:
+
+`ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570`
+
+Vorher-/Nachher-Snapshots außerdem direkt gleich verglichen. AUTO_INCREMENT wie
+bisher ausgenommen. Keine Schemaabweichung, fremden Geschäftszeilen oder
+Datenerhaltungsabweichung erkannt. Kein langfristiger Schutz gegen spätere externe
+Schreiber und kein Beleg für zukünftige Commit-/Konkurrenzsemantik aus diesem Lauf.
+
+Nur SELECT/SHOW, Hibernate-Schemavalidierung und read-only Transaktionssteuerung.
+Keine DML/DDL, Fixtures, Migrationen, Seeding, Bereinigung oder Rechteänderung.
+Kein Zugriff auf Produktiv-/Manual-DB, keine Anwendung/Listener/Browser/Scraper/
+Worker gestartet. Keine zweite DB-Ausführung. Bekannte BPP-/Open-in-View-/CDS-
+Warnungen ohne Eingriff; die gesonderte Boot-Writer-Proxyprüfung bleibt vor
+späterer Commitabnahme erforderlich. Keine abgeschlossene T03-Gesamtabnahme.
+
+Bericht build/reports/tests/t03ReadOnlyTest/index.html und zugehöriges JUnit-XML;
+persistierte Dokumentation nur Counts/Hash, keine Zeileninhalte. git diff --check
+erfolgreich. Nur TESTING.md/T03_6B_APPROVAL.md ergänzt. Keine Git-Schreibaktionen;
+bestehende T03-Arbeiten erhalten. Commit-, Rollback- und Konkurrenztests bleiben
+bis zu neuer ausdrücklicher Freigabe gesperrt.
+
+## Nachtrag 06.11.2026 – Abschlussreview vor erster T03-Schreibstufe
+
+Status **CORRECTIONS_REQUIRED**, keine DB-Verbindung. Detaillierte Bewertung der
+drei Methoden, verbleibende P1-Lücken, Fixturemengen, Crash-/Abbruchgrenzen,
+Boot-Proxynachweis und Git-Abgrenzung: T03_6B_APPROVAL.md Abschnitt 15.
+
+Kleine eindeutig begrenzte Änderungen ausschließlich T03CommitAcceptanceTest:
+vor Schreibarbeit vollständige historische Baseline, beide Indexkollisionen,
+keine äußere TX/Synchronisation, ein gemeinsamer Coordinator, tatsächliche Proxys
+und passende Advisorreihenfolge aller fünf Writer prüfen. Rollback auch auf Details
+prüfen. Kaufband-IDs nach bestätigtem Threadende auch bei Future-/Outcomefehlern
+erfassen. Kein produktiver Code, Guard oder bestehende Assertion abgeschwächt.
+Neue Bootprüfungen nur kompiliert; Kontextstart erfordert eine neue DB-Freigabe.
+
+Verbleibend: Gemeinsame Start-Latch beweist keine zeitliche Kaufüberlappung.
+Deterministisch überlappende Aufrufe mit Serialisierung am echten Coordinator
+nachweisen; keine zwei gleichzeitig aktiven Writer-TX bei dieser Architektur
+erzwingen. Alte eigene drei Bände vor/nach Kauf vollständig per ID/Feldern prüfen;
+globaler Leerbaselinevergleich plus registrierte IDs/Summe genügt hierfür nicht.
+Keinen realen Konkurrenztest mit diesen Nachweislücken als bereit behaupten.
+
+Tatsächlich ausgeführt, Java 21, jeweils --offline --no-daemon und vorher
+identischer erfolgreicher --dry-run:
+- test --rerun mit TestDatabaseGuardTest, T03PreparationTest,
+  T03ReadOnlyPreparationTest, T03ServerRightsTest, T03RightsDiagnosisPreparationTest,
+  LibraryWriteBootstrapTest, LibraryWriteConfigurationTest,
+  LibraryWriteCoordinatorTest und PurchaseServiceTest:
+  **175 bestanden, 0 Fehler, 0 übersprungen**.
+- t03ClasspathCheck: erfolgreich, neue Opt-in-Quellen kompiliert, alle drei Tasks
+  vollständig/getrennt; keine Opt-in-Testausführung.
+- git diff --check erfolgreich; bekannte LF/CRLF-/HotSpot-CDS-Hinweise.
+
+Kein t03ReadOnlyTest/t03RightsDiagnosisTest/t03CommitTest, Bootkontext, SQL, neue
+Fixtures, Cleanup, Migration, Anwendungs-/HTTP-/Browser-/Scraper-/Workerstart.
+Keine neue Abhängigkeit, kein Staging/Commit/Push. Manual-JARs und historische
+Experimente unverändert. Geänderte Dateien dieses Auftrags: ausschließlich
+T03CommitAcceptanceTest.java, TESTING.md, T03_6B_APPROVAL.md.
+
+## Nachtrag 06.11.2026 – zwei verbleibende Integrationslücken geschlossen
+
+Status **T03_6B_COMMIT_READY_FOR_APPROVAL**, ausschließlich Vorbereitung.
+Aktueller verbindlicher Nachtrag T03_6B_APPROVAL.md Abschnitt 16; Abschnitt 15
+bleibt als historisches Review mit damaligen Lücken erhalten.
+
+Testlokaler Manager-Spy beobachtet echten Coordinator-Mutex/äußere Transaktionen.
+Erste TX am Commitpunkt aktiv halten, zweiten Thread in tatsächlicher Mutexqueue
+nachweisen, dann erster Commit/Cleanup vor zweitem Begin und zwei geordnete
+Threadergebnisse verlangen. REQUIRED-Nesting zählt nicht als zusätzliche äußere TX.
+Keine produktive Hook-/Sperr-/Timeoutänderung und keine zusätzliche Testtransaktion.
+Beobachtungsgate begrenzt auf 4 s, Queue-Nachweis 2 s. Bei eigener Beobachterstörung
+Rollbackversuch über denselben Manager; bei unbestätigtem Abschluss STOP ohne
+nachgelagerte DB-Abfragen. Kein automatischer Retry oder Fixturecleanup.
+
+Eigene drei Fixturebände vor Kauf mit unterschiedlichen Centpreisen/Anpassungen,
+Lesestatus, NULL-/0-/positiven Rereads, nullable Spezialflags, Indizes, optionalen
+URLs und Zeitwerten versehen. Keine zusätzlichen Zeilen; erwartete Summe 18,02
+vor/18,01 nach Kauf unverändert. Alle 13 persistenten Felder aus unabhängigem
+Reload als unveränderliche ID-Map aufnehmen und nach Kauf exakt vergleichen;
+ausschließlich Band 4 neu. URL-Vergleich als externe Zeichenkette, ohne DNS.
+
+Final tatsächlich ausgeführt: Java 21, stets --offline --no-daemon, vor jedem
+Aufruf identischer erfolgreicher --dry-run. test --rerun mit T03BandSnapshotTest,
+T03PurchaseOverlapTest, TestDatabaseGuardTest, T03PreparationTest,
+T03ReadOnlyPreparationTest, T03ServerRightsTest, T03RightsDiagnosisPreparationTest,
+LibraryWriteBootstrapTest, LibraryWriteConfigurationTest,
+LibraryWriteCoordinatorTest und PurchaseServiceTest:
+**199 bestanden, 0 Fehler, 0 übersprungen**. Davon 24 neue Fälle (16 Bandfelder/
+Inventar, 8 Überlappungs-/Fehlerfälle). Frühere Zwischenläufe ebenfalls erfolgreich;
+final um Fail-closed-/Timeoutprüfungen ergänzt, keine Assertions abgeschwächt.
+t03ClasspathCheck einschließlich compileT03IntegrationJava erfolgreich;
+alle drei Opt-in-Tasks weiterhin vollständig/getrennt. Bekannte CDS-Warnung.
+
+Keine Datenbankverbindung, SQL, Boot-/HTTP-/Browser-/Scraper-/Workerstarts,
+Migrationen, Schema-/Rechteänderungen, Fixtures oder Bereinigung ausgeführt.
+Kein t03CommitTest/t03ReadOnlyTest/t03RightsDiagnosisTest. Produktionsquellen,
+Guards und Manual-JARs unverändert. Geänderte/neue Dateien ausschließlich
+T03CommitAcceptanceTest.java, T03PurchaseOverlap.java, T03BandSnapshot.java,
+service/T03PurchaseOverlapTest.java, T03BandSnapshotTest.java, TESTING.md und
+T03_6B_APPROVAL.md. Historische Experimente erhalten; kein Git-Staging/Commit/Push.
+Echte Boot-Spy-/Proxyverdrahtung, MySQL-Abschlüsse und unabhängige Persistenz-
+Reloads sind weiterhin nicht real ausgeführt. Neue ausdrückliche Schreibfreigabe
+bleibt erforderlich; keine vollständige T03-Abnahme behaupten.

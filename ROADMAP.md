@@ -325,7 +325,7 @@ Ausführliche Beobachtungen, Ursachen, Testbefehle, Dateiliste und manuelle Nach
 
 ### T03 – Atomare, wiederholungssichere Datenänderungen
 
-**Umsetzung nur vorbereitet (02.11.2026):** [Priorisierte T03-Vorbereitung](T03_IMPLEMENTATION_PLAN.md). Keine T03-Implementierung; Kauf-, Identitäts-, Reduktions- und echte Parallelitätstestentscheidungen vor Umsetzung klären.
+**T03-0 datenbankfrei abgeschlossen (02.11.2026):** [T03-Plan mit Ist-/Soll-Matrix und Fachentscheidungen](T03_IMPLEMENTATION_PLAN.md). Auf neuem Branch `codex/t03-data-integrity` direkt ab T02-Commit `b7a2dbe`: 53 neue Charakterisierungsfälle und 227 unveränderte M06-/T02-/Standalone-MockMvc-Fälle bestanden, insgesamt 280, keine Fehler/übersprungen. Wiederholungs-/Konkurrenz-, Zuordnungs-, Cent- und Reduktionsprobleme reproduziert, NICHT behoben. Keine DB-Verbindung oder produktive T03-Implementierung; D1–D6 vor T03-1 bestätigen. Historische Prototypdateien und T02-Branch unverändert.
 
 - Einkauf → Bibliothek in einer konsistenten Transaktion; erneute und parallele Kaufübernahme absichern.
 - Einzelbandänderung und abgeleitete Reihensummen gemeinsam sichern.
@@ -2570,3 +2570,87 @@ jeder produktiven Altzeile. Rohe CL+TE-Ablehnung zurückgestellt; Logging T06,
 späteres LAN separat. Nächster Schritt T03-0 gemäß T03_IMPLEMENTATION_PLAN.md:
 zuerst datenbankfreie Charakterisierung der Kauf-/Fehler-/Wiederholungsfälle und
 Klärung der Fachentscheidungen, noch keine T03-Implementierung.
+
+
+## Nachtrag 02.11.2026 – T03-1/T03-2 implementiert, datenbankfrei geprüft
+
+`IMPLEMENTED_DB_FREE_VERIFIED`: gemeinsame Kaufoperation, eigener Transaktionsrahmen,
+Mutex bis nach Managerabschluss, Einkaufs-/Reihenlocks, Wiederholungsschutz und
+konservative Zielidentifikation. Normale Bibliotheks-/Band-/Einkaufswrites teilen
+innerhalb einer JVM die Schreibgrenze. Eigentümerfreigabe für feste 200-/409-
+Ergebnisse und ausdrückliche Bestätigung des neuen Bandnummernbereichs umgesetzt.
+Alte Bandwerte/M06 erhalten; exakte Restcents nur für neue Kaufbände, keine
+allgemeine Preis-/Bestandskorrektur. 462 ausgewählte datenbankfreie Java- und
+225 DOM-Tests bestanden, jeweils 0 Fehler/übersprungen. Kein DB-/Browserlauf.
+
+**T03 insgesamt weiterhin offen.** Echte Commit-/Rollback-/Lock-/Parallelitäts-
+nachweise fehlen. Vor der nächsten geschützten Vollsuite müssen äußere
+@Transactional-Schreibtests sicher an die neue eigene Kauftransaktion angepasst
+werden, ohne unbemerkt dauerhafte Fixtures zu erzeugen. T03-6 benötigt gesonderte
+mangalib_test-Freigabe; keine automatische Bereinigung. Bandbereichsbestätigung
+beweist keine unbekannte externe Bandidentität. T03-3 (globale Zuordnung/Aggregate),
+T03-4 (globale Preise/Double), T03-5 (normale Anzahlkorrektur/-reduktion) bleiben
+abgegrenzt. Bestehende T02-/M06-Abnahmen und Muss-/Soll-/Kann-Prioritäten unverändert.
+Details, D1–D6, Schreibpfade und Abnahmeplan: T03_IMPLEMENTATION_PLAN.md Abschnitt 11;
+ausgeführte Prüfungen und Grenzen: TESTING.md. Keine DB-Verbindung oder Datenänderung.
+
+### Nachtrag 04.11.2026 – T03-3 datenbankfrei umgesetzt
+
+`IMPLEMENTED_DB_FREE_VERIFIED`: gemeinsame geprüfte Bandidentitäten aus ID,
+Bandnummer und Reihenbeziehung statt Repositoryposition; kontrollierte Ablehnung
+mehrdeutiger Bestände. M06-Append und PurchaseService verwenden dieselbe Prüfung.
+Summen aus tatsächlichen Bandpreisen/-anpassungen; keine NULL-als-Nullpreis-Regel.
+Mittelwert bei finanzieller Einzelbandänderung aus tatsächlicher Bandanzahl und
+bei Reihenpreisänderung auch ohne Anzahländerung aktualisiert. Altbände/M06 und
+Kaufbestätigung erhalten. 417 datenbankfreie Java-Tests erfolgreich, keine DB-Abnahme.
+Integrationsanpassungsmatrix in T03_IMPLEMENTATION_PLAN.md Abschnitt 12 vorbereitet;
+keine automatischen Commit-Tests, keine Änderung der Rollback-/Datenbankguards.
+T03 insgesamt offen: globale Preise/Restcents (T03-4), Anzahlkorrektur/-reduktion
+(T03-5), echte Commit-/Rollback-/Konkurrenz- und Browserabnahme (T03-6).
+Prioritäten und historische Nachweise unverändert.
+
+### Nachtrag 04.11.2026 – T03-4 Preisregeln / D5 Variante C
+
+Gemeinsame reine Centarithmetik für Anlage, Erweiterung und Kauf; deterministische
+signierte Restcentverteilung nach geprüfter Bandnummer. Pflichtpreise bei Anlage,
+explizite 0 erlaubt, keine neue Preisunbekanntheit durch Leeren und keine
+Normalisierung historischer NULL-Werte. Ausdrückliche Preisoptionen im Reihen-
+formular, abwesende Preisfelder bleiben unverändert. Einkauf durchgängig BigDecimal;
+gemeinsame T03-Koordination, M06-Altbanderhaltung und Kaufbestätigung erhalten.
+Details und aktuelle Prüfergebnisse: T03_IMPLEMENTATION_PLAN.md §13 / TESTING.md.
+Echte DECIMAL-/Commit-/Rollback-/Konkurrenz- und Browsernachweise weiterhin offen;
+T03-5 und T03-6 bleiben Folgearbeiten. Keine Datenbankabnahme oder vollständigen
+T03-Abschluss behaupten; Muss-/Soll-/Kann-Prioritäten unverändert.
+
+Implementierungsstatus `IMPLEMENTED_DB_FREE_VERIFIED`: final 446 datenbankfreie
+Java-Tests und 231 DOM-Tests bestanden, jeweils 0 Fehler/übersprungen.
+
+### Nachtrag 04.11.2026 – T03-5 / sichere Anzahlkorrekturen
+
+D4 Variante A implementiert: Reduktionen unter tatsächlichen Bestand und
+Teilkorrekturen ohne Anlage kontrolliert gesperrt. Reine Korrektur auf den
+konsistenten tatsächlichen Bestand ändert nur die Deklaration; keine Preis-,
+Lese-/Reread- oder Bandmutation. Ausdrückliche Erweiterungsoption erhält M06 auch
+bei abweichender Deklaration; keine Kaufnebenkorrektur. Historisch abweichende
+Preisaggregate bleiben bei reiner Korrektur erhalten, keine automatische Reparatur.
+Aktueller Nachweis und Grenzen: TESTING.md / T03_IMPLEMENTATION_PLAN.md §14.
+T03 insgesamt weiterhin offen: echte Commit-/Rollback-/Konkurrenz-/Browserabnahme
+in T03-6 steht aus und benötigt gesonderte Freigaben. Prioritäten unverändert.
+
+`IMPLEMENTED_DB_FREE_VERIFIED`: 468 datenbankfreie Java-Tests und 232 DOM-Tests
+bestanden, jeweils 0 Fehler/übersprungen. Keine vollständige T03-/DB-Abnahme.
+
+### Nachtrag 04.11.2026 – T03-6A Integrationsvorbereitung
+
+13 DB-abhängige Bootklassen/75 Testmethoden samt Fixture-/Transaktionsstrategie
+inventarisiert. Getrennte Opt-in-Commitstruktur mit vorhandenen DB-Guards, eindeutiger
+Laufkennung, dauerhaftem ID-Journal und Fremddatenerhaltungsprüfung vorbereitet.
+Keine automatische Bereinigung. Erste drei Commit-/Rollback-/Konkurrenzfälle nur
+kompiliert; keine DB-Abnahme. Erweiterte E1–E6- und bestehende HTTP-Schreibtests
+müssen vor der vollständigen Integrationsfreigabe weiter übertragen werden.
+Freigabestufen und spätere Browsercheckliste: T03_6B_APPROVAL.md.
+T03 bleibt offen, keine Änderung fachlicher Prioritäten oder bestehender Guards.
+
+Vorbereitungsstatus `T03_6A_READY_FOR_APPROVAL` ausschließlich für die dokumentierte
+erste Opt-in-Stufe. 475 datenbankfreie Javafälle erfolgreich, 0 Fehler/übersprungen;
+Commit-Testquellen nur kompiliert. Keine DB-/Browserausführung, keine Bereinigung.

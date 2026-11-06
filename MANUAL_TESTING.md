@@ -1603,3 +1603,43 @@ Datenänderungen im Abschlussauftrag. Lokaler Abschlusscommit freigegeben, kein
 Push/Merge; T03 weiterhin nur vorbereitet. LAN/Internet, globale OS-Isolierung,
 vollständige Prozessprovenienz und allgemeine Schwachstellenfreiheit sind nicht
 Teil dieser Abnahme. Historische JARs/Evidenzen und Sicherheitsguards erhalten.
+
+
+## T03-1/T03-2 – neue Kaufbereichsbestätigung (Vorbereitung, nicht ausgeführt)
+
+Diese Anleitung ist KEINE Start-/Schreibfreigabe. Nur nach gesonderter Freigabe die
+abgesicherte manual-test-Umgebung verwenden; alle bisherigen Launcher-/DB-/Proxy-
+Schutzbedingungen gelten unverändert. Nie mangalib oder mangalib_test im Browser.
+Nur eigens neu angelegte synthetische T03-Datensätze verändern; Altbestände erhalten.
+
+1. Einen neuen synthetischen Einkauf mit eindeutiger kompatibler Reihenidentität
+   und bekanntem Preis vorbereiten (separate Schreibfreigabe). Bestehende Band-IDs,
+   Nummern, Preise, Flags, Lesestatus und Rereads der eigenen Zielreihe erfassen.
+2. Kaufen klicken: Bei vorhandener eindeutiger Reihe erscheint die neue kleine
+   Bestätigung „Bände N+1–Z ... übernehmen?“. Noch keine neuen Bände, keine
+   Kaufmarkierung. Abbrechen bleibt schreibfrei; bewusster neuer Klick zeigt erneut
+   die Vorschau. Kein automatischer zweiter Request.
+3. Nur für eigene neue Daten ausdrücklich „Bände übernehmen“ klicken. Nach Reload
+   exakt die bestätigten neuen Nummern, gekauft=true und unveränderte Altbandwerte.
+   Neue Bände ungelesen; Reihen-Reread erhalten, Reihenlesestatus neu abgeleitet.
+   Preise/Summen und positive/negative Restcents prüfen. Band-ID ist keine Reihen-ID.
+4. Denselben bereits gekauften Einkauf erneut bewusst aufrufen: feste Meldung
+   „Kauf bereits übernommen“, keine weitere Bibliotheks-/Markierungsänderung.
+5. Ohne Zielreihe bleibt die bestehende Statusauswahl (417). Auswahl erzeugt nur
+   eine neue Reihe. Wurde inzwischen eine eindeutige Zielreihe angelegt, muss auch
+   dieser Weg vor Append die ausdrückliche Bandbereichsbestätigung verlangen.
+6. Stale Bereich gezielt nur mit eigenen Daten/gesonderter Freigabe erzeugen:
+   409 BAND_CONFLICT, feste verständliche Meldung, keine Speicherung/Autowiederholung.
+   Auch unbekannter Kaufstatus, unklare Edition und inkonsistenter Bestand sind
+   feste 409-Konflikte. Keine internen Fehlertexte oder Fehlerbodys anzeigen.
+7. Unklarer 5xx-/Transport-/Antwortfehler: Dialog/Werte erhalten, Speicherklick bis
+   Reload gesperrt; auch Cancel darf keinen automatischen neuen Kauf auslösen.
+   Nach unbekanntem Transaktionsende sperrt der Coordinator weitere Writes.
+   Keine eigenmächtige Wiederholung oder Bereinigung; Zustand getrennt prüfen.
+8. Abschließend nur über freigegebene geschützte Verfahren Vorher/Nachher vergleichen.
+   Keine Bestandsdaten löschen, keine automatische Entfernung der synthetischen Daten.
+
+DOM-Prüfungen für diese Bediensemantik bestanden (225 gesamte DOM-Suite);
+keine echte Browser-/Datenbankprüfung in diesem Auftrag. Neue externe Bandindices
+werden weder erfunden noch durch die Bestätigung bewiesen. Vollständige reale
+Abnahme und sichere Anpassung der Integrationstest-Transaktionen bleiben T03-6.

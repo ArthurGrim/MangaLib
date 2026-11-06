@@ -1,4 +1,7 @@
 import java.security.MessageDigest
+import java.util.UUID
+import java.nio.file.Files
+import java.net.URLClassLoader
 
 plugins {
 	java
@@ -51,7 +54,75 @@ tasks.withType<Test> {
 	}
 }
 
+// Bewusst nicht an test/check/build gekoppelt. Nur nach eigener DB-/Commitfreigabe.
+val t03Integration by sourceSets.creating {
+    compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+    runtimeClasspath += output + compileClasspath
+}
+configurations[t03Integration.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
+configurations[t03Integration.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
+val t03CommitTest by tasks.registering(Test::class) {
+    description = "Opt-in T03-Commitabnahme; hinterlässt registrierte synthetische Zeilen, kein Cleanup."
+    group = "verification"
+    testClassesDirs = t03Integration.output.classesDirs
+    include("**/T03CommitAcceptanceTest.class")
+    // Source-Set-Classpath erst bei Auflösung lesen: productionOwner wird später ergänzt.
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("t03Approval").orNull == "COMMIT_NEW_SYNTHETIC_ROWS_ONLY") {
+            "Separate Eigentümerfreigabe und -Pt03Approval=COMMIT_NEW_SYNTHETIC_ROWS_ONLY erforderlich."
+        }
+        val runId = UUID.fromString(providers.gradleProperty("t03RunId").get()).toString()
+        val directory = layout.projectDirectory.dir(".gradle/t03-integration/$runId").asFile.toPath()
+        Files.createDirectories(directory.parent)
+        Files.createDirectory(directory) // Atomar: keine Wiederverwendung eines Laufs.
+        systemProperty("t03.run.id", runId)
+        systemProperty("t03.approved", "true")
+        systemProperty("t03.evidence.directory", directory.toString())
+    }
+}
+
+val t03ReadOnlyTest by tasks.registering(Test::class) {
+    description = "Opt-in: ausschließlich lesende T03-Datenbankvorprüfung, keine Fixtures."
+    group = "verification"
+    testClassesDirs = t03Integration.output.classesDirs
+    include("**/T03ReadOnlyPreflightTest.class")
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("t03ReadOnlyApproval").orNull == "READ_ONLY_MANGALIB_TEST") {
+            "Separate Eigentümerfreigabe für lesenden DB-Zugriff erforderlich."
+        }
+        require(!System.getenv("MANGALIB_TEST_DB_PASSWORD").isNullOrBlank()) {
+            "MANGALIB_TEST_DB_PASSWORD fehlt oder ist leer."
+        }
+        systemProperty("t03.readOnly.approved", "true")
+    }
+}
+
 // Getrennt vom normalen JAR und von Spring TestContext: kein JUnit-Guard im Browserbetrieb.
+val t03RightsDiagnosisTest by tasks.registering(Test::class) {
+    description = "Opt-in: ausschließlich vier lesende Identitäts-/Rechteabfragen."
+    testClassesDirs = t03Integration.output.classesDirs
+    include("**/T03RightsDiagnosisTest.class")
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("t03RightsApproval").orNull == "DIAGNOSE_TEST_RIGHTS_ONCE") {
+            "Separate Eigentümerfreigabe für lesende Rechte-Diagnose erforderlich."
+        }
+        require(!System.getenv("MANGALIB_TEST_DB_PASSWORD").isNullOrBlank()) { "Testpasswort fehlt." }
+        systemProperty("t03.rightsDiagnosis.approved", "true")
+    }
+}
+
 val manualTest by sourceSets.creating {
     compileClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()
     runtimeClasspath += output + compileClasspath
@@ -411,6 +482,83 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
 sourceSets.test {
     compileClasspath += productionOwner.output
     runtimeClasspath = runtimeClasspath.filter { !it.name.startsWith("jna-") } + productionOwner.output + productionOwner.runtimeClasspath
+}
+t03Integration.compileClasspath += productionOwner.output
+t03Integration.runtimeClasspath = sourceSets.test.get().runtimeClasspath + t03Integration.output
+
+// Prüft die effektiven Task-Classpaths ohne Test-/Springstart oder Klasseninitialisierung.
+// Absichtlich kein Bestandteil von test/check/build und keine Abhängigkeit zu DB-Tasks.
+tasks.register("t03ClasspathCheck") {
+    group = "verification"
+    description = "Datenbankfreie Runtime-/Tasktrennungsprüfung der T03-Opt-in-Tests."
+    dependsOn(tasks.named(t03Integration.compileJavaTaskName))
+    doLast {
+        val expected = t03Integration.runtimeClasspath.files
+        val optIn = mapOf(
+            t03ReadOnlyTest.get() to "**/T03ReadOnlyPreflightTest.class",
+            t03CommitTest.get() to "**/T03CommitAcceptanceTest.class",
+            t03RightsDiagnosisTest.get() to "**/T03RightsDiagnosisTest.class"
+        )
+        val required = listOf(
+            "de.mangalib.service.LiveScraperGateway",
+            "de.mangalib.windowsadapter.ProductionScraperClient",
+            "de.mangalib.windowsadapter.WorkerJobOwner",
+            "de.mangalib.windowsadapter.WorkerWire",
+            "de.mangalib.windowsadapter.SimpleWorkerNative",
+            "de.mangalib.windowsadapter.Win64NativeBindings",
+            "com.sun.jna.Native", "com.sun.jna.Pointer",
+            "de.mangalib.testsupport.GuardedTestDataSource"
+        )
+        optIn.forEach { (task, include) ->
+            val actual = task.classpath.files
+            val missing = expected - actual
+            logger.lifecycle("${task.name}: runtime entries=${actual.size}, missing=${missing.map { it.name }}")
+            check(actual == expected) { "${task.name}: abweichende Runtime-Classpath" }
+            check(task.includes == setOf(include) && task.excludes.isEmpty()) { "Falsche Klassen-Allowlist" }
+            check(task.testClassesDirs.files == t03Integration.output.classesDirs.files) { "Falsche Testklassen" }
+            URLClassLoader(actual.map { it.toURI().toURL() }.toTypedArray(), ClassLoader.getPlatformClassLoader()).use { loader ->
+                required.forEach { name ->
+                    // false verhindert statische Initialisierung, insbesondere von JNA Native.
+                    val type = Class.forName(name, false, loader)
+                    type.declaredMethods
+                    type.declaredConstructors
+                    type.declaredFields
+                }
+                check(loader.getResource("META-INF/spring.factories") != null) { "Test-Guard-Ressource fehlt" }
+            }
+            // Negativkontrolle: Ohne Owner-Output muss genau der ursprüngliche
+            // Gateway-Signaturfehler erkannt werden, ohne einen Bean zu erzeugen.
+            val withoutOwner = actual - productionOwner.output.files
+            URLClassLoader(withoutOwner.map { it.toURI().toURL() }.toTypedArray(), ClassLoader.getPlatformClassLoader()).use { loader ->
+                val failure = runCatching {
+                    Class.forName("de.mangalib.service.LiveScraperGateway", false, loader).declaredMethods
+                }.exceptionOrNull()
+                check(failure is NoClassDefFoundError && failure.message?.contains("ProductionScraperClient") == true) {
+                    "Negativkontrolle erkennt fehlenden Owner nicht"
+                }
+            }
+            logger.lifecycle("${task.name}: ${required.size} Klassen ohne Initialisierung auflösbar; Allowlist korrekt")
+        }
+        val regular = tasks.named<Test>("test").get()
+        check(regular.testClassesDirs.files == sourceSets.test.get().output.classesDirs.files)
+        check(regular.classpath.files.intersect(t03Integration.output.files).isEmpty()) { "Opt-in-Output im Standardtest" }
+        fun closure(task: Task, seen: MutableSet<Task> = mutableSetOf()): Set<Task> {
+            if (seen.add(task)) {
+                task.taskDependencies.getDependencies(task).forEach { closure(it, seen) }
+                task.finalizedBy.getDependencies(task).forEach { closure(it, seen) }
+            }
+            return seen
+        }
+        listOf("test", "check", "build").forEach { name ->
+            check(closure(tasks.named(name).get()).intersect(optIn.keys).isEmpty()) { "Opt-in-Task an $name gekoppelt" }
+        }
+        check(closure(this).intersect(optIn.keys).isEmpty()) { "Diagnose würde DB-Task ausführen" }
+        check(sourceSets.main.get().output.files.intersect(t03Integration.output.files).isEmpty())
+        val manualClasspath = requireNotNull(manualBootJar.get().classpath).files
+        check(manualClasspath.intersect(productionOwner.output.files).isEmpty())
+        check(manualClasspath.none { it.name.startsWith("jna-") || it.name.startsWith("selenium-") })
+        logger.lifecycle("T03_CLASSPATH_CHECK_PASS: Runtime, Klassenauflösung, Task-/Source-Set-Trennung und Manual-Classpath")
+    }
 }
 manualCheck.compileClasspath += productionOwner.output
 manualCheck.runtimeClasspath += productionOwner.output
