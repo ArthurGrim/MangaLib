@@ -13689,3 +13689,934 @@ T03_6B_APPROVAL.md. Historische Experimente erhalten; kein Git-Staging/Commit/Pu
 Echte Boot-Spy-/Proxyverdrahtung, MySQL-Abschlüsse und unabhängige Persistenz-
 Reloads sind weiterhin nicht real ausgeführt. Neue ausdrückliche Schreibfreigabe
 bleibt erforderlich; keine vollständige T03-Abnahme behaupten.
+
+## Nachtrag 06.11.2026 – erste reale T03-6B-Stufe bestanden
+
+Status **T03_6B_FIRST_COMMIT_ACCEPTED** für ausschließlich die drei freigegebenen
+Methoden. Quellstand Branch codex/t03-data-integrity, HEAD
+b09c6f5c3d144d93a4cc85b48de5af440f40e4f1 (vorheriger Fachcommit 8c165f0).
+Versionierte Dateien vor Ausführung unverändert, Staging leer, ausschließlich acht
+bekannte historische Experimente unversioniert. Kein neuer Commit/Push.
+
+Einmalige Lauf-UUID: **264bc431-7c43-4fc2-b2d4-3efd35d8bb1c**. Vor realer Ausführung
+festgelegt und im Chat dokumentiert. Pfad .gradle/t03-integration/264bc431-7c43-4fc2-b2d4-3efd35d8bb1c/
+vor und nach Dry-Run nicht vorhanden; erst realer Task reservierte ihn atomar.
+Privates ids.txt bleibt unverändert erhalten; nur UUID/Tabellen/ID-Versuche/Phasen,
+keine fachlichen Rohdaten. Keine zweite Ausführung dieser UUID oder Einzelmethoden.
+
+Vorprüfungen: Passwortvariable vorhanden/nicht leer, keine relevanten Profil-/
+Datasource-/JPA-/JVM-Overrides; unverändertes festes Testprofil und Guards.
+CIM-Abfrage im eingeschränkten Aufruf nicht verfügbar; ersatzweise genehmigte
+rein lesende Get-Process-/Get-NetTCPConnection-Prüfung erfolgreich: keine Java-
+Prozesse und keine etablierten MySQL-Clientverbindungen vor Teststart. Dies ist
+eine Momentaufnahme, keine globale Sperre gegen spätere externe Schreiber.
+
+Java 21, alle Gradle-Aufrufe --offline --no-daemon und vor jedem tatsächlichen
+Aufruf identischer erfolgreicher --dry-run:
+- test --rerun mit T03BandSnapshotTest, T03PurchaseOverlapTest,
+  TestDatabaseGuardTest, T03PreparationTest, T03ReadOnlyPreparationTest,
+  T03ServerRightsTest, T03RightsDiagnosisPreparationTest,
+  LibraryWriteBootstrapTest, LibraryWriteConfigurationTest,
+  LibraryWriteCoordinatorTest und PurchaseServiceTest:
+  **199 bestanden, 0 Fehler, 0 übersprungen**.
+- t03ClasspathCheck: erfolgreich; vollständige Classpaths/feste Allowlists,
+  keine Kopplung anderer DB-Tasks oder Standardtests.
+- t03CommitTest -Pt03Approval=COMMIT_NEW_SYNTHETIC_ROWS_ONLY
+  -Pt03RunId=264bc431-7c43-4fc2-b2d4-3efd35d8bb1c: **genau ein realer Lauf**,
+  **3 bestanden, 0 Fehler, 0 übersprungen**, BUILD SUCCESSFUL (23 s).
+
+Spring-/JPA-Kontext erfolgreich gestartet/geschlossen. Vor Fixtures alle fünf
+Writer-Proxys, vorhandene TX-Advisors/Writeadvisorreihenfolge, genau ein Coordinator,
+identischer tatsächlich verwendeter Manager-Spy und keine äußere Test-TX/
+Synchronisation bestätigt. SHOW-GRANTS-Prüfung erfolgreich; ausschließlich global
+USAGE und eigene maskierte Schema-DML-Rechte zulässig. Snapshot bestätigt tatsächliche
+DB mangalib_test und Testaccount; feste URL localhost:3306 und Passwort nur aus
+Prozessvariable durch Guard vor und bei jeder Verbindung erzwungen.
+
+Ausgangsbaseline vor Writes vollständig bestätigt: zehn InnoDB-Tabellen, 78
+Stammdaten, fünf leere Geschäftstabellen, Schema-/Datenhash
+ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570.
+Beide geplanten Mangaindizes kollisionsfrei. Keine Rohgrants oder ursprünglichen
+Datenzeilen in die Dokumentation übernommen.
+
+Tatsächliche Ergebnisse laut JUnit-XML und unverändertem ID-Journal:
+
+| Methode | Ergebnis | Journal-/Reloadnachweis |
+|---|---|---|
+| committedSeriesReloadsExactMoneyAndOwnedIds | bestanden (0,396 s) | Eigener Commit, unabhängiger Reload: 3 Bände, 18,02 Gesamtpreis, Restcentverteilung 0,01/0,01/0,00; 5 registrierte Commit-IDs |
+| failureAfterBandsRollsBackOwnNewRows | bestanden (0,152 s) | Flush vor definierter SyntheticFailure; unabhängiger Reload: Reihe, Details und Bände abwesend; 5 zurückgerollte ID-Versuche |
+| sameConfirmedPurchaseInTwoThreadsAppendsOnlyOnce | bestanden (0,365 s) | Erste TX aktiv am Commitpunkt, zweiter Thread am echten Mutex wartend; zwei geordnete Transaktionen, UPDATED/ALREADY_PURCHASED; 7 IDs einschließlich einzigem neuen Band 4 |
+
+Konkurrenzreihenfolge durch erfolgreiche Assertions bestätigt: FIRST_BEGIN,
+FIRST_COMMIT_CLEANED, SECOND_BEGIN, SECOND_COMMIT_CLEANED. Maximal eine aktive äußere
+Schreib-TX, Managerabschluss einschließlich Cleanup vor Mutexfreigabe, beide
+Threads beendet. Das ist ein Assertionnachweis, kein separat gespeicherter
+zeitgestempelter Ereignistrace und keine konkurrierende Mehrinstanz-Rowlockprüfung.
+
+Alle 13 persistenten Felder der drei zuvor unabhängig geladenen Fixturebände
+anhand ihrer ursprünglichen IDs unverändert; ausschließlich Band 4 neu, Kaufstatus
+true, Gesamtpreis 18,01. Unterschiedliche Centpreise, Anpassungen, nullable Rereads/
+Flags, Lesestatus, externe Indizes, optionale URLs und gespeicherte Datumswerte
+blieben erhalten. Keine Browser-/URL-/Scraperaufrufe.
+
+Bestätigte dauerhafte Fixturegruppen ergeben **12 neue Zeilen**: 2 mangareihe,
+2 mangadetails, 7 baende, 1 einkaufsliste; keine einkaufslistedetails. Zusätzlich
+5 ID-Versuche aus der vollständig zurückgerollten Gruppe; insgesamt 17 Journal-
+ID-Einträge und drei STAGE_CONFIRMED, kein STOP. Diese Einträge sind allein keine
+Commitbeweise; die Unterscheidung beruht zusätzlich auf den bestandenen unabhängigen
+Commit-/Rollback-Reloads. Keine zusätzliche Abschluss-DB-Abfrage nach dem Testlauf.
+
+Nach jeder Stufe vollständiger bestehender Snapshotvergleich erfolgreich: alle
+vorherigen Zeilen/Stammdaten und Schema-/Spalten-/Index-/FK-Metadaten unverändert,
+neue Zeilen nur mit registrierten IDs. AUTO_INCREMENT ausgenommen. Gesamthash
+nach bewusst verbleibenden Fixtures wird nicht als identisch behauptet und ist
+nicht separat protokolliert. Journal erfolgreich geschlossen; privater Bericht
+build/reports/tests/t03CommitTest/index.html und JUnit-XML lokal vorhanden.
+
+Keine DELETEs, DDL, Migrationen, Seeding/Resets, Rechteänderungen oder Cleanup.
+Keine Produktiv-/Manual-DB-Verbindung, keine anderen DB-Tests, keine Anwendung,
+Listener, Browser, Worker oder Live-Scraper. Bekannte BPP-/Open-in-View-/CDS-Warnungen;
+die tatsächlichen vorgeschalteten Writer-Proxyprüfungen bestanden trotzdem.
+Nur TESTING.md und T03_6B_APPROVAL.md um diesen Nachtrag geändert. Historische
+Experimente/Manual-JARs erhalten; keine weitere Git-Schreibaktion.
+
+Nachweisgrenzen: nur diese erste Stufe, keine vollständige T03-/E1–E6-Abnahme,
+keine Crashfestigkeitsgarantie des Journals und kein Mehrinstanzbeweis. Die zwölf
+synthetischen Zeilen verbleiben ausdrücklich. Weitere Prüfungen (einschließlich
+einer Wiederholung, die jetzt an der Leerbaseline stoppen würde), Restmatrix,
+Cleanup und Browserabnahme brauchen jeweils neue konkrete Freigabe.
+
+## Nachtrag 06.11.2026 – verbleibende E1–E6-Matrix datenbankfrei vorbereitet
+
+Status **T03_6B_E1_E6_READY_FOR_APPROVAL**, keine Datenbankausführung.
+Branch codex/t03-data-integrity, HEAD weiterhin b09c6f5c3d144d93a4cc85b48de5af440f40e4f1.
+Die vorhandenen Nachträge zur ersten echten Schreibstufe bleiben erhalten. Keine
+Produktionsänderung, Guardänderung, neue Abhängigkeit oder Git-Schreibaktion.
+
+Neue getrennte Opt-in-Tasks:
+
+- `t03ContinuationReadOnlyTest`: genau T03ContinuationReadOnlyTest, zwei unabhängige
+  Read-only-Snapshots/Rechteprüfungen, historische Schema-/Stammdatenbindung plus
+  exakte ID-Zuordnung der zwölf akzeptierten Zeilen. Ermittelt erst nach separater
+  Freigabe einen aktuellen vollständigen Hash einschließlich dieser Zeilen.
+- `t03MatrixTest`: genau T03MatrixAcceptanceTest, 17 Fälle. Verlangt eine separat
+  akzeptierte aktuelle Baseline, neue UUID, neuen atomar reservierten Journalpfad
+  und eigene Schreib-/Konkurrenzfreigabe. Keine automatische Fortsetzung nach dem
+  lesenden Task, keine Taskkopplung zu test/check/build. Ein Fork, failFast, keine
+  Up-to-date-Abkürzung. Bestehende Leerbaseline-Tasks bleiben unverändert.
+
+Verbindlicher Ablauf, Fallmatrix, Befehle und Grenzen: T03_6B_APPROVAL.md §18.
+Nicht die alte Commitklasse erneut ausführen: zwölf Geschäftszeilen sind jetzt
+erwarteter Vorbestand, keine Abweichung, die durch Löschung zu beheben wäre.
+Die historische ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570-Referenz
+bleibt als historischer Schema-/78-Stammdaten-/Leerbestandvergleich unverändert.
+Die neue Policy bildet dessen leere Geschäftslisten ausschließlich im RAM nach,
+ohne den tatsächlichen vollständigen Snapshot oder Datenbankzeilen zu ändern.
+
+Die Zuordnung bindet das unveränderte Journal der UUID
+264bc431-7c43-4fc2-b2d4-3efd35d8bb1c an SHA-256
+8606d5080f4608c5e6a7cab0edf89258e0e4e677f5998b15434a38736b8edc97.
+Nur die bestätigten Commitgruppen zählen als Vorbestand, Rollback-IDs nicht.
+Der alte Lauf hat keinen vollständigen Feldwertsnapshot dieser zwölf Zeilen
+dauerhaft aufbewahrt: deren damalige Feldwerte sind heute nicht rückwirkend aus
+dem Journal beweisbar. Die neue aktuelle Baseline ist noch nicht real bestätigt.
+
+Vorbereitete Fälle (noch nicht gegen MySQL ausgeführt):
+
+Statisches Abschlussreview hat zwei testinterne Lifecyclefallen beseitigt:
+Lazy-Details werden innerhalb der Read-TX materialisiert (kein Lazyzugriff auf
+ungefüllte detached Proxys); die drei PER_CLASS-Spies verwenden ausdrücklich
+MockReset.NONE, damit Spring deren einmalig installierte Delegations-/Fehlerhaken
+nicht nach dem ersten Fall entfernt. Fallbezogene Fehlerflags und Beobachter
+werden weiterhin vor jedem Fall neu gesetzt. Kein produktiver Hook geändert.
+
+- E1: beide HTTP-Kaufwege, Kauf in vorhandene/neue Reihe; echte Repositorydelegation
+  vor gezieltem save-/flush-Fehler und unabhängiger exakter Rollbackvergleich;
+  Einzelbandfehler nach save; letzter beforeCommit-Fehler mit ROLLED_BACK-Nachweis,
+  leerer Spring-TX-Bindung und unveränderter konservativer Coordinatorquarantäne.
+- E2: update/create desselben Kaufs plus Replay, zwei Einkäufe derselben vorhandenen
+  und neuen Identität; ausdrückliche zweite Bereichsbestätigung; Kauf gegen direkte
+  Doppelanlage und gegen Einzelbandedit. Der vorhandene Überlappungshelfer erlaubt
+  jetzt unterschiedliche Callables sowie einen ausdrücklich erwarteten zweiten
+  Work-Rollback. Dieser muss samt Managercleanup bestätigt sein; kein bloßes
+  nacheinander gestartetes Future-Paar und kein Aufweichen unbekannter Abschlüsse.
+- E3: IDs trotz umgekehrter Repositoryliste, nicht vorhandene ID, doppelte Bandnummer,
+  mehrdeutiger/NULL-Index, veralteter Bereich, inkompatibles vorhandenes Format,
+  fehlende Details und NULL-Kaufstatus. Ein zweiter vorhandener Formatwert ist
+  Voraussetzung für den Editionskonflikt; fehlt er, STOP statt Stammdatenanlage.
+- E4: explizite Centvektoren für ±0,01, 0,02 und ±20 auf drei Bände nach separaten
+  Commits/Reloads; NULL-Preis schützt vor Finanzmutation, Metadaten weiter möglich;
+  individuelle alte Preise 4/6/8 Euro bleiben beim Kauf erhalten.
+- E5: reine Korrekturen von 2/5 auf tatsächliche 3 ohne Finanz-/Bandmutation;
+  Reduktion/Teilkorrektur kontrolliert abweisen; unveränderte hohe Deklaration
+  erzeugt nichts; ausdrückliche M06-Erweiterung erhält alle 13 alten Bandfelder,
+  inklusive NULL/0/positiver Rereads und nullable Specials, neuer Band ungelesen.
+- E6: vollständiger Snapshot gegen Fall- und Laufbeginn, sämtliche alten Zeilen
+  einschließlich erster Fixturegruppe und früherer Matrixfälle exakt erhalten;
+  Schema/Spalten/Indizes/FKs/78 Stammdaten unverändert, neue IDs vor Commit im
+  eigenen privaten Journal. Keine Löschfunktion oder Übernahme fremder IDs.
+
+Echte Commits bleiben auf die dafür notwendigen Reload-/Konkurrenznachweise
+begrenzt. Acht reine Ablehnungsvarianten laufen in eigenen vollständig
+zurückgerollten Coordinator-Fixtures (geplant 51 ID-Versuche); die anderen
+Work-/beforeCommit-Fehler rollen weitere geplante 17 neue Zeilen zurück.
+Erfolgreicher vollständiger Lauf hinterlässt maximal/exakt 60 neue Zeilen:
+8 Reihen, 8 Details, 28 Bände, 8 Einkäufe, 8 Einkaufsdetails; mit den bestehenden
+zwölf insgesamt 72. Laufende Obergrenzen und exakte Endzahlen sind Assertions.
+Geplant 128 neue journalisierte ID-Versuche einschließlich 68 Rollback-IDs;
+AUTO_INCREMENT bleibt ausdrücklich ausgenommen. Kein Cleanup/Reset/Seeding.
+Bei Teilabbruch können bereits bestätigte Teilmengen verbleiben; nicht wiederholen.
+Bei unbekanntem Thread-/Managerabschluss sind weitere Snapshotzugriffe gesperrt.
+
+Tatsächlich ausgeführte datenbankfreie Prüfungen, jeweils Java 21,
+`--offline --no-daemon` und vorher identischer erfolgreicher `--dry-run`:
+
+```powershell
+.\gradlew.bat --offline --no-daemon test --rerun --tests '*TestDatabaseGuardTest' --tests '*T03PreparationTest' --tests '*T03ReadOnlyPreparationTest' --tests '*T03ServerRightsTest' --tests '*T03RightsDiagnosisPreparationTest' --tests '*LibraryWriteBootstrapTest' --tests '*LibraryWriteConfigurationTest' --tests '*LibraryWriteCoordinatorTest' --tests '*PurchaseServiceTest' --tests '*T03BandSnapshotTest' --tests '*T03PurchaseOverlapTest' --tests '*T03ContinuationPolicyTest'
+.\gradlew.bat --offline --no-daemon t03ClasspathCheck
+```
+
+Finale ausgewählte Unitgruppe: **217 bestanden, 0 Fehler, 0 übersprungen**.
+44 Guardfälle; 16 neue synthetische Fortsetzungspolicyfälle (Journalintegrität,
+falsche Laufkennung, STOP/unvollständige Phasen, unbekannte/fehlende IDs,
+Schema-/Stammdatenänderung, Schutz mehrerer Läufe, Rollback-IDs, reine Leseklasse);
+zwei neue Überlappungsfälle mit RAM-Manager. Zwischenlauf zuvor 216 erfolgreich,
+vor Ergänzung des getrennten zweiten Rollbacknachweises. Keine deaktivierten Tests.
+Die Sourceprüfung der Leseklasse ist nur zusätzliche statische Evidenz, kein
+behaupteter echter Datenbank-/Transaktionsnachweis.
+
+t03ClasspathCheck einschließlich compileT03IntegrationJava erfolgreich: fünf
+feste Opt-in-Klassen, jeweils vollständiger Runtime-Classpath (165 Einträge),
+neun Klassen ohne Initialisierung auflösbar, Negativkontrolle ohne Owner-Output,
+keine Kopplung an Standardlifecycle/andere DB-Tasks, Manual-Classpath ohne
+Owner/JNA/Selenium. Kein Test aus dem Opt-in-Source-Set tatsächlich gestartet.
+Einzige beobachtete Testlaufwarnung: vorhandene JVM-CDS/Mockito-Agent-Warnung.
+
+Geänderte/neue Dateien dieses Vorbereitungsauftrags: build.gradle.kts,
+T03Preservation.java, T03PurchaseOverlap.java, service/T03PurchaseOverlapTest.java,
+T03ContinuationPolicy.java, T03ContinuationPolicyTest.java,
+t03Integration/T03ContinuationReadOnlyTest.java, t03Integration/T03MatrixAcceptanceTest.java
+sowie TESTING.md und T03_6B_APPROVAL.md. Bestehende Nachträge nicht ersetzt.
+Historische acht Experimente per gespeicherter SHA-256-Liste unverändert; drei
+Manual-JARs und bisheriges Laufjournal hashidentisch. Staging leer.
+
+Noch offen: reale Ausführung der beiden neuen Stufen nach getrennten Freigaben,
+weitere historische C-/R-/F-Methoden aus dem Inventar und T03-6C-Browserabnahme.
+Kein Vollsuite-, Mehrinstanz-, echter JDBC-Ausfall- oder verlorener Commit-ACK-
+Nachweis. T03 insgesamt nicht abgeschlossen. Keine DB-Verbindung, SQL-Ausführung,
+Anwendung, Listener, Browser, Scraper, Worker, Installation oder Git-Schreibaktion
+in diesem Auftrag. Abschließender Diffcheck ohne Whitespacefehler.
+
+## Nachtrag 06.11.2026 – lesende T03-Fortsetzungsabnahme erfolgreich
+
+Status **T03_6B_CONTINUATION_READ_ONLY_VERIFIED**. Ausschließlich separat
+freigegebene Stufe A; t03MatrixTest und sämtliche anderen DB-Tests nicht ausgeführt.
+Branch codex/t03-data-integrity, HEAD b09c6f5 unverändert. Vorhandene lokale
+T03-Arbeiten und historische Nachträge erhalten, keine Quellcodeänderung.
+
+Statisch geprüft: feste Task-Allowlist T03ContinuationReadOnlyTest, kein
+schreibender Lifecycle/Fixturepfad; zwei getrennte readOnly-TransactionTemplates,
+SHOW GRANTS und vorhandene SELECT-only-Snapshotabfragen. MOCK-Kontext ohne
+HTTP-Listener, Scraper-Mock ohne Interaktionen. Bestehende TestContext-Factory
+erzwingt vor Beaninitialisierung die einzige GuardedTestDataSource; diese prüft
+vor jedem Verbindungsaufbau erneut feste URL, Benutzer, Passwortquelle, Profil
+und deaktivierte Initialisierung/Migration/DDL-Erzeugung. Schema nur validate.
+
+Vorprüfung: Passwortvariable vorhanden/nicht leer, keine relevanten Env-/Gradle-
+Overrides, keine Java-Prozesse/etablierten MySQL-Clientverbindungen beobachtet.
+Historisches Journal lokal SHA-256-gebunden; historische acht Dateien und drei
+Manual-JARs hashidentisch. Keine geheimen Werte oder Umgebungslisten ausgegeben.
+
+Tatsächlich ausgeführte Gradle-Befehle, jeweils Java 21, offline/no-daemon und
+zuvor derselbe Befehl mit zusätzlichem --dry-run erfolgreich kontrolliert:
+
+```powershell
+.\gradlew.bat --offline --no-daemon test --rerun --tests '*TestDatabaseGuardTest' --tests '*T03PreparationTest' --tests '*T03ReadOnlyPreparationTest' --tests '*T03ServerRightsTest' --tests '*T03RightsDiagnosisPreparationTest' --tests '*LibraryWriteBootstrapTest' --tests '*LibraryWriteConfigurationTest' --tests '*LibraryWriteCoordinatorTest' --tests '*PurchaseServiceTest' --tests '*T03BandSnapshotTest' --tests '*T03PurchaseOverlapTest' --tests '*T03ContinuationPolicyTest' t03ClasspathCheck
+.\gradlew.bat --offline --no-daemon t03ContinuationReadOnlyTest -Pt03ContinuationApproval=VERIFY_EXISTING_T03_FIXTURES
+```
+
+Vorprüfung: **217 datenbankfreie Tests bestanden**, 0 Fehler/Skips, davon 44 Guards.
+Classpathcheck aller fünf isolierten Tasks erfolgreich (je 165 Runtimeeinträge,
+neun Klassen ohne Initialisierung, negative Owner-Classpathkontrolle und
+Source-Set-/Standardlifecycle-/Manual-Trennung). Datenbanktask **genau einmal**:
+**1 Test bestanden, 0 Fehler, 0 übersprungen**, BUILD SUCCESSFUL in 26s.
+Spring-/JPA-Kontext erfolgreich, Profil test auch im Bericht bestätigt;
+EntityManagerFactory nach Testende geschlossen. Vorhandene CDS/Mockito-Warnung,
+keine fehlgeschlagene Assertion. Keine Wiederholung oder Reparatur.
+
+Identität mangalib_test/mangalib_test_user bestätigt; Host/Port ausschließlich
+localhost:3306 durch unveränderten festen Guard. CURRENT_USER() wird auf den
+Benutzernamen geprüft; keine zusätzliche aktuelle Hostkomponentenabfrage behauptet.
+Die zweimalige SHOW-GRANTS-Prüfung akzeptierte ausschließlich global USAGE und
+SELECT/INSERT/UPDATE/DELETE auf literal maskiertem mangalib_test-Schema, keine
+weiteren Schemas/Rechte/Rollen/GRANT OPTION.
+
+Zehn erwartete InnoDB-Tabellen; Spalten, Indizes, FKs und weitere erfasste
+Metadaten unverändert. Alle 78 Stammdatensätze samt historischem Schema stimmen
+nach ausschließlich virtueller Leerung der Geschäftslisten in einer Snapshotkopie
+mit ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570 überein.
+Genau 12 Geschäftszeilen: 2 Reihen, 2 Details, 7 Bände, 1 Einkauf, 0 Einkaufsdetails.
+ID-Mengen entsprechen den bestätigten Commitgruppen des Laufs
+264bc431-7c43-4fc2-b2d4-3efd35d8bb1c; fünf zurückgerollte ID-Versuche abwesend,
+keine zusätzlichen oder unbekannten Zeilen. Journal unverändert, SHA-256
+8606d5080f4608c5e6a7cab0edf89258e0e4e677f5998b15434a38736b8edc97.
+
+Zwei voneinander unabhängige vollständige Snapshots exakt gleich, einschließlich
+aller zwölf Geschäftszeilen. Verifizierter aktueller Vollhash:
+
+`T03_CONTINUATION_CURRENT_FINGERPRINT=b223c47368c2e83f4a11de2199c6f8dd31e63434a46a587762fca3e54f6ddb4a`
+
+Historische Leerbaseline bleibt unverändert separat. Keine rückwirkende Aussage
+über sämtliche damaligen Feldwerte der ersten Fixturegruppe. Keine serverweite
+SQL-Auditierung oder globale Fremdschreibersperre; geprüft wurden der lesende
+Codepfad, Guards, READ_ONLY-Transaktionen und identische vollständige Snapshots.
+Keine INSERT/UPDATE/DELETE/DDL, Fixtures, Rechteänderungen, Migrationen oder Cleanup.
+
+Privater JUnit-Bericht build/test-results/t03ContinuationReadOnlyTest/TEST-de.mangalib.T03ContinuationReadOnlyTest.xml,
+SHA-256 16ae7bf13e9b467a7ffd01ba5e93e3801dfe231f5672b9298f583e7a7c6e441b.
+Bericht nur gezielt auf feste Status-/Hashzeilen und Zähler ausgewertet.
+Keine Datenbankinhalte oder Secrets in Projektdokumente kopiert.
+In diesem Auftrag nur TESTING.md/T03_6B_APPROVAL.md um neue Nachträge ergänzt.
+Keine Anwendung, Browser, HTTP-Listener, Scraper, Worker, Installation oder
+Git-Schreibaktion. Staging leer; keine Änderungen historischer Experimente,
+Manual-JARs oder Journale. Diffcheck ohne Whitespacefehler.
+Nach diesem einen lesenden Lauf gestoppt; Matrix-/Commit-/Konkurrenzfreigabe
+weiterhin erforderlich, keine automatische Fortsetzung und kein T03-Abschluss.
+
+## Nachtrag 06.11.2026 – reale E1–E6-Matrix vor Kaufprüfung abgebrochen
+
+Status **T03_6B_E1_E6_FAILED**. Genau ein ausdrücklich freigegebener Matrixlauf,
+keine Wiederholung oder zusätzliche Datenbankdiagnose nach dem Fehler.
+Branch codex/t03-data-integrity, HEAD unverändert b09c6f5; keine Quellcodeänderung.
+UUID 7e2a4fd0-19c3-4e78-a5b4-62d1a8c90f3e ausschließlich für diesen Versuch.
+Der Journalpfad existierte vor und nach Dry-Run nicht, wurde erst real reserviert
+und bleibt samt STOP-Evidenz erhalten. Keine Wiederverwendung/Ersatz-UUID.
+
+Tatsächlich ausgeführte Vorprüfung: dieselbe dokumentierte Auswahl von zwölf
+datenbankfreien Klassen mit test --rerun und t03ClasspathCheck zusammen, jeweils
+--offline --no-daemon und identischem vorherigem --dry-run. **217 bestanden,
+0 Fehler, 0 übersprungen**, davon 44 TestDatabaseGuardTest-Fälle. Fünf isolierte
+Opt-in-Classpaths mit je 165 Einträgen, feste Allowlists, neun Klassen ohne
+Initialisierung und Negativkontrolle ohne Owner-Output erfolgreich. Keine
+Kopplung anderer DB-Tasks. Passwortvariable nur auf Vorhandensein geprüft,
+keine relevanten Env-/Gradle-Overrides; keine Java-Prozesse/etablierten
+MySQL-Clientverbindungen vor Start beobachtet (Momentaufnahme).
+
+Danach identischer erfolgreicher Dry-Run und genau einmal:
+
+```powershell
+.\gradlew.bat --offline --no-daemon t03MatrixTest -Pt03MatrixApproval=E1_E6_NEW_SYNTHETIC_ROWS_ONLY -Pt03MatrixRunId=7e2a4fd0-19c3-4e78-a5b4-62d1a8c90f3e -Pt03MatrixBaselineFingerprint=b223c47368c2e83f4a11de2199c6f8dd31e63434a46a587762fca3e54f6ddb4a
+```
+
+Java 21. Geschützter Spring-/JPA-MOCK-Kontext/Profil test erfolgreich. Die vor
+Fixtures ausgeführten Assertions bestätigten GuardedTestDataSource, einzige
+Coordinatorinstanz, fehlende äußere TX, Writer-Proxys/Advisorreihenfolge und
+Manager-/Repositoryidentitäten, SHOW-GRANTS-Minimalrechte, Datenbank mangalib_test
+und Benutzer mangalib_test_user sowie den freigegebenen aktuellen Vollhash
+b223c47368c2e83f4a11de2199c6f8dd31e63434a46a587762fca3e54f6ddb4a.
+Der historische Schema-/78-Stammdatenhash und die ID-/Hashbindung der zwölf
+alten Zeilen bestanden ebenfalls. Historische Leerbaseline nicht ersetzt.
+
+Gradle/JUnit: **6 erfasste Fälle, 0 bestanden, 5 fehlgeschlagen, 1 übersprungen**,
+BUILD FAILED in 27s. Elf weitere der insgesamt 17 geplanten Fälle nicht gestartet/
+erfasst; keine Behauptung, dass diese elf als JUnit-Skips gemeldet worden wären.
+
+| Geplanter Fall | Tatsächlich beobachtet |
+|---|---|
+| 1 Bestehender Kauf, Fehlerpunkte, gemischte Routen/Replay | Fehlgeschlagen bereits beim ersten Reihenfixtureaufbau; Kaufaktionen nicht erreicht |
+| 2 Neuer Kauf, Fehlerpunkte/Replay | BeforeEach-STOP fehlgeschlagen, Testkörper nicht ausgeführt |
+| 3 Zwei Einkäufe derselben vorhandenen Reihe | BeforeEach-STOP fehlgeschlagen, Testkörper nicht ausgeführt |
+| 4 Neue Identität und Kauf gegen Doppelanlage | BeforeEach-STOP fehlgeschlagen, Testkörper nicht ausgeführt |
+| 5 Kauf gegen Bandedit/unsortierte Liste | BeforeEach-STOP fehlgeschlagen, Testkörper nicht ausgeführt |
+| 6 Restcent und positive/negative Anpassungen | Im JUnit-Bericht übersprungen |
+| 7 NULL-Preise und reine Anzahlkorrektur | Nicht gestartet/erfasst |
+| 8 M06-Erweiterung bei abweichender Deklaration | Nicht gestartet/erfasst |
+| 9–16 Acht negative Identifikations-/Bestandsvarianten | Nicht gestartet/erfasst |
+| 17 beforeCommit-Fehler und Quarantäne | Nicht gestartet/erfasst |
+
+Nachgewiesene unmittelbare Ursache: MockitoException `Cannot call abstract real
+method on java object!` in T03MatrixAcceptanceTest.java:124 beim Band-save-Hook.
+BandService.createAndSaveBaende rief die Repository-Spy-Methode auf; deren
+callRealMethod kann in dieser tatsächlichen Spring-Data-Interface-/Proxyform
+keinen konkreten Methodenkörper ausführen. Der synthetische BAND_SAVE-Fehlerpunkt
+war dabei noch nicht aktiv: der Hook scheitert schon an seiner Grunddelegation.
+Das belegt einen Fehler der Testinfrastruktur, keinen T03-Fachfehler. Gleichartige
+save/flush/find-Hooks sind vor erneutem Versuch mit einem aussagekräftigen
+datenbankfreien Proxy-Regressionstest zu überprüfen. Hier keine Reparatur oder
+neue Tests durchgeführt und keine Assertions abgeschwächt.
+
+Der erste Fixtureaufbau lief innerhalb der Coordinatortransaktion und endete
+mit der Ausnahme. Die nachfolgende vorhandene AfterEach-Kontrolle bestand:
+keine unbestätigte Coordinatortransaktion, exakte Erhaltung beider Vollsnapshots
+(Fall-/Laufbeginn) und keine unregistrierten neuen Zeilen. Der Bericht enthält
+beim ersten Fall genau einen Mockito-Fehler, keinen zusätzlichen/supprimierten
+AfterEach-Fehler. Die späteren BeforeEach-STOPs aktivierten keinen Testkörper und
+keine weitere Fall-Snapshotprüfung. Keine zusätzliche DB-Kontrolle nach Taskende.
+
+Damit durch die interne Erhaltungskontrolle bestätigt: **0 neue dauerhafte
+mangareihe, 0 mangadetails, 0 baende, 0 einkaufsliste, 0 einkaufslistedetails**.
+Alle zwölf bisherigen Geschäftszeilen, sämtliche 78 Stammdatensätze und erfasste
+Schema-Metadaten unverändert. Kein bestätigter neuer fachlicher Commit oder
+Konkurrenzablauf. E1–E6 nicht abgenommen; lediglich Start-/Baselineprüfungen und
+Erhaltung nach diesem frühen Fehler bestanden. Kein neuer Gesamthash ermittelt;
+die geplanten Commit-/Datenbudgets sind keine tatsächlichen Ergebnisse.
+
+Neues Journal privat unter .gradle/t03-integration/7e2a4fd0-19c3-4e78-a5b4-62d1a8c90f3e/ids.txt:
+8 Zeilen (PREPARED + 7 STOP), **0 registrierte ID-Versuche, 0 STAGE_CONFIRMED**;
+SHA-256 7319c4ee391210058cc91109f38477b22dec2d9f885c05219b802347b90226c1.
+Die mehrfachen STOP-Meldungen zählen keine unterschiedlichen Commitgruppen.
+Wichtig: null ID-Einträge bedeutet nicht null SQL-INSERT-Versuche. registerGraph
+liegt nach dem vollständigen Anlageaufruf und wurde nicht erreicht; dessen
+vorherige Teilanlage kann IDs verbraucht haben. Die genaue Zahl/Identität dieser
+rollbackten IDs ist im Journal nicht dokumentiert. Keine unbewiesene Angabe
+128/68 übernehmen, keine AUTO_INCREMENT-Abfrage oder Zurücksetzung durchführen.
+Die vollständige interne Nachkontrolle belegte keine verbliebenen neuen Zeilen.
+
+JUnit-Evidenz build/test-results/t03MatrixTest/TEST-de.mangalib.T03MatrixAcceptanceTest.xml,
+SHA-256 57ffd47fce7d4fd953d9ccca54643905d855d5e442ffe6b05de4181a50568423.
+Nach Abbruch nur vorhandene lokale Quellen, Zähler/Fehlerstelle und Journale
+ausgewertet; keine Datenbankinhalte oder Zugangsdaten in Dokumente übernommen.
+Historisches Journal weiterhin SHA-256
+8606d5080f4608c5e6a7cab0edf89258e0e4e677f5998b15434a38736b8edc97.
+Historische Experimente und Manual-JARs unverändert; nur dieser Nachtrag und
+T03_6B_APPROVAL.md ergänzt. Staging leer, bestehende lokale Arbeiten erhalten,
+keine Git-Schreibaktion, andere DB, Migration, Cleanup, Anwendung/Listener,
+Browser, Scraper oder Worker. Diffcheck ohne Whitespacefehler.
+
+Nächster Freigabeschritt: eng begrenzte datenbankfreie Korrektur der Repository-
+Delegation und Absicherung gegen echte Interface-/Proxyformen. Kein Wechsel der
+Facharchitektur oder Guardlockerung nötig. Neue reale Ausführung erst nach
+separater Eigentümerentscheidung mit neuer UUID; die jetzige ist verbraucht.
+
+## Nachtrag 06.11.2026 – Repository-Hooks und frühe IDs datenbankfrei korrigiert
+
+Status **T03_6B_MATRIX_RETRY_READY_FOR_APPROVAL**. Keine neue Datenbankausführung;
+der historische Matrixlauf bleibt T03_6B_E1_E6_FAILED. HEAD b09c6f5 und Branch
+codex/t03-data-integrity unverändert, keine Git-Schreibaktion.
+
+Technische Ursache: MockitoSpyBean unterscheidet im lokal geprüften Spring-Test-
+Bytecode JDK-Proxys (AdditionalAnswers.delegatesTo) von konkreten Klassen
+(CALLS_REAL_METHODS/spiedInstance). Das nachträgliche doAnswer(callRealMethod)
+überschreibt beim Interface-Mock den delegierenden DefaultAnswer. Die Methode
+ist abstrakt; damit fehlt ein aufrufbarer Methodenkörper, obwohl eine reale
+Spring-Data-Implementierung hinter dem ursprünglichen Proxy vorhanden ist.
+
+Gesamte Matrix geprüft: Einkauf-save, Einkauf-flush, Band-save und
+findByMangaReiheId verwendeten diese fehlerhafte Form. Alle entfernt, nicht nur
+die historisch zuerst erreichte Stelle. Der konkrete PlatformTransactionManager-
+Spy/Abschlussbeobachter ist kein Repository-Interface-Mock und bleibt unverändert.
+
+Lösung: ursprüngliche Repositorybeans per Autowired; kleiner Testhelfer
+T03RepositoryHook fügt genau einen eigenen Spring-Advisor pro Repository hinzu.
+Ein MethodInvocation.proceed pro Aufruf, vorhandene Interceptor-/Transaktionskette
+bleibt erhalten. Kein reflektiver/erneuter Repositoryaufruf, keine Mock-Rückgabe,
+keine neue Beanersetzung oder Transaktion. Unbehandelte Methoden werden normal
+weitergereicht; saveAndFlush samt internem Save/Flush und Find-Methoden ebenfalls.
+Die eigene Fehlerlogik läuft vor/nach der Operation nach demselben Testvertrag.
+
+Hooks werden je BeforeEach installiert und in AfterEach entfernt, bei partiellem
+Setup ebenfalls über den bestehenden Lifecycle. AfterAll ist zusätzliche Sicherung.
+Abbau nur nach bestätigtem Threadende, nur eigener Advisor; idempotenter close,
+Zuordnungsfehler bleibt STOP, keine Entfernung anderer Advices. Fault-/Reverse-
+Flags werden zurückgesetzt. Manager-/Coordinator-, Writerproxy- und Repository-
+Identitätsprüfungen bleiben erhalten bzw. werden ergänzt. Der Hookabbau setzt
+keine Coordinatorquarantäne zurück und erlaubt keine automatische Wiederaufnahme.
+
+Eng begrenzte ID-Verbesserung: erfolgreiche Repositoryrückgaben für Reihen,
+Details/Bände sofort registrieren, bevor weitere Graphschritte fehlschlagen
+können. Keine zusätzliche SQL-Abfrage, Verbindung oder Flush. Kindobjekte werden
+über die bereits eigene Root-ID zugeordnet, ohne deren Titel/Details lazy
+aufzulösen; neue Roots müssen zum bekannten Lauftitel gehören. Der bestehende
+record-Prüfpfad sperrt alle vorbestehenden IDs; wiederholte Saves erzeugen keine
+doppelten Journaleinträge. Spätere registerGraph-Prüfung bleibt erhalten.
+Grenzen ausdrücklich: kein vollständiger Nachweis von SQL-Versuchen bei Fehler
+vor erfolgreicher Repositoryrückkehr, Flush-/JDBC-Ausfall, Prozessabbruch oder
+Journal-I/O-Fehler. Keine crashfeste Journal-/Cleanup-/Resume-Garantie. Keine
+Nachtragung historisch unbekannter IDs und keine Änderung alter Journale.
+
+Neue datenbankfreie Regressionen:
+
+- T03RepositoryHookTest: **18 Fälle**. Echte RepositoryFactorySupport erzeugt
+  einen Spring-Data-Interfaceproxy mit konkretem RAM-Store; zusätzlich JDK- und
+  CGLIB-AOP-Proxyvarianten. Historischer delegatesTo-/callRealMethod-Fehler wird
+  mit derselben MockitoException reproduziert, ohne zweite Storemutation.
+  Normale save/saveAndFlush/flush/find-Aufrufe, identische Rückgaben, echte
+  Storemutationen und exakte Aufrufzahlen, originale Exceptions ohne Wrap/Retry,
+  Fehler vor/nach Delegation, konkreter Mockito-Spy hinter Proxy, wiederholte
+  Scopes, eigener Advisorabbau, eingefrorene/fremde Proxys, parallele Aufrufe und
+  Journalisierung vor einem späteren Graphfehler geprüft. Ein ergänzender reiner
+  Sourcecheck sperrt die Wiedereinführung von callRealMethod in der Matrix;
+  er wird nicht als Persistenznachweis ausgegeben.
+- T03RepositoryHookTransactionTest: **3 Fälle**. Vorhandener RAM-TX-Manager und
+  produktiver LibraryWriteCoordinator: vor-/nachgelagerter Hookfehler bleibt
+  dieselbe Exception, verursacht Rollback statt Commit; danach ist bei bekanntem
+  Work-Rollback ein normaler eigener Write möglich. beforeCommit-Fehler bleibt
+  nach Entfernen des Repositoryhooks quarantänisiert. Keine Behauptung, dass
+  diese Fake-Transaktionen tatsächliche MySQL-Daten zurückgerollt hätten.
+
+Tatsächlich ausgeführt, Java 21, offline/no-daemon, jeweils zuvor identischer
+erfolgreicher Befehl mit zusätzlichem --dry-run:
+
+```powershell
+.\gradlew.bat --offline --no-daemon test --rerun --tests '*T03RepositoryHookTest' --tests '*T03RepositoryHookTransactionTest' --tests '*TestDatabaseGuardTest' --tests '*T03PreparationTest' --tests '*T03ReadOnlyPreparationTest' --tests '*T03ServerRightsTest' --tests '*T03RightsDiagnosisPreparationTest' --tests '*LibraryWriteBootstrapTest' --tests '*LibraryWriteConfigurationTest' --tests '*LibraryWriteCoordinatorTest' --tests '*PurchaseServiceTest' --tests '*T03BandSnapshotTest' --tests '*T03PurchaseOverlapTest' --tests '*T03ContinuationPolicyTest' t03ClasspathCheck
+.\gradlew.bat --offline --no-daemon t03ClasspathCheck
+```
+
+Finale Testgruppe: **238 bestanden, 0 Fehler, 0 übersprungen**, darunter unverändert
+44 Guards und die 217 bisherigen Fälle. Zwischenlauf vor drei zusätzlichen
+Lifecycle-/Verdrahtungsregressionen: 235 erfolgreich. Keine roten/deaktivierten
+Tests; historischer Fehler wird als erwartete Exception geprüft. Ein zunächst
+verwendeter veralteter Factory-Metadatenoverride wurde auf die aktuelle
+RepositoryMetadata-Signatur umgestellt; finale Kompilierung ohne diese neue
+Warnung. Vorhandene JVM-CDS/Mockito-Agent-Warnung bleibt.
+
+Opt-in-Quellen erfolgreich kompiliert; Classpath-/Taskprüfung aller fünf festen
+Tasks erfolgreich, jeweils 165 Runtimeeinträge und neun Klassen ohne
+Initialisierung, Negativkontrolle ohne Owner-Output, Source-Set-/Standardlifecycle-
+und Manual-Trennung erhalten. Kein Opt-in-Datenbanktask gestartet, auch kein
+Matrix-Dry-Run oder lesender Baseline-Neulauf. Die 17 fachlichen Fallkörper,
+Commit-/Rollback-/Konkurrenz-/beforeCommit-Assertions, vollständige Snapshots,
+60-Zeilen-Budget und STOP-/Einmal-/Quarantänebedingungen bleiben erhalten.
+
+Nachweisgrenze: reale Spring-Data/AOP-Dispatchkette mit RAM-Implementierung,
+keine echte SimpleJpaRepository-/Hibernate-/MySQL-Persistenz oder Provider-ID-
+Vergabe. Neue reale Abnahme nur mit gesonderter Freigabe und neuer einmaliger
+UUID; verbrauchte 7e2a4fd0-19c3-4e78-a5b4-62d1a8c90f3e unverändert erhalten.
+Letzte bestätigte Referenz weiterhin
+b223c47368c2e83f4a11de2199c6f8dd31e63434a46a587762fca3e54f6ddb4a,
+keine automatische Neubestimmung oder Änderung. Historische Leerbaseline separat.
+
+Dateien dieses Auftrags: src/t03Integration/java/de/mangalib/T03MatrixAcceptanceTest.java,
+src/test/java/de/mangalib/T03RepositoryHook.java,
+src/test/java/de/mangalib/T03RepositoryHookTest.java,
+src/test/java/de/mangalib/service/T03RepositoryHookTransactionTest.java,
+TESTING.md und T03_6B_APPROVAL.md (nur neue Nachträge). Vorbestehende lokale
+Arbeiten erhalten; keine Änderung produktiver Quellen, Testguards, Profile oder
+Gradle-Taskdefinitionen. Keine DB-Verbindung/SQL, Anwendung/Listener, Browser,
+Scraper/Worker, Installation/Download, Git-Staging/Commit/Push oder sonstige
+Git-Schreibaktion. Acht historische Experimente, drei Manual-JARs, Journale und
+fehlgeschlagener Matrixbericht hashidentisch. Staging leer, Diffcheck erfolgreich.
+
+## Nachtrag 06.11.2026 – korrigierte Matrix: neun Fälle bestanden, NULL-Fixture STOP
+
+Status **T03_6B_E1_E6_FAILED**. Genau ein neu freigegebener Realversuch,
+UUID 6db42e71-8fc3-4a96-b2d5-0e719c43f8ab, nun verbraucht. Branch
+codex/t03-data-integrity, HEAD b09c6f5 unverändert. Keine Quellcode-/Assertion-
+änderung oder Reparatur in diesem Auftrag, keine zweite DB-Ausführung.
+
+Vorprüfungen: Passwortvariable vorhanden/nicht leer, keinerlei relevante Env-/
+Gradle-Overrides, keine Java-Prozesse/etablierten MySQL-Verbindungen beobachtet.
+Dies ist keine globale Fremdschreibersperre. Historische Dateien, Manual-JARs,
+beide vorherigen Journale unverändert. Die neue UUID war vor/nach Dry-Run frei;
+ihre atomare Reservierung erfolgte ausschließlich im tatsächlichen Task.
+
+Die dokumentierte Auswahl der 14 datenbankfreien Klassen mit test --rerun und
+t03ClasspathCheck erneut erfolgreich: **238 bestanden, 0 Fehler/übersprungen**,
+darunter 44 Guards und 21 Proxy-/Hookregressionen. Fünf isolierte Task-Classpaths
+mit je 165 Einträgen, feste Allowlists/Negativkontrolle/Manual-/Lifecycle-Trennung
+bestätigt. Java 21, alle Gradle-Aufrufe --offline --no-daemon, identischer
+erfolgreicher --dry-run vor jedem tatsächlichen Aufruf. Keine andere DB-Stufe.
+
+Tatsächlicher einmaliger Matrixbefehl:
+
+```powershell
+.\gradlew.bat --offline --no-daemon t03MatrixTest -Pt03MatrixApproval=E1_E6_NEW_SYNTHETIC_ROWS_ONLY -Pt03MatrixRunId=6db42e71-8fc3-4a96-b2d5-0e719c43f8ab -Pt03MatrixBaselineFingerprint=b223c47368c2e83f4a11de2199c6f8dd31e63434a46a587762fca3e54f6ddb4a
+```
+
+Geschützter Spring-/JPA-MOCK-Kontext startete im Profil test, ohne HTTP-Listener.
+Vor dem ersten Write: GuardedTestDataSource, einzige Coordinatorinstanz, Writer-
+Proxys/Advisorreihenfolge/Manager-/Repositoryverdrahtung, Minimalrechte und
+Datenbank-/Benutzeridentität mangalib_test/mangalib_test_user bestätigt.
+Fester Host localhost:3306; keine zusätzliche Verbindungsart. Historischer
+Schema-/78-Stammdatenvergleich und Journalbindung der zwölf alten Geschäftszeilen
+sowie exakter aktueller Ausgangshash bestanden:
+b223c47368c2e83f4a11de2199c6f8dd31e63434a46a587762fca3e54f6ddb4a.
+
+**17 JUnit-Fälle: 9 bestanden, 8 fehlgeschlagen, 0 übersprungen**. BUILD FAILED
+in 27s. Sieben der acht Fehler sind reine BeforeEach-STOPs ohne Testkörper;
+nicht als erfolgreiche negative Fachtests oder als JUnit-Skips zählen.
+
+| Fall | Tatsächlicher Nachweis / Ergebnis |
+|---|---|
+| 1 Vorhandene Reihe, beide Routen/Replay, Save-/Flushfehler | Bestanden: echte Delegation, Fehlerrollback, UPDATED/ALREADY_PURCHASED, 13 alte Bandfelder erhalten |
+| 2 Neue Reihe, Fehlerpunkte und Replay | Bestanden: 417-Vorschritt, Save-/Flushrollback, CREATED/ALREADY_PURCHASED, ungültige Einkaufsanlage ohne Änderung |
+| 3 Zwei Einkäufe derselben vorhandenen Reihe | Bestanden: bestätigte Bereiche 4/5 seriell übernommen, Altbände unverändert |
+| 4 Neue Identität, Bestätigung und direkte Doppelanlage | Bestanden: CREATED/CONFIRM_VOLUMES, danach bestätigter Kauf gegen abgewiesene Doppelanlage |
+| 5 Kauf gegen Bandedit bei umgekehrter Liste | Bestanden: stabile IDs, alte individuelle Preise/Metadaten, genau gewollte Lesestatusänderung, Band-save-Fehlerrollback, fehlende ID ohne Mutation |
+| 6 Restcent und ±Anpassungen | Bestanden: explizite Centvektoren für 0,01/−0,01/0,02/20/−20 nach unabhängigen Commits/Reloads |
+| 7 NULL-Preise und reine Anzahlkorrekturen | Bestanden: Metadatenedit erhält unbekannte Preise; Finanzedit abgewiesen, Deklarationen 2/5 → tatsächliche 3 ohne Band-/Finanzmutation |
+| 8 Abweichende Deklaration und M06 | Bestanden: Reduktion/Teilkorrektur gesperrt, keine versteckte Anlage, ausdrückliche Erweiterung erhält alte Lese-/Reread-/Spezial-/Metadatenwerte, neuer Band ungelesen |
+| 9 Parameter ambiguous | Bestanden: mehrdeutige Zuordnung kontrolliert, gesamte eigene Fixturegruppe zurückgerollt |
+| 10 Parameter null | Fehlgeschlagen im Fixturehelfer vor fachlicher NULL-Kaufprüfung |
+| 11–16 stale/details/duplicate/unknownPrice/cartDetails/edition | BeforeEach-STOP, Testkörper nicht ausgeführt |
+| 17 beforeCommit und Coordinatorquarantäne | BeforeEach-STOP, nicht neu abgenommen |
+
+Repositorykorrektur damit im tatsächlich erreichten Kontext bestätigt: echte
+Spring-Data-Aufrufe/Commits/Reloads über proceed, keine erneute abstrakte
+Mockito-callRealMethod-Ausnahme. Gezielte Kauf-save-/flush- sowie Einzelband-save-
+Fehler durchliefen die vorgesehenen Rollbackassertions. Fünf deterministische
+Konkurrenzpaare bestanden Queue-/Managercleanup-/Threadendnachweise: vier Paare
+mit je zwei äußeren Commits, ein Paar mit Commit und kontrolliertem Work-Rollback
+der direkten Doppelanlage. Das zählt nur die instrumentierten Paare, nicht alle
+Fixture-/Read-/Validierungstransaktionen; kein Mehrinstanz-/DB-Lockwartebeweis.
+
+Neue Fehlerursache: T03MatrixAcceptanceTest.cart, Zeile 378,
+`item.setMangaIndex(r==null?index():r.getMangaIndex())`. index() hat primitiven
+Rückgabetyp int, getMangaIndex liefert Integer. Der ternäre Ausdruck entpackt
+auch den NULL-Zweig zu int; NPE auf Integer.intValue statt gewünschter nullable
+Übernahme. Er trat im synthetischen Einkaufsfixtureaufbau auf, noch vor dessen
+persist und PurchaseService-Aufruf. Die äußere Erwartung RollbackFixture bekam
+deshalb stattdessen NPE. Kein Nachweis einer fehlerhaften produktiven NULL-Regel.
+Hier keine Korrektur, keine erneute Methode und keine Datenbankdiagnose ausgeführt.
+
+Die anschließende vorhandene AfterEach-Erhaltungskontrolle bestand: beim NULL-Fall
+genau ein Fehler im Bericht, kein zusätzlicher/supprimierter preserve-Fehler;
+kein unbestätigter Coordinatorabschluss, Originalzeilen/Schema vollständig
+erhalten, ausschließlich eigene registrierte neue Zeilen und Budgetgrenzen
+eingehalten. Alle zwölf vorbestehenden Geschäftszeilen, 78 Stammdatensätze und
+Schema-/Spalten-/Index-/FK-Metadaten im Umfang dieser internen Kontrollen unverändert.
+Nach Taskende nur lokale Evidenzen ausgewertet; kein zusätzlicher DB-Zugriff.
+
+Aus bestandenen Commit-/Reload-/Rollbackprüfungen und Journalgruppen abgeleiteter
+dauerhafter Neuzugang, nicht aus einem zusätzlichen Nachher-SELECT:
+
+| Tabelle | Neue dauerhafte Zeilen |
+|---|---:|
+| mangareihe | 8 |
+| mangadetails | 8 |
+| baende | 28 |
+| einkaufsliste | 7 |
+| einkaufslistedetails | 7 |
+| Gesamt | 58 |
+
+Insgesamt damit 70 Geschäftszeilen einschließlich der ursprünglichen zwölf;
+die zwei Einkaufszeilen des nicht ausgeführten letzten Falls fehlen zum
+geplanten 72er-Endzustand. Kein Gesamthash nach den Commits ausgegeben oder
+zusätzlich ermittelt. Der vorherige Vollhash ist weiterhin historisch bestätigte
+Ausgangsreferenz dieses Laufs, kein aktueller Vollhash für 70 Zeilen.
+
+Journal .gradle/t03-integration/6db42e71-8fc3-4a96-b2d5-0e719c43f8ab/ids.txt:
+**87 ID-Versuche, 9 STAGE_CONFIRMED, 9 STOP**, 106 Zeilen mit PREPARED.
+Tabellenweise Versuche 13 Reihen, 13 Details, 45 Bände, 8 Einkäufe, 8 Einkaufsdetails.
+58 dauerhafte Zeilen und 29 zurückgerollte IDs durch die erreichten Prüfungen
+zugeordnet. ID-Gruppen je Fallphase: 10/17/11/8/8/5/5/6/12/5; die zwölf IDs des
+ambiguous-Falls und fünf des abgebrochenen NULL-Falls wurden vollständig
+zurückgerollt. Die neue frühe Registrierung erfasste diese fünf IDs vor dem NPE.
+Neun STAGE_CONFIRMED schließen den Rollbackfall ein, keine Gleichsetzung mit
+neun TX-Commits. Keine unbewiesene Übernahme der geplanten Gesamtzahlen 128/68,
+kein Cleanup/DELETE oder AUTO_INCREMENT-Reset. Journalhash
+50cd7c13f7acc9911fe4dcf474711ed5406c7c68bc63bf9c5d23f21d1d843efe.
+
+Aktueller JUnit-Bericht-SHA-256
+52b4255157894d8bc56d376e73e81c1f6d19671c90899d70291eecd6e663bef7;
+XML/HTML lokal gesichert unter
+.gradle/t03-integration/6db42e71-8fc3-4a96-b2d5-0e719c43f8ab/matrix-report/.
+Vor dem Gradle-Neulauf wurde der historische Fehlerbericht samt XML/HTML
+byteidentisch in .gradle/t03-integration/7e2a4fd0-19c3-4e78-a5b4-62d1a8c90f3e/matrix-report-original/
+archiviert, weil Gradle seinen Standard-Berichtspfad wiederverwendet. Alter
+XML-Hash unverändert 57ffd47fce7d4fd953d9ccca54643905d855d5e442ffe6b05de4181a50568423.
+Beide vorherigen ID-Journale unverändert. Keine historische Umdeutung oder
+Übernahme von Rohdaten/Secrets in Dokumentation.
+
+Offen: fachlicher NULL-Zuordnungsfall, sechs weitere Ablehnungsvarianten und
+abschließender beforeCommit-/Quarantänenachweis. Sinnvoller Folgeauftrag:
+nullable Fixtureauswahl datenbankfrei korrigieren/regressionsprüfen und eine
+ausdrücklich freizugebende Fortsetzung nur der acht noch offenen Fälle planen.
+Die 58 bestätigten neuen Zeilen sind geschützter Vorbestand, keine automatische
+Bereinigung und kein kompletter Wiederholungslauf. Die bisherige zwölfzeilige
+Fortsetzungspolicy ist jetzt nicht ungeprüft wiederverwendbar. Neue aktuelle
+Baseline nur nach eigener ausdrücklich freigegebener tatsächlicher Leseprüfung,
+keine selbstständige Umstellung oder Wiederaufnahme.
+
+In diesem Auftrag ausschließlich TESTING.md/T03_6B_APPROVAL.md um neue Nachträge
+ergänzt; Code/Assertions/Guards/Gradletasks unverändert. Staging leer, alle lokalen
+Arbeiten erhalten. Historische acht Experimente, Manual-JARs und alte Journale
+unverändert. Keine andere DB, weitere DB-Tests/Diagnose, Migration/Seeding/DELETE,
+Anwendung/Listener, Browser, Scraper/Worker oder Git-Schreibaktion. Diffcheck
+erfolgreich. E1–E6 insgesamt und T03 nicht abgeschlossen. Nach einmaligem Lauf
+gestoppt; keine automatische Wiederholung oder Fortsetzung zur Browserabnahme.
+
+## Nachtrag 06.11.2026 – NULL-Fixture korrigiert, acht offene Fälle isoliert vorbereitet
+
+**T03_6B_CONTINUATION_PREPARED**, ausschließlich datenbankfrei. Verbindlicher
+neuer Ablauf und Freigabevorlagen in T03_6B_APPROVAL.md §23. Historische neun
+bestandene Fälle/58 Commitzeilen bleiben Nachweis, kein vollständiger Matrix-PASS.
+Keine alten Journale/Berichte verändert und keine neue Lauf-UUID reserviert.
+
+T03CartFixture.identity übernimmt bei vorhandener Reihe den Integer ohne
+int/Integer-Ternärkonversion. NULL, 0 und positive Werte bleiben unterscheidbar;
+Generatoren nur bei ausdrücklich optionaler fehlender Reihenreferenz aufrufen.
+Angeforderte, aber nicht gefundene/falsch zugeordnete Reihenreferenz kontrolliert
+abweisen. Kein produktiver Modell-/Service-/NULL-Regelwechsel. Ähnliche Ternäre
+und Unboxingstellen in T03-Testquellen geprüft; kein weiterer gleichartiger
+Fehler belegt. null-Literal-Boxing für Reread/Special/URLs/Requestfelder bleibt.
+
+T03MatrixHistory wertet nur gepinnte lokale Evidenzen des Teilversuchs aus:
+UUID 6db42e71-8fc3-4a96-b2d5-0e719c43f8ab, Journalhash
+50cd7c13f7acc9911fe4dcf474711ed5406c7c68bc63bf9c5d23f21d1d843efe,
+archivierter Reporthash 52b4255157894d8bc56d376e73e81c1f6d19671c90899d70291eecd6e663bef7.
+Konkrete private ID-Mengen für alle neun erfolgreichen Gruppen sind als immutable
+committedGroups/committed/rolledBack reproduzierbar. Tabelle/Positionsauswahl §23.1;
+keine Feldwerte oder ID-Dumps in öffentliche Dokumente kopieren. Phase 9 ist
+bestanden, aber vollständig zurückgerollt; Phase 10 fehlgeschlagen, fünf IDs
+ebenfalls zurückgerollt; die sieben STOP-blockierten Fälle haben keine ID-Gruppe.
+Abschlussmarker nicht mit TX-Commits gleichsetzen. 58 Commit-/29 Rollback-IDs
+werden strukturell und per festem Journal-/Reporthash gebunden.
+
+Neue read-only-Klasse/Task T03SeventyReadOnlyTest/t03SeventyReadOnlyTest:
+zwei unabhängige readOnly-TXs mit bestehenden Snapshot-/Rechtehelfern. Ausschließlich
+MOCK/test/GuardedTestDataSource, keine Fixtures. T03Preservation.retain projiziert
+im RAM die originalen zwölf Zeilen inklusive unveränderter Schema-/Stammdaten
+aus dem 70-Zeilen-Snapshot; deren kompletter Hash muss weiterhin exakt
+b223c47368c2e83f4a11de2199c6f8dd31e63434a46a587762fca3e54f6ddb4a sein.
+Zusätzlich unveränderte historische ca1433-Policy, alte UUID-/Journalbindung,
+exakte disjunkte ID-Vereinigung 12+58 und Ausschluss aller alten fünf/neuen 29
+Rollback-IDs. Damit keine bloße ID-Prüfung für die zwölf alten Zeilen.
+Die 58 neueren Feldwerte sind historisch nicht komplett gehasht; aktuelle Werte
+erst später beim tatsächlichen Lesen bestätigen. Neue Vollreferenz für 70 Zeilen
+noch unbekannt, nicht erraten. Zwei Vollsnapshots müssen identisch sein, bevor
+T03_SEVENTY_CURRENT_FINGERPRINT ausgegeben wird. Keine automatische Baselineänderung.
+
+Neue Restklasse/Task T03RemainingAcceptanceTest/t03RemainingTest nutzt die Matrix
+als gemeinsame Implementierung. Geänderte Baseline-/Budget-Prüfmethoden haben im
+alten Task unverändert ihre zwölfzeilige Policy und 60er-Grenze. Fachliche
+Testkörper/Assertions bleiben gleich; keine kopierten abgeschwächten Tests.
+Feste Whitelist nur controlledRejectionsUseFullyRolledBackFixtures (Parameter
+null/stale/details/duplicate/unknownPrice/cartDetails/edition, Order 9) und
+beforeCommitFailureRollsBackAndQuarantinesFurtherWrites (geerbt, Order 10).
+Die übrigen geerbten Methoden werden ausdrücklich durch den Taskfilter ausgeschlossen;
+ambiguous wird nicht wiederholt. Kein CLI-Testfilter zulässig. Klassen-/Methoden-
+Whitelist wird sowohl im Classpathcheck als auch vor echter Taskausführung geprüft.
+Neue JVM/fresh Kontext, Zähler/Quarantäne aus alten JVMs nicht übernommen.
+Eigene neue Rollbackfixtures, keine Fachwrites an den 70 vorhandenen Zeilen.
+
+Restbudget: 39 vollständig zurückgerollte IDs für sieben Negativgruppen
+(7/7/3/7/7/1/7); letzter Fall fünf weitere Rollback-IDs und zwei dauerhafte Zeilen
+(ein Einkauf, ein Einkaufsdetails). Insgesamt 46 ID-Versuche/44 Rollback-IDs/
+2 dauerhafte Zeilen. Keine neuen dauerhaften Reihen/Details/Bände; Gesamtbudget
+einschließlich bestehender 58 dann die ursprünglich vorgesehenen 60 neuen Zeilen
+bzw. 72 Geschäftszeilen mit erstem Zwölferbestand. Exakte Budgetassertionen
+gelten relativ zum neuen 70-Zeilen-Laufbeginn, zusätzlich Schutz aller vorbestehenden
+Zeilen/Schema und Fall-zu-Fall-Schutz. Keine alte Fixturegruppe dafür wiederverwenden.
+beforeCommit muss zuletzt bleiben, danach nur bestehende read-only-Endkontrollen
+und gesperrter Writecheck; kein Reset/DELETE/Reseeding oder Quarantäneaufhebung.
+
+Tatsächlich ausgeführt (Java 21), jeweils identischer erfolgreicher --dry-run
+vor dem realen datenbankfreien Aufruf:
+
+```powershell
+.\gradlew.bat --offline --no-daemon test --rerun --tests '*T03CartFixtureTest' --tests '*T03MatrixHistoryTest' --tests '*T03RepositoryHookTest' --tests '*T03RepositoryHookTransactionTest' --tests '*TestDatabaseGuardTest' --tests '*T03PreparationTest' --tests '*T03ReadOnlyPreparationTest' --tests '*T03ServerRightsTest' --tests '*T03RightsDiagnosisPreparationTest' --tests '*LibraryWriteBootstrapTest' --tests '*LibraryWriteConfigurationTest' --tests '*LibraryWriteCoordinatorTest' --tests '*PurchaseServiceTest' --tests '*T03BandSnapshotTest' --tests '*T03PurchaseOverlapTest' --tests '*T03ContinuationPolicyTest' t03ClasspathCheck -Pt03HistoryCheck=true
+```
+
+**263 bestanden, 0 Fehler/übersprungen**. 25 neue Fälle: 7 Fixturetests,
+17 Historien-/Snapshotprojektions-/Whitelistfälle und ein Test der ursprünglichen
+Rollback-IDs. Die 238 bisherigen Fälle bleiben erhalten, darunter 44 Guards.
+Unboxingfehler wird als erwartete NPE reproduziert, neuer Fixturepfad korrekt.
+Feldänderungen an alten zwölf Zeilen/Schema/Stammdaten, fremde/fehlende/rollbackte
+IDs sowie kaputte Phasen/Hashes werden zurückgewiesen. Snapshotprojektion verändert
+das Original nicht; unbekannte historische Feldwerte der neuen 58 werden nicht erfunden.
+Keine privaten lokalen Dateien als Voraussetzung der normalen Unitfälle; synthetische
+Journale/Snapshots. Der separat optierte -Pt03HistoryCheck=true las tatsächlich die
+gepinnte lokale reale Historie und bestätigte 58/29, ohne Datenbankzugriff.
+
+Opt-in-Quellen kompiliert, sieben getrennte Tasks mit je 165 Runtimeeinträgen,
+neun erforderliche Klassen ohne Initialisierung, Negativkontrolle ohne Owner,
+keine Kopplung zu test/check/build, Manual-Classpath weiterhin ohne Owner/JNA/
+Selenium. Methodenfilter und sieben Parameter sowie letzter Order-10-Fall direkt
+an kompilierten Metadaten geprüft. Kein Opt-in-Test tatsächlich entdeckt/ausgeführt
+als neuer Spring-/JPA-Laufnachweis; Erreichbarkeit hier statisch/metadata-geprüft,
+reale Provider-/JUnit-Ausführung bleibt freigabepflichtig. Kein neuer Framework-/
+Bibliotheksbedarf. Ein Kotlin-DSL-Namenskonflikt (java-Erweiterung verdeckte java.nio)
+scheiterte zunächst im Dry-Run, wurde per Path-Import vor jeglichem Testlauf
+korrigiert; danach Dry-Run und reale datenbankfreie Prüfungen erfolgreich.
+Vorhandene CDS/Mockito-Agent-Warnung bleibt.
+
+Geänderte/neue Dateien dieses Auftrags: build.gradle.kts,
+src/t03Integration/java/de/mangalib/T03MatrixAcceptanceTest.java,
+src/t03Integration/java/de/mangalib/T03RemainingAcceptanceTest.java,
+src/t03Integration/java/de/mangalib/T03SeventyReadOnlyTest.java,
+src/test/java/de/mangalib/T03CartFixture.java und T03CartFixtureTest.java,
+src/test/java/de/mangalib/T03MatrixHistory.java und T03MatrixHistoryTest.java,
+src/test/java/de/mangalib/T03Preservation.java, T03ContinuationPolicy.java,
+T03ContinuationPolicyTest.java sowie TESTING.md und T03_6B_APPROVAL.md.
+Bestehende Änderungen erhalten, Staging leer, keine Git-Schreibaktion. Acht
+historische Experimente, drei Manual-JARs und alle vorherigen Journale/archivierten
+Berichte unverändert. Kein DB-/SQL-Zugriff, kein alter/neuer Matrix-/Lesetask,
+keine Anwendung/Listener/Browser/Scraper/Worker, Migration, Cleanup oder Installation.
+Diffcheck erfolgreich. Separat zu genehmigen sind zunächst eine tatsächliche
+70-Zeilen-Leseprüfung, danach bei akzeptiertem Hash ein neuer einmaliger Achtfälle-
+Schreiblauf mit ausdrücklichem Zwei-Zeilen-Budget und neuer UUID. Hier stoppen.
+
+## Nachtrag 06.11.2026 – tatsächliche 70-Zeilen-Leseprüfung erfolgreich
+
+Status **T03_6B_SEVENTY_READ_ONLY_VERIFIED**. Die separat freigegebene Leseprüfung
+t03SeventyReadOnlyTest wurde genau einmal ausgeführt. Keine Schreibfortsetzung,
+keine Wiederholung früherer Matrix-/Commit-/Leseläufe. Branch
+codex/t03-data-integrity, HEAD b09c6f5 unverändert; keine Quellcodeänderungen.
+
+Voraussetzungen erneut geprüft: nur vorhandene GuardedTestDataSource, feste
+Testkonfiguration, Schema validate, generate-ddl=false, SQL-Initialisierung never,
+Flyway/Liquibase=false, MOCK/test-Kontext und Scraper-Mock. Passwortvariable
+vorhanden/nicht leer ohne Wertausgabe; keine relevanten Umgebungs-/Gradle-Overrides,
+keine Java-Prozesse/etablierten MySQL-Clientverbindungen beobachtet. Momentaufnahme,
+keine globale Fremdschreibersperre. Statischer Quellencheck: nur SELECT/SHOW und
+zwei unabhängige readOnly-TransactionTemplates, keine Fixtures/Fachoperationen.
+
+Tatsächlich ausgeführt, jeweils offline/no-daemon und nach identischem
+erfolgreichem --dry-run, Java 21:
+
+```powershell
+.\gradlew.bat --offline --no-daemon test --rerun --tests '*T03CartFixtureTest' --tests '*T03MatrixHistoryTest' --tests '*T03RepositoryHookTest' --tests '*T03RepositoryHookTransactionTest' --tests '*TestDatabaseGuardTest' --tests '*T03PreparationTest' --tests '*T03ReadOnlyPreparationTest' --tests '*T03ServerRightsTest' --tests '*T03RightsDiagnosisPreparationTest' --tests '*LibraryWriteBootstrapTest' --tests '*LibraryWriteConfigurationTest' --tests '*LibraryWriteCoordinatorTest' --tests '*PurchaseServiceTest' --tests '*T03BandSnapshotTest' --tests '*T03PurchaseOverlapTest' --tests '*T03ContinuationPolicyTest' t03ClasspathCheck -Pt03HistoryCheck=true
+.\gradlew.bat --offline --no-daemon t03SeventyReadOnlyTest -Pt03SeventyApproval=READ_ONLY_SEVENTY_ROWS
+```
+
+Vorprüfung **263 bestanden, 0 Fehler/Skips**, davon 44 Guards. Sieben isolierte
+Task-Classpaths (je 165 Runtimeeinträge), neun Klassen ohne Initialisierung,
+Negativkontrolle ohne Owner, feste Klassen-/Methodenfilter, Standardlifecycle-/
+Manual-Trennung und tatsächliche lokale gepinnte Historienauswertung erfolgreich.
+Keine andere Datenbankstufe an den Task gekoppelt oder gestartet.
+
+Lesetask **1 bestanden, 0 Fehler, 0 übersprungen**, BUILD SUCCESSFUL in 25s.
+Geschützter Spring-/JPA-Kontext erfolgreich; Profil test im Bericht bestätigt,
+EntityManagerFactory nach Ende geschlossen. Vorhandene CDS/Mockito-Agent-Warnung,
+keine fehlgeschlagene Assertion. Kein HTTP-Listener oder Scraperkontakt.
+
+Tatsächliche Datenbank mangalib_test und CURRENT_USER()-Benutzername
+mangalib_test_user bestätigt. Keine zusätzliche Hostkomponentenabfrage behauptet;
+fester Verbindungsweg ausschließlich localhost:3306 durch den unveränderten Guard.
+SHOW GRANTS in beiden unabhängigen readOnly-TXs akzeptierte ausschließlich global
+USAGE und SELECT/INSERT/UPDATE/DELETE auf dem literal maskierten Testschema,
+keine anderen Schemas/Rechte/Rollen/GRANT OPTION.
+
+Zehn InnoDB-Tabellen, historische 78 Stammdatensätze und sämtliche erfassten
+Spalten-/Index-/FK-/Schema-Metadaten unverändert. Tatsächliche Geschäftsverteilung:
+
+| Tabelle | Bestätigte Zeilen |
+|---|---:|
+| mangareihe | 10 |
+| mangadetails | 10 |
+| baende | 35 |
+| einkaufsliste | 8 |
+| einkaufslistedetails | 7 |
+| Gesamt | 70 |
+
+Exakte ID-Zuordnung 12 aus 264bc431-7c43-4fc2-b2d4-3efd35d8bb1c und 58 aus den
+dauerhaften Gruppen von 6db42e71-8fc3-4a96-b2d5-0e719c43f8ab, keine Überschneidung,
+keine fremden/fehlenden/zusätzlichen Zeilen. Fünf alte und 29 neuere Rollback-IDs
+abwesend. Neun bestätigte Fallgruppen schließen den vollständig zurückgerollten
+ambiguous-Fall ein; keine Umdeutung zum Commit/PASS des gesamten Matrixversuchs.
+
+Historische Bindungen unverändert geprüft: erster Journalhash
+8606d5080f4608c5e6a7cab0edf89258e0e4e677f5998b15434a38736b8edc97,
+gescheitertes leeres Infrastrukturjournal
+7319c4ee391210058cc91109f38477b22dec2d9f885c05219b802347b90226c1,
+Teilversuchsjournal 50cd7c13f7acc9911fe4dcf474711ed5406c7c68bc63bf9c5d23f21d1d843efe.
+Archivierte historische Berichthashes 57ffd47fce7d4fd953d9ccca54643905d855d5e442ffe6b05de4181a50568423
+und 52b4255157894d8bc56d376e73e81c1f6d19671c90899d70291eecd6e663bef7 stimmen.
+
+Projektion der zwölf ursprünglichen Geschäftszeilen inklusive unveränderter
+Schema-/Stammdaten gegen b223c47368c2e83f4a11de2199c6f8dd31e63434a46a587762fca3e54f6ddb4a
+erfolgreich: Feldwerte vollständig unverändert, nicht nur IDs. Historische
+Leerbaseline ca1433e49f4ce51e388480ff2e4118326011332264489dab82ab4d2040895570
+ebenfalls bestätigt (nur RAM-Projektionen, keine realen Daten geleert/verändert).
+
+Zwei unabhängige vollständige Snapshots exakt identisch. Neu tatsächlich bestätigter
+Vollfingerabdruck für alle aktuellen 70 Geschäftszeilen, Stammdaten und Schema:
+
+`T03_SEVENTY_CURRENT_FINGERPRINT=0ffdb7dafe18a88c00de8a4feb6d432f442d7f6f72526842aa114b8acbdbe991`
+
+Dies bestätigt die heutigen Feldwerte der 58 späteren Zeilen; keine rückwirkende
+Feldgleichheit mit deren ursprünglichen Commitzeitpunkten behauptet. b223 bleibt
+historische Zwölfzeilenreferenz, der neue Vollhash wird nicht aus Zahlen abgeleitet.
+Kein automatisches Rebaselining; alle bisherigen Erwartungen bestanden unverändert.
+
+Privater JUnit-Bericht build/test-results/t03SeventyReadOnlyTest/TEST-de.mangalib.T03SeventyReadOnlyTest.xml,
+SHA-256 e548c11c51c799ac03095c3795c942ec905451606eed46164b876a5cd8878fe8;
+XML/HTML byteidentisch unter .gradle/t03-continuation-preparation/seventy-read-only-20261106/ gesichert.
+Nur feste Status-/Hashzeilen und Testzähler ausgewertet, keine Feldwerte/Secrets
+in Projektdokumente übernommen. Keine serverweite unabhängige SQL-Auditierung;
+Seiteneffektfreiheit stützt sich auf geprüften Lesecode, readOnly-TXs, deaktivierte
+Initialisierung/Migrationen/DDL-Erzeugung und identische vollständige Snapshots.
+Keine INSERT/UPDATE/DELETE/DDL oder Fixture-/Rechte-/Schemaänderung.
+
+In diesem Auftrag nur TESTING.md und T03_6B_APPROVAL.md durch neue Nachträge ergänzt.
+Bestehende lokale Arbeiten erhalten, Staging leer, keine Git-Schreibaktionen.
+Historische acht Experimente, drei Manual-JARs, alle Journale und archivierten
+Berichte unverändert. Diffcheck erfolgreich. Keine andere DB, Anwendung/Listener,
+Browser, Scraper/Worker, Migration/Seeding/Cleanup oder Installation.
+Nach diesem einmaligen lesenden Lauf angehalten; t03RemainingTest weiterhin
+gesperrt bis neuer ausdrücklicher Schreibfreigabe mit frischer UUID und Bindung
+an den jetzt bestätigten 70-Zeilen-Vollhash. T03 insgesamt bleibt offen.
+
+### 08.11.2026 – Einmalige Abnahme der acht offenen T03-6B-Fälle
+
+263 datenbankfreie Tests bestanden. Classpath-, Tasktrennungs- und
+Historienprüfung bestanden. Die Offline-Aufrufe ohne Daemon wurden jeweils
+zuvor mit identischen Argumenten und `--dry-run` geprüft.
+
+Der geschützte Start von `t03RemainingTest` bestätigte `mangalib_test`,
+`mangalib_test_user`, das Profil `test`, die Minimalrechte und den gebundenen
+Vollfingerabdruck des Ausgangsbestands aus 70 Geschäftszeilen,
+78 Stammdatensätzen und zehn Tabellen.
+
+Der Lauf ergab 1 bestanden, 7 fehlgeschlagen, 0 übersprungen. `null` bestand.
+`stale` erhielt `INVALID_INVENTORY` statt `BAND_CONFLICT`. Sechs nachfolgende
+Fälle wurden durch die STOP-Barriere vor ihrem Testkörper blockiert und vom
+Runner als Fehler gezählt. Die Erhaltungskontrollen blieben ohne zusätzlichen
+Befund. Die 14 registrierten Fixture-IDs stammen aus den zwei zurückgerollten
+Fällen. Es gab keinen dauerhaften Geschäftsschreibvorgang. Der abschließende
+`beforeCommit`- und Quarantänefall wurde nicht erreicht. Ein separater
+Nachlauf zur Fingerabdruckmessung fand nicht statt.
+
+Status `T03_6B_REMAINING_FAILED`. Die UUID
+`11a8a5f8-82a4-4655-98eb-c15e8edfa224` ist verbraucht. Einzelheiten zum
+gebundenen Versuch und zu seinen Nachweisen stehen in Abschnitt 25 von
+`T03_6B_APPROVAL.md`.
+
+### 08.11.2026 – Datenbankfreie Korrektur und sieben offene T03-6B-Fälle
+
+Die Stale-Fixture lädt die gespeicherte Reihe nach Flush und Clear innerhalb
+derselben Rollback-Transaktion neu. Dadurch kann Hibernate die inverse
+Detailbeziehung materialisieren. Die Fixture prüft den vollständigen
+Stale-Ausgangszustand vor dem Kauf. Die Produktionslogik und sämtliche
+fachlichen Ergebnisassertions bleiben unverändert.
+
+265 gefilterte datenbankfreie Tests bestanden. Darunter die beiden neuen
+Kaufregressionen zu Detailbeziehung, Bestandspriorität, NULL-Werten und
+unveränderten Band-IDs. Der erste Offline-Lauf hatte einen Fehlschlag in der
+statischen Prüfung des inzwischen ersetzten Acht-Fälle-Freigabewerts. Nach
+Anpassung dieser Prüfung bestanden auch Opt-in-Kompilierung, Methoden- und
+Parameter-Whitelist, Classpath-/Tasktrennung und Historienprüfung. Beide
+Offline-Testaufrufe hatten einen identischen Dry-Run.
+
+`t03RemainingTest` ist für sechs negative Parameterfälle und den letzten
+`beforeCommit`-Fall vorbereitet. Geplant sind 39 ID-Versuche, davon 37
+Rollback-IDs und höchstens zwei dauerhafte Einkaufszeilen. Die vollständige
+70-Zeilen-Baseline wird beim späteren Start vor dem ersten Fixture-Write
+als Startvoraussetzung geprüft. Es wurde keine neue Datenbankmessung
+durchgeführt. Aufruf und Tabellenbudget stehen in Abschnitt 26 von
+`T03_6B_APPROVAL.md`. Die reale Ausführung erfordert eine neue Freigabe und
+eine frische UUID.
+
+### 08.11.2026 – Reale Abnahme der sieben T03-6B-Restfälle
+
+`T03_6B_SEVEN_REMAINING_ACCEPTED`. 265 datenbankfreie Vorprüfungen und
+Classpath-/Historienprüfung bestanden. Der einmalig freigegebene
+`t03RemainingTest` mit UUID `f91b7d46-ec82-4a50-9e71-26c40bd57a83`
+bestand mit sieben Tests, null Fehlern und null übersprungenen Fällen.
+Der Start bestätigte die gebundene 70-Zeilen-Baseline und die MySQL-Minimalrechte.
+
+Der reale JPA-Reload der Stale-Fixture und `BAND_CONFLICT` sowie
+`UNKNOWN_STATUS` sind bestätigt. Alle sechs negativen Fixturegruppen
+wurden zurückgerollt. Der letzte Test bestätigte den gezielten
+`beforeCommit`-Fehler, `afterCompletion=ROLLED_BACK` und die
+Coordinatorquarantäne. Von 39 journalisierten ID-Versuchen wurden 37
+zurückgerollt. Genau eine neue Einkaufsposition und ihr Detaildatensatz
+blieben dauerhaft. Die Endkontrollen bestätigten 72 Geschäftszeilen
+einschließlich aller 70 unveränderten Bestandszeilen, 78 unveränderte
+Stammdatensätze und unveränderte Schema-Metadaten. Ein neuer
+Vollfingerabdruck wurde nicht ermittelt.
+
+Fallresultate, Tabellenbudget und Evidenzbindungen stehen in Abschnitt 27
+von `T03_6B_APPROVAL.md`. Die UUID ist verbraucht. Es fand kein weiterer
+Datenbanklauf statt.
