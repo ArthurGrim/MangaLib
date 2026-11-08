@@ -325,6 +325,15 @@ Ausführliche Beobachtungen, Ursachen, Testbefehle, Dateiliste und manuelle Nach
 
 ### T03 – Atomare, wiederholungssichere Datenänderungen
 
+**Abnahmestand 08.11.2026:** T03 ist für das lokale Einzelbenutzermodell
+fachlich und technisch abgenommen. Drei reale Commit-/Konkurrenzfälle,
+17 E1–E6-Matrixfälle über getrennte Läufe und die freigegebenen Browserfälle
+H1–H7 sind bestätigt. [T03-Gesamtabnahme](T03_CLOSEOUT.md) trennt die
+Nachweisgrenzen und dokumentiert den vorbereiteten lokalen Fast-Forward.
+Dokumentationscommit und Merge stehen aus. Historische Integrationstests
+mit abweichender Transaktionsgrenze bleiben eine getrennte Testaufgabe.
+Die folgenden datierten Einträge erhalten ihren historischen Status.
+
 **T03-0 datenbankfrei abgeschlossen (02.11.2026):** [T03-Plan mit Ist-/Soll-Matrix und Fachentscheidungen](T03_IMPLEMENTATION_PLAN.md). Auf neuem Branch `codex/t03-data-integrity` direkt ab T02-Commit `b7a2dbe`: 53 neue Charakterisierungsfälle und 227 unveränderte M06-/T02-/Standalone-MockMvc-Fälle bestanden, insgesamt 280, keine Fehler/übersprungen. Wiederholungs-/Konkurrenz-, Zuordnungs-, Cent- und Reduktionsprobleme reproduziert, NICHT behoben. Keine DB-Verbindung oder produktive T03-Implementierung; D1–D6 vor T03-1 bestätigen. Historische Prototypdateien und T02-Branch unverändert.
 
 - Einkauf → Bibliothek in einer konsistenten Transaktion; erneute und parallele Kaufübernahme absichern.

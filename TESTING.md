@@ -14620,3 +14620,74 @@ Vollfingerabdruck wurde nicht ermittelt.
 Fallresultate, Tabellenbudget und Evidenzbindungen stehen in Abschnitt 27
 von `T03_6B_APPROVAL.md`. Die UUID ist verbraucht. Es fand kein weiterer
 Datenbanklauf statt.
+
+### 08.11.2026 – T03-6C-Kandidat separat offline paketiert
+
+`T03_6C_CANDIDATE_PACKAGED`. Unter `codex/t03-data-integrity` auf
+`ba18ffc0e7c9bd777247f6be0476a52d94974417` war der verfolgte
+Arbeitsbaum beim Build unverändert. Der identische Offline-Dry-Run für
+`assembleManualTest` mit lokalem Init-Skript war erfolgreich.
+Genau ein realer Offline-Aufruf ohne Daemon erzeugte
+`build/libs/mangalib-manual-test-t03-6c-ba18ffc.jar` (66.523.398 Bytes).
+SHA-256 `0139557bb0395cd35fa8c38dbf025f7f76dd8023cb3a6c8c4718fa090bcc60a9`.
+
+Der statische ZIP-/Manifestabgleich bestätigte 29 Pflichtbestandteile,
+71 Klassen bytegleich zu den aktuellen Gradle-Ausgaben und 53 Ressourcen
+bytegleich zum Checkout. 118 Runtime-Bibliotheken wurden inventarisiert.
+Manueller Launcher, Guards, DataSource, synthetischer Gateway und
+T03-Kaufpfade sind im Archiv vorhanden. Produktivkonfiguration und die
+ausgeschlossenen Live-/Worker-/Selenium-Komponenten fehlen. Die drei
+historischen Manual-JARs blieben laut SHA-256 unverändert. Details zu
+Aufgabenplan, Klassenherkunft und Freigabegrenze stehen im Nachtrag in
+`T03_6C_APPROVAL.md`.
+
+Keine Testausführung, kein `-ValidateOnly`, kein Anwendungsstart,
+Datenbankzugriff, Snapshot oder Browserlauf. Das manuelle Schreibbudget
+von höchstens 18 neuen Zeilen blieb ungenutzt. Start und Browserabnahme
+benötigen die getrennte SHA-256-gebundene Freigabe B/C.
+
+### 08.11.2026 – T03-6C-Browserabnahme teilweise ausgeführt
+
+`T03_6C_BROWSER_PARTIAL`. `-ValidateOnly` bestand. Der hashgebundene
+Kandidat startete einmal als PID 23144 im Profil `manual-test` auf
+`127.0.0.1:18080`. Das manuelle Banner wurde im Codex In-app Browser
+bestätigt. Reihe A mit drei Bänden sowie der freigegebene Band-1-Edit
+wurden nach Reload und Read-only-Snapshot bestätigt.
+
+Die Einkaufsanlage blieb ungespeichert. Das Feld für Preisanpassungen
+wird nur über `eBay-Preis` eingeblendet. Das zusätzliche Flag war für
+A1/N nicht festgelegt. Die Kauf-, Konflikt-, Erweiterungs- und
+Sessionszenarien blieben nach STOP offen.
+
+Genau fünf neue Geschäftszeilen (eine Reihe, ein Detail, drei Bände).
+Alle ursprünglichen Zeilen, Stammdaten und Schema-Metadaten unverändert.
+Frischer Ausgangs-SHA-256
+`2eb8d9ed03cd73a66ace123f4a3f60507f2de3d48c31450a9aacc96b8732c226`.
+Abschluss-SHA-256
+`92512a2cdb091d4b128b08a0c847ce4e1d626858f5ac1cabe4e0dfc3a5f03581`.
+Eigene Sitzung geordnet beendet, PID beendet und Port frei. Keine neue
+Paketierung, weiteren Tests oder Git-Schreibaktionen. Einzelheiten und
+Nachweisgrenzen im Nachtrag von `T03_6C_APPROVAL.md`.
+
+### 08.11.2026 – T03-6C R02 im manuellen Browser abgenommen
+
+`T03_6C_BROWSER_ACCEPTED` für H1–H7. Der unveränderte hashgebundene
+Kandidat bestand `-ValidateOnly` und startete genau einmal unter PID 38244
+mit Java 21, Profil `manual-test` und ausschließlich `127.0.0.1:18080`.
+Der frische lesende Ausgangssnapshot bestätigte den R01-Endhash
+`92512a2cdb091d4b128b08a0c847ce4e1d626858f5ac1cabe4e0dfc3a5f03581`.
+
+Im Codex In-app Browser bestanden Vorschau und Abbruch, Übernahme in A,
+der Konflikt der alten Vorschau im zweiten Tab, Wiederholungsschutz,
+Kauf von N mit Restcents, Ablehnung der Reduktion, ausdrückliche
+Erweiterung sowie die Sessionablehnung nach Inaktivität. Statuscodes
+waren nicht direkt beobachtbar. H8 und eine echte reine Anzahlkorrektur
+bei inkonsistenter Deklaration blieben außerhalb des Umfangs.
+
+Genau 13 neue Geschäftszeilen in R02, kumulativ mit R01 18. Alle geschützten
+Altzeilen, Stammdaten und Schema-Metadaten blieben erhalten. Der lesende
+Abschluss-SHA-256
+`980f117a8d1e69a09e0ebd72f8fdb9ffea4795093f9d3a8591ceb5e798b83c5b`
+stimmte mit dem Snapshot vor der Sessionprobe überein. Tomcat/JPA
+geordnet beendet, PID und Port freigegeben. Fallresultate und
+Nachweisgrenzen stehen im R02-Nachtrag von `T03_6C_APPROVAL.md`.
