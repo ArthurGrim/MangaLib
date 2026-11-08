@@ -31,6 +31,21 @@ final class T03Preservation {
                 .filter(row -> table.equals(row.get(0)) && KEYS.get(table).equals(row.get(1)))
                 .mapToInt(row -> ((Number) row.get(2)).intValue() - 1).findFirst().orElseThrow();
     }
+    static Set<Long> ids(TestDatabaseSnapshot.Snapshot snapshot, String table) {
+        return Set.copyOf(indexed(snapshot.values().get(table), idColumn(snapshot, table)).keySet());
+    }
+    /** Reine RAM-Projektion, Reihenfolge und Schema/Stammdaten unverändert. */
+    static TestDatabaseSnapshot.Snapshot retain(TestDatabaseSnapshot.Snapshot snapshot, Map<String,Set<Long>> retained) {
+        var values = new TreeMap<>(snapshot.values());
+        for (String table : T03RunJournal.BUSINESS) {
+            var wanted = retained.getOrDefault(table, Set.of());
+            assertTrue(ids(snapshot, table).containsAll(wanted), "Historische ID fehlt: STOP");
+            int column = idColumn(snapshot, table);
+            values.put(table, snapshot.values().get(table).stream()
+                    .filter(row -> wanted.contains(((Number) row.get(column)).longValue())).toList());
+        }
+        return new TestDatabaseSnapshot.Snapshot(values);
+    }
     private static Map<Long, List<Object>> indexed(List<List<Object>> rows, int column) {
         var result = new HashMap<Long, List<Object>>();
         for (var row : rows) assertTrue(result.put(((Number) row.get(column)).longValue(), row) == null, "Doppelte ID");

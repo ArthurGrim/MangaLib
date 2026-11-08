@@ -11,6 +11,30 @@ import static org.mockito.Mockito.*;
 
 /** Echte Coordinator-/Spring-TX-Steuerung, ausschließlich vorhandener RAM-Manager. */
 class T03PurchaseOverlapTest {
+    @Test void separatelyConfirmsExpectedSecondRollbackAndCleanup() throws Exception {
+        var manager = spy(new FakeLibraryTransactionManager());
+        var coordinator = new LibraryWriteCoordinator(manager);
+        var observer = new T03PurchaseOverlap(manager, coordinator);
+        assertEquals(List.of("UPDATED", "REJECTED"), observer.runWithRejectedSecondWrite(
+                () -> coordinator.execute(() -> "UPDATED"),
+                () -> { assertThrows(IllegalArgumentException.class, () -> coordinator.execute(() -> {
+                    throw new IllegalArgumentException("synthetic duplicate");
+                })); return "REJECTED"; }));
+        assertTrue(observer.completionConfirmed());
+        assertEquals(1, manager.commits.get()); assertEquals(1, manager.rollbacks.get());
+        assertEquals("NEXT", coordinator.execute(() -> "NEXT"));
+    }
+    @Test void observesDifferentOperationsUnderTheSameCoordinator() throws Exception {
+        var manager = spy(new FakeLibraryTransactionManager());
+        var coordinator = new LibraryWriteCoordinator(manager);
+        var observer = new T03PurchaseOverlap(manager, coordinator);
+        var values = new ArrayList<String>();
+        assertEquals(List.of("PURCHASE", "BAND"), observer.run(
+                () -> coordinator.execute(() -> { values.add("purchase"); return "PURCHASE"; }),
+                () -> coordinator.execute(() -> { values.add("band"); return "BAND"; })));
+        assertEquals(List.of("purchase", "band"), values);
+        assertTrue(observer.completionConfirmed());
+    }
     @Test void provesQueuedSecondRequestAndTwoNonoverlappingTransactionsIncludingCleanup() throws Exception {
         var manager = spy(new FakeLibraryTransactionManager());
         var coordinator = new LibraryWriteCoordinator(manager);

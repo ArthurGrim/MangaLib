@@ -109,6 +109,49 @@ class PurchaseServiceTest {
         assertEquals(BAND_CONFLICT, service.purchase(new PurchaseService.Request(7, null, 99L, 4, 4)).outcome()); noWrites();
     }
 
+    @Test void staleRangeIsEvaluatedOnlyAfterBothSidesOfDetailsAreAvailable() {
+        var stale = new PurchaseService.Request(7, null, 42L, 2, 2);
+        var before = f.state();
+        var savedDetails = f.row.getMangaDetails();
+        // Wie nach der Fixtureanlage ist nur die besitzende Seite gesetzt.
+        assertSame(f.row, savedDetails.getMangaReihe());
+        f.row.setMangaDetails(null);
+        assertEquals(INVALID_INVENTORY, service.purchase(stale).outcome());
+
+        // Der Fake bildet die nach Reload materialisierte inverse Seite nach.
+        f.row.setMangaDetails(savedDetails);
+        assertEquals(BAND_CONFLICT, service.purchase(stale).outcome());
+        assertEquals(before, f.state());
+        assertFalse(item.getGekauft());
+        noWrites();
+
+        assertEquals(UPDATED, service.purchase(request(null, true)).outcome());
+        before.forEach((id, state) -> assertEquals(state, f.state().get(id)));
+        assertEquals(4, f.stored.getLast().getBandNr());
+        assertNull(f.stored.getLast().getReread());
+        assertTrue(item.getGekauft());
+    }
+
+    @Test void inconsistentVolumeIdentityPrecedesStaleRangeButUnknownStatusPrecedesBoth() {
+        var stale = new PurchaseService.Request(7, null, 42L, 2, 2);
+        var band = f.stored.getFirst();
+        Long id = band.getId();
+        band.setId(null);
+        assertEquals(INVALID_INVENTORY, service.purchase(stale).outcome());
+        assertNull(band.getId());
+
+        band.setId(id);
+        band.setPreis(null);
+        var before = f.state();
+        assertEquals(INVALID_INVENTORY, service.purchase(stale).outcome());
+        assertFalse(item.getGekauft());
+        item.setGekauft(null);
+        assertEquals(UNKNOWN_STATUS, service.purchase(stale).outcome());
+        assertNull(item.getGekauft());
+        assertEquals(before, f.state());
+        noWrites();
+    }
+
     @Test void locksAreAcquiredShoppingBeforeSeriesAndBeforeAnyMutation() {
         assertEquals(UPDATED, service.purchase(request(null, true)).outcome());
         var order = inOrder(cart, f.rows, f.bands);

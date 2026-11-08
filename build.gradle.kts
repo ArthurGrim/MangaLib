@@ -1,6 +1,7 @@
 import java.security.MessageDigest
 import java.util.UUID
 import java.nio.file.Files
+import java.nio.file.Path
 import java.net.URLClassLoader
 
 plugins {
@@ -120,6 +121,98 @@ val t03RightsDiagnosisTest by tasks.registering(Test::class) {
         }
         require(!System.getenv("MANGALIB_TEST_DB_PASSWORD").isNullOrBlank()) { "Testpasswort fehlt." }
         systemProperty("t03.rightsDiagnosis.approved", "true")
+    }
+}
+
+// Fortsetzung nach der ersten Commitstufe: historische Leerbaseline bleibt separat.
+val t03ContinuationReadOnlyTest by tasks.registering(Test::class) {
+    description = "Opt-in: lesende Identitäts-/Bestandsprüfung der zwölf akzeptierten T03-Zeilen."
+    testClassesDirs = t03Integration.output.classesDirs
+    include("**/T03ContinuationReadOnlyTest.class")
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("t03ContinuationApproval").orNull == "VERIFY_EXISTING_T03_FIXTURES") {
+            "Separate Freigabe für die lesende Fortsetzungsprüfung erforderlich."
+        }
+        require(!System.getenv("MANGALIB_TEST_DB_PASSWORD").isNullOrBlank()) { "Testpasswort fehlt." }
+        systemProperty("t03.continuation.approved", "true")
+    }
+}
+
+val t03MatrixTest by tasks.registering(Test::class) {
+    description = "Opt-in: E1–E6 mit eigenen synthetischen Commit-/Rollbackfixtures; kein Cleanup."
+    testClassesDirs = t03Integration.output.classesDirs
+    include("**/T03MatrixAcceptanceTest.class")
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("t03MatrixApproval").orNull == "E1_E6_NEW_SYNTHETIC_ROWS_ONLY") {
+            "Separate Eigentümerfreigabe für die Matrix erforderlich."
+        }
+        require(!System.getenv("MANGALIB_TEST_DB_PASSWORD").isNullOrBlank()) { "Testpasswort fehlt." }
+        val baseline = providers.gradleProperty("t03MatrixBaselineFingerprint").get()
+        require(baseline.matches(Regex("[a-f0-9]{64}"))) { "Vorher separat bestätigter aktueller Fingerabdruck erforderlich." }
+        val runId = UUID.fromString(providers.gradleProperty("t03MatrixRunId").get()).toString()
+        val directory = layout.projectDirectory.dir(".gradle/t03-integration/$runId").asFile.toPath()
+        Files.createDirectories(directory.parent)
+        Files.createDirectory(directory)
+        systemProperty("t03.matrix.approved", "true")
+        systemProperty("t03.matrix.baseline", baseline)
+        systemProperty("t03.run.id", runId)
+        systemProperty("t03.evidence.directory", directory.toString())
+    }
+}
+
+val t03SeventyReadOnlyTest by tasks.registering(Test::class) {
+    description = "Opt-in: ausschließlich lesende Prüfung der 12+58 bestehenden T03-Zeilen."
+    testClassesDirs = t03Integration.output.classesDirs
+    include("**/T03SeventyReadOnlyTest.class")
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("t03SeventyApproval").orNull == "READ_ONLY_SEVENTY_ROWS") { "Separate Lesefreigabe erforderlich." }
+        require(!System.getenv("MANGALIB_TEST_DB_PASSWORD").isNullOrBlank()) { "Testpasswort fehlt." }
+        systemProperty("t03.seventy.approved", "true")
+    }
+}
+val remainingMethods = setOf(
+    "de.mangalib.T03RemainingAcceptanceTest.controlledRejectionsUseFullyRolledBackFixtures",
+    "de.mangalib.T03RemainingAcceptanceTest.beforeCommitFailureRollsBackAndQuarantinesFurtherWrites"
+)
+val t03RemainingTest by tasks.registering(Test::class) {
+    description = "Opt-in: nur sechs offene Rollbackvarianten und letzter beforeCommit-Fall."
+    testClassesDirs = t03Integration.output.classesDirs
+    include("**/T03RemainingAcceptanceTest.class")
+    filter { remainingMethods.forEach { includeTestsMatching(it) } }
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("t03RemainingApproval").orNull == "SEVEN_OPEN_CASES_TWO_DURABLE_ROWS") { "Separate Restmatrixfreigabe erforderlich." }
+        require(filter.includePatterns == remainingMethods && filter.excludePatterns.isEmpty()
+            && includes == setOf("**/T03RemainingAcceptanceTest.class") && excludes.isEmpty()) { "Restmatrix-Allowlist verändert: STOP" }
+        require(!System.getenv("MANGALIB_TEST_DB_PASSWORD").isNullOrBlank()) { "Testpasswort fehlt." }
+        val baseline = providers.gradleProperty("t03RemainingBaselineFingerprint").get()
+        require(baseline == "0ffdb7dafe18a88c00de8a4feb6d432f442d7f6f72526842aa114b8acbdbe991") { "Separat bestätigter aktueller 70-Zeilen-Hash erforderlich." }
+        val runId = UUID.fromString(providers.gradleProperty("t03RemainingRunId").get()).toString()
+        require(runId !in setOf("264bc431-7c43-4fc2-b2d4-3efd35d8bb1c", "7e2a4fd0-19c3-4e78-a5b4-62d1a8c90f3e",
+            "6db42e71-8fc3-4a96-b2d5-0e719c43f8ab", "11a8a5f8-82a4-4655-98eb-c15e8edfa224")) { "Historische UUID gesperrt." }
+        val directory = layout.projectDirectory.dir(".gradle/t03-integration/$runId").asFile.toPath()
+        Files.createDirectories(directory.parent)
+        Files.createDirectory(directory)
+        systemProperty("t03.remaining.approved", "true")
+        systemProperty("t03.matrix.approved", "true") // Zusätzliche geerbte Kontextbarriere bleibt aktiv.
+        systemProperty("t03.matrix.baseline", baseline)
+        systemProperty("t03.run.id", runId)
+        systemProperty("t03.evidence.directory", directory.toString())
     }
 }
 
@@ -497,7 +590,11 @@ tasks.register("t03ClasspathCheck") {
         val optIn = mapOf(
             t03ReadOnlyTest.get() to "**/T03ReadOnlyPreflightTest.class",
             t03CommitTest.get() to "**/T03CommitAcceptanceTest.class",
-            t03RightsDiagnosisTest.get() to "**/T03RightsDiagnosisTest.class"
+            t03RightsDiagnosisTest.get() to "**/T03RightsDiagnosisTest.class",
+            t03ContinuationReadOnlyTest.get() to "**/T03ContinuationReadOnlyTest.class",
+            t03MatrixTest.get() to "**/T03MatrixAcceptanceTest.class",
+            t03SeventyReadOnlyTest.get() to "**/T03SeventyReadOnlyTest.class",
+            t03RemainingTest.get() to "**/T03RemainingAcceptanceTest.class"
         )
         val required = listOf(
             "de.mangalib.service.LiveScraperGateway",
@@ -509,6 +606,8 @@ tasks.register("t03ClasspathCheck") {
             "com.sun.jna.Native", "com.sun.jna.Pointer",
             "de.mangalib.testsupport.GuardedTestDataSource"
         )
+        check(t03RemainingTest.get().filter.includePatterns == remainingMethods)
+        check(t03RemainingTest.get().filter.excludePatterns.isEmpty())
         optIn.forEach { (task, include) ->
             val actual = task.classpath.files
             val missing = expected - actual
@@ -525,6 +624,18 @@ tasks.register("t03ClasspathCheck") {
                     type.declaredFields
                 }
                 check(loader.getResource("META-INF/spring.factories") != null) { "Test-Guard-Ressource fehlt" }
+                if (task == t03RemainingTest.get()) {
+                    val remaining = Class.forName("de.mangalib.T03RemainingAcceptanceTest", false, loader)
+                    check(remaining.superclass.name == "de.mangalib.T03MatrixAcceptanceTest")
+                    val rejection = remaining.getDeclaredMethod("controlledRejectionsUseFullyRolledBackFixtures", String::class.java)
+                    val values = rejection.annotations.single { it.annotationClass.java.name == "org.junit.jupiter.params.provider.ValueSource" }
+                    val cases = values.annotationClass.java.getMethod("strings").invoke(values) as Array<*>
+                    check(cases.toList() == listOf("stale", "details", "duplicate", "unknownPrice", "cartDetails", "edition"))
+                    val last = remaining.superclass.getDeclaredMethod("beforeCommitFailureRollsBackAndQuarantinesFurtherWrites")
+                    val order = last.annotations.single { it.annotationClass.java.name == "org.junit.jupiter.api.Order" }
+                    check(order.annotationClass.java.getMethod("value").invoke(order) == 10)
+                    logger.lifecycle("Restmatrix: feste Methodenfilter, sechs Parameter und geerbter letzter Order-10-Fall korrekt")
+                }
             }
             // Negativkontrolle: Ohne Owner-Output muss genau der ursprüngliche
             // Gateway-Signaturfehler erkannt werden, ohne einen Bean zu erzeugen.
@@ -540,6 +651,23 @@ tasks.register("t03ClasspathCheck") {
             logger.lifecycle("${task.name}: ${required.size} Klassen ohne Initialisierung auflösbar; Allowlist korrekt")
         }
         val regular = tasks.named<Test>("test").get()
+        if (providers.gradleProperty("t03HistoryCheck").orNull == "true") {
+            URLClassLoader(expected.map { it.toURI().toURL() }.toTypedArray(), ClassLoader.getPlatformClassLoader()).use { loader ->
+                val type = Class.forName("de.mangalib.T03MatrixHistory", true, loader)
+                val method = type.getDeclaredMethod("local", Path::class.java)
+                method.isAccessible = true
+                val root = layout.projectDirectory.dir(".gradle/t03-integration/6db42e71-8fc3-4a96-b2d5-0e719c43f8ab").asFile.toPath()
+                val history = method.invoke(null, root)
+                fun count(name: String): Int {
+                    val accessor = history.javaClass.getDeclaredMethod(name)
+                    accessor.isAccessible = true
+                    val ids = accessor.invoke(history) as Map<*, *>
+                    return ids.values.sumOf { (it as Set<*>).size }
+                }
+                check(count("committed") == 58 && count("rolledBack") == 29)
+                logger.lifecycle("T03_HISTORY_CHECK_PASS: gepinnte lokale Evidenzen, 58 Commitzeilen / 29 Rollback-IDs; keine DB")
+            }
+        }
         check(regular.testClassesDirs.files == sourceSets.test.get().output.classesDirs.files)
         check(regular.classpath.files.intersect(t03Integration.output.files).isEmpty()) { "Opt-in-Output im Standardtest" }
         fun closure(task: Task, seen: MutableSet<Task> = mutableSetOf()): Set<Task> {

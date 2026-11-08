@@ -94,16 +94,27 @@ public final class T03PurchaseOverlap {
     }
 
     public <T> List<T> run(Callable<T> purchase) throws Exception {
+        return run(purchase, purchase);
+    }
+    /** Unterschiedliche Kaufwege/Schreiboperationen, gleicher beobachteter Coordinator. */
+    public <T> List<T> run(Callable<T> firstWork, Callable<T> secondWork) throws Exception {
+        return run(firstWork, secondWork, false);
+    }
+    /** Ein erwarteter, nachgewiesener Work-Rollback ist kein unbekannter Abschluss. */
+    public <T> List<T> runWithRejectedSecondWrite(Callable<T> firstWork, Callable<T> secondWork) throws Exception {
+        return run(firstWork, secondWork, true);
+    }
+    private <T> List<T> run(Callable<T> firstWork, Callable<T> secondWork, boolean secondRollback) throws Exception {
         var executor = Executors.newFixedThreadPool(2);
         threadsEnded = false;
         try {
-            var first = executor.submit(() -> { firstThread.set(Thread.currentThread()); return purchase.call(); });
+            var first = executor.submit(() -> { firstThread.set(Thread.currentThread()); return firstWork.call(); });
             long firstDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15);
             while (!atCommit.await(20, TimeUnit.MILLISECONDS)) {
                 if (first.isDone()) { first.get(); fail("Erster Kauf ohne beobachteten Commit: STOP"); }
                 assertTrue(System.nanoTime() < firstDeadline, "Erster aktiver Kaufcommit nicht erreicht: STOP");
             }
-            var second = executor.submit(() -> { secondThread.set(Thread.currentThread()); return purchase.call(); });
+            var second = executor.submit(() -> { secondThread.set(Thread.currentThread()); return secondWork.call(); });
             long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
             while ((secondThread.get() == null || !mutex.hasQueuedThread(secondThread.get())) && System.nanoTime() < deadline) {
                 if (second.isDone()) break;
@@ -116,7 +127,8 @@ public final class T03PurchaseOverlap {
             assertEquals(1, active.get()); assertEquals(List.of("FIRST_BEGIN"), events);
             release.countDown();
             var results = List.of(first.get(45, TimeUnit.SECONDS), second.get(45, TimeUnit.SECONDS));
-            assertEquals(List.of("FIRST_BEGIN", "FIRST_COMMIT_CLEANED", "SECOND_BEGIN", "SECOND_COMMIT_CLEANED"), events);
+            assertEquals(List.of("FIRST_BEGIN", "FIRST_COMMIT_CLEANED", "SECOND_BEGIN",
+                    secondRollback ? "SECOND_ROLLBACK_CLEANED" : "SECOND_COMMIT_CLEANED"), events);
             assertEquals(1, maximum.get()); assertEquals(0, active.get());
             return results;
         } finally {
