@@ -97,6 +97,7 @@ aller Updates vollständig erhalten bleiben.
 ## 2. Muss – verbindliche Funktionsanforderungen
 
 ### M01 – Einkaufslisteneinträge nachträglich bearbeiten
+- **Status:** Implementiert und fachlich abgenommen. Die Nachweise zu Bearbeitung, Kaufkonflikten und schmaler Ansicht stehen in `M01_IMPLEMENTATION_PLAN.md`.
 - In der Einkaufsliste bereits angezeigte/eingetragene Titel bearbeiten können.
 - Insbesondere Preis und Bandanzahl korrigieren; auch weitere vorhandene sinnvolle Felder einbeziehen.
 - Bereits vorhandene Daten und gegebenenfalls verknüpfte Bände konsistent aktualisieren; fachliche Auswirkungen vor Implementierung prüfen.

@@ -189,8 +189,9 @@ class T03MatrixAcceptanceTest {
         faultRequests(item,false);
         var old=read(()->T03BandSnapshot.capture(bands.findByMangaReiheId(row)));
         overlap=new T03PurchaseOverlap(manager,coordinator);
+        var token=confirmed(item,null,row,4,4).purchaseToken();
         assertEquals(List.of("UPDATED","ALREADY_PURCHASED"),overlap.run(
-                ()->http(item,false,row,4,4,200),()->http(item,true,row,4,4,200)));
+                ()->http(item,false,row,4,4,200,token),()->http(item,true,row,4,4,200,token)));
         read(()->{T03BandSnapshot.verifyFourthOnly(old,T03BandSnapshot.capture(bands.findByMangaReiheId(row)),row);
             assertTrue(em.find(EinkaufslisteItem.class,item).getGekauft());return null;});
         unchanged(()->assertEquals("ALREADY_PURCHASED",http(item,false,row,4,4,200)));
@@ -211,9 +212,10 @@ class T03MatrixAcceptanceTest {
         long row=row(3,"6.00","0.00"),first=cart(row,1),second=cart(row,1);
         var old=read(()->T03BandSnapshot.capture(bands.findByMangaReiheId(row)));
         overlap=new T03PurchaseOverlap(manager,coordinator);
+        var firstRequest=confirmed(first,null,row,4,4);var secondRequest=confirmed(second,null,row,5,5);
         assertEquals(List.of(PurchaseService.Outcome.UPDATED,PurchaseService.Outcome.UPDATED),overlap.run(
-                ()->purchases.purchase(new PurchaseService.Request(first,null,row,4,4)).outcome(),
-                ()->purchases.purchase(new PurchaseService.Request(second,null,row,5,5)).outcome()));
+                ()->purchases.purchase(firstRequest).outcome(),
+                ()->purchases.purchase(secondRequest).outcome()));
         read(()->{var after=T03BandSnapshot.capture(bands.findByMangaReiheId(row));assertEquals(5,after.size());
             old.forEach((id,value)->assertTrue(Objects.equals(value,after.get(id)),"Altband geändert"));
             assertTrue(em.find(EinkaufslisteItem.class,first).getGekauft());assertTrue(em.find(EinkaufslisteItem.class,second).getGekauft());return null;});
@@ -223,15 +225,17 @@ class T03MatrixAcceptanceTest {
         coordinator.execute(()->{var a=em.find(EinkaufslisteItem.class,first);var b=em.find(EinkaufslisteItem.class,second);
             b.setTitel(a.getTitel());b.setMangaIndex(a.getMangaIndex());return null;});
         overlap=new T03PurchaseOverlap(manager,coordinator);
+        var firstRequest=confirmed(first,statusId,null,null,null);var secondRequest=confirmed(second,statusId,null,null,null);
         assertEquals(List.of(PurchaseService.Outcome.CREATED,PurchaseService.Outcome.CONFIRM_VOLUMES),overlap.run(
-                ()->purchases.purchase(new PurchaseService.Request(first,statusId,null,null,null)).outcome(),
-                ()->purchases.purchase(new PurchaseService.Request(second,statusId,null,null,null)).outcome()));
+                ()->purchases.purchase(firstRequest).outcome(),
+                ()->purchases.purchase(secondRequest).outcome()));
         read(()->{assertTrue(em.find(EinkaufslisteItem.class,first).getGekauft());assertFalse(em.find(EinkaufslisteItem.class,second).getGekauft());return null;});
         var identity=read(()->{var item=em.find(EinkaufslisteItem.class,first);
             return em.createQuery("from MangaReihe where mangaIndex=:i",MangaReihe.class).setParameter("i",item.getMangaIndex()).getSingleResult();});
         overlap=new T03PurchaseOverlap(manager,coordinator);
+        var appendRequest=confirmed(second,null,identity.getId(),2,2);
         assertEquals(List.of("UPDATED","DUPLICATE_REJECTED"),overlap.runWithRejectedSecondWrite(
-                ()->purchases.purchase(new PurchaseService.Request(second,null,identity.getId(),2,2)).outcome().name(),
+                ()->purchases.purchase(appendRequest).outcome().name(),
                 ()->{assertThrows(IllegalArgumentException.class,()->library.saveMangaReihe(identity.getMangaIndex(),statusId,publisherId,typeId,formatId,
                         identity.getTitel(),1,new BigDecimal("2.00"),false,false,null,1L,BigDecimal.ZERO,false,Map.of()));return "DUPLICATE_REJECTED";}));
         read(()->{assertEquals(2,bands.findByMangaReiheId(identity.getId()).size());assertTrue(em.find(EinkaufslisteItem.class,second).getGekauft());return null;});
@@ -242,8 +246,9 @@ class T03MatrixAcceptanceTest {
             for(int i=0;i<list.size();i++){list.get(i).setPreis(BigDecimal.valueOf(4L+2L*i).setScale(2));list.get(i).setBandIndex(index());}return null;});
         var old=read(()->T03BandSnapshot.capture(bands.findByMangaReiheId(row)));long target=old.keySet().stream().min(Long::compare).orElseThrow();
         reverse=true;overlap=new T03PurchaseOverlap(manager,coordinator);
+        var appendRequest=confirmed(item,null,row,4,4);
         assertEquals(List.of("UPDATED","EDITED"),overlap.run(
-                ()->purchases.purchase(new PurchaseService.Request(item,null,row,4,4)).outcome().name(),
+                ()->purchases.purchase(appendRequest).outcome().name(),
                 ()->{var input=new Band();input.setBildUrl(null);input.setId(target);input.setIstGelesen(!old.get(target).read());bandService.updateBand(input);return "EDITED";}));
         read(()->{var after=T03BandSnapshot.capture(bands.findByMangaReiheId(row));assertEquals(4,after.size());
             old.forEach((id,value)->{if(id!=target)assertTrue(Objects.equals(value,after.get(id)));});
@@ -372,8 +377,18 @@ class T03MatrixAcceptanceTest {
             assertFalse(quarantined());T03Preservation.verify(before,read(()->TestDatabaseSnapshot.capture(em)),Map.of());
         }
     }
+    private PurchaseService.Request confirmed(long item, Long status, Long row, Integer first, Integer last) {
+        var preview = purchases.purchase(new PurchaseService.Request(item, null, null, null, null));
+        return new PurchaseService.Request(item, status, row, first, last, preview.purchaseToken());
+    }
+
     private String http(long item,boolean create,Long row,Integer first,Integer last,int expected)throws Exception{
+        String token = create || row != null ? confirmed(item,null,null,null,null).purchaseToken() : null;
+        return http(item,create,row,first,last,expected,token);
+    }
+    private String http(long item,boolean create,Long row,Integer first,Integer last,int expected,String token)throws Exception{
         String json="{\"itemId\":\""+item+"\""+(create?",\"statusId\":\""+statusId+"\"":"")
+                +(token==null?"":",\"purchaseToken\":\""+token+"\"")
                 +(row==null?"":",\"confirmedSeriesId\":\""+row+"\",\"firstBand\":"+first+",\"lastBand\":"+last)+"}";
         var response=mvc.perform(post(create?"/buyItemCreate":"/buyItemUpdate").header("Host","localhost:8080")
                 .with(request->{request.setServerPort(8080);return request;})

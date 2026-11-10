@@ -165,7 +165,9 @@ class T03CommitAcceptanceTest {
             item.setGekauft(false); em.persist(item); em.flush(); journal.register("einkaufsliste", item.getId());
             return item.getId();
         });
-        var request = new PurchaseService.Request(itemId, null, rowId, 4, 4);
+        var preview = purchases.purchase(new PurchaseService.Request(itemId, null, null, null, null));
+        assertEquals(PurchaseService.Outcome.CONFIRM_VOLUMES, preview.outcome());
+        var request = new PurchaseService.Request(itemId, null, rowId, 4, 4, preview.purchaseToken());
         overlap = new T03PurchaseOverlap(manager, coordinator);
         try {
             assertEquals(List.of(PurchaseService.Outcome.UPDATED, PurchaseService.Outcome.ALREADY_PURCHASED),

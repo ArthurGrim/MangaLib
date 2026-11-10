@@ -117,6 +117,10 @@
                   class="reihe"
                   th:classappend="${item.gekauft} ? 'gekauft' : ''"
                 >
+                  <button type="button" class="shopping-edit-button" title="Bearbeiten"
+                          th:if="${item.gekauft == false}" th:data-id="${item.id}">
+                    <img th:src="@{/svg/edit_icon.svg}" alt="Bearbeiten" width="17" height="17" />
+                  </button>
                   <button
                     type="button"
                     id="buy-button"
@@ -133,7 +137,7 @@
                   </button>
                   <div
                     class="manga-reihe-datum"
-                    th:text="${#temporals.format(item.erscheinungsdatum, 'dd.MM')}"
+                    th:text="${item.erscheinungsdatum == null ? 'Ohne Datum' : #temporals.format(item.erscheinungsdatum, 'dd.MM')}"
                   >
                     Erscheinungsdatum
                   </div>
@@ -435,5 +439,6 @@
     <script src="/js/security.js"></script>
     <script src="/js/scrollToTop.js"></script>
     <script src="/js/einkaufsliste.js"></script>
+    <script src="/js/shopping-edit.js"></script>
   </body>
 </html>

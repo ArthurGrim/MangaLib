@@ -232,6 +232,7 @@ body {
   background-color: #217B3F; /* Grün für gekaufte Artikel */
 }
 
+.shopping-edit-button,
 .buy-button {
   background: transparent;
   border: none;
@@ -268,6 +269,21 @@ body {
   width: 90%;
   max-width: 600px;
   box-sizing: border-box; /* Stellt sicher, dass padding und border in der width enthalten sind */
+}
+
+.shopping-editor .popup {
+  max-height: 90vh;
+  overflow: auto;
+  color: var(--font-page);
+}
+
+.shopping-editor .input-group label {
+  color: inherit;
+}
+
+.shopping-editor form {
+  display: grid;
+  gap: 10px;
 }
 
 .loading-label {
