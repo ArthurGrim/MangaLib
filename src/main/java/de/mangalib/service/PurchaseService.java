@@ -15,10 +15,15 @@ public class PurchaseService {
     public enum Outcome {
         UPDATED, CREATED, ALREADY_PURCHASED, STATUS_REQUIRED, CONFIRM_VOLUMES,
         NOT_FOUND, DETAILS_NOT_FOUND, UNKNOWN_STATUS, AMBIGUOUS_SERIES, INCOMPATIBLE_SERIES,
-        BAND_CONFLICT, INVALID_INVENTORY, BUSY
+        BAND_CONFLICT, PURCHASE_STATE_CONFLICT, INVALID_INVENTORY, BUSY
     }
-    public record Request(long itemId, Long statusId, Long confirmedSeriesId, Integer firstBand, Integer lastBand) {
+    public record Request(long itemId, Long statusId, Long confirmedSeriesId, Integer firstBand, Integer lastBand,
+            String purchaseToken) {
+        public Request(long itemId, Long statusId, Long confirmedSeriesId, Integer firstBand, Integer lastBand) {
+            this(itemId, statusId, confirmedSeriesId, firstBand, lastBand, null);
+        }
         public Request {
+            WriteValidation.require(purchaseToken == null || purchaseToken.matches("[a-f0-9]{64}"));
             WriteValidation.require(statusId == null || statusId > 0);
             boolean any = confirmedSeriesId != null || firstBand != null || lastBand != null;
             WriteValidation.require(!any || confirmedSeriesId != null && confirmedSeriesId > 0
@@ -26,7 +31,11 @@ public class PurchaseService {
                     && lastBand >= firstBand && lastBand <= WriteValidation.MAX_VOLUMES);
         }
     }
-    public record Result(Outcome outcome, Long seriesId, Integer firstBand, Integer lastBand) {
+    public record Result(Outcome outcome, Long seriesId, Integer firstBand, Integer lastBand, String purchaseToken,
+            Map<String, Object> purchaseSummary) {
+        public Result(Outcome outcome, Long seriesId, Integer firstBand, Integer lastBand) {
+            this(outcome, seriesId, firstBand, lastBand, null, null);
+        }
         static Result of(Outcome outcome) { return new Result(outcome, null, null, null); }
     }
 
@@ -79,13 +88,16 @@ public class PurchaseService {
         // Titel nur Kandidatenhinweis, niemals automatische Editionszuordnung.
         if (!rows.findByTitel(item.getTitel()).isEmpty()) return Result.of(Outcome.AMBIGUOUS_SERIES);
         if (request.confirmedSeriesId() != null) return Result.of(Outcome.BAND_CONFLICT);
-        if (request.statusId() == null) return Result.of(Outcome.STATUS_REQUIRED);
+        if (request.statusId() == null)
+            return preview(Outcome.STATUS_REQUIRED, item, null, null, null);
         var details = shoppingDetails.findById(item.getId());
         if (details.isEmpty()) return Result.of(Outcome.DETAILS_NOT_FOUND);
         var d = details.get();
         if (!Objects.equals(d.getId(), item.getId()) || d.getEinkaufslisteItem() == null
                 || !Objects.equals(d.getEinkaufslisteItem().getId(), item.getId()))
             return Result.of(Outcome.INVALID_INVENTORY);
+        if (!ShoppingState.token(item, d, true).equals(request.purchaseToken()))
+            return Result.of(Outcome.PURCHASE_STATE_CONFLICT);
         Map<String, String> imported = new HashMap<>();
         imported.put("Deutsche Ausgabe Status", d.getStatusDe());
         imported.put("Band 1 Bild Url", d.getCoverUrl());
@@ -115,9 +127,11 @@ public class PurchaseService {
         int last = Math.addExact(existing.size(), item.getAnzahlBaende());
         WriteValidation.volumes(last);
         if (request.confirmedSeriesId() == null)
-            return new Result(Outcome.CONFIRM_VOLUMES, row.getId(), first, last);
+            return preview(Outcome.CONFIRM_VOLUMES, item, row.getId(), first, last);
         if (!Objects.equals(request.confirmedSeriesId(), row.getId()) || request.firstBand() != first || request.lastBand() != last)
             return Result.of(Outcome.BAND_CONFLICT);
+        if (!ShoppingState.token(item, item.getEinkaufslisteItemDetails(), true).equals(request.purchaseToken()))
+            return Result.of(Outcome.PURCHASE_STATE_CONFLICT);
         // Fehlende konkrete externe Bandindices werden nicht aus dem Reihenindex erfunden.
         var result = library.updateMangaReihe(row.getId(), row.getMangaIndex(), row.getStatus().getStatusId(),
                 row.getVerlag().getVerlagId(), row.getTyp().getTypId(), row.getFormat().getFormatId(), row.getTitel(), last,
@@ -128,6 +142,15 @@ public class PurchaseService {
             throw new IllegalStateException("Kaufänderung nicht bestätigt.");
         finish(item, result.get(), existing);
         return Result.of(Outcome.UPDATED);
+    }
+
+    private static Result preview(Outcome outcome, EinkaufslisteItem item, Long series, Integer first, Integer last) {
+        var detail = item.getEinkaufslisteItemDetails();
+        var state = ShoppingState.fields(item, detail);
+        Map<String, Object> summary = new LinkedHashMap<>();
+        for (String field : List.of("titel", "anzahlBaende", "preisProBand", "gesamtpreisAenderung", "gesamtpreis"))
+            summary.put(field, state.get(field));
+        return new Result(outcome, series, first, last, ShoppingState.token(item, detail, true), summary);
     }
 
     /** Nur die neuen Kaufbände korrigieren; globale Preis-/Einzelbandpfade bleiben T03-3/4.

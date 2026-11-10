@@ -36,6 +36,8 @@ const MangaLibFeedback = (() => {
     AMBIGUOUS_SERIES: "Die Zielreihe ist nicht eindeutig. Es wurde nichts übernommen.",
     INCOMPATIBLE_SERIES: "Die gefundene Ausgabe passt nicht zur Einkaufsposition. Es wurde nichts übernommen.",
     BAND_CONFLICT: "Der bestätigte Bandbereich passt nicht mehr zum Bestand. Bitte lade die Seite neu.",
+    PURCHASE_STATE_CONFLICT: "Der Einkauf wurde inzwischen geändert. Bitte lade die Seite neu und bestätige erneut.",
+    SHOPPING_EDIT_CONFLICT: "Der Eintrag wurde geändert oder ist gesperrt. Bitte lade die Seite neu.",
     INVALID_INVENTORY: "Der vorhandene Bestand ist unvollständig oder widersprüchlich. Es wurde nichts übernommen.",
     BUSY: "Eine andere Schreiboperation ist noch aktiv. Bitte versuche es später bewusst erneut."
   });

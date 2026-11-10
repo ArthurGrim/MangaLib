@@ -445,7 +445,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
           }
           button.disabled = true;
-          const completed = await askUserForNewMangaReiheStatus(itemId, button);
+          const completed = await askUserForNewMangaReiheStatus(itemId, button, data);
           if (completed) window.location.reload();
         })
         .catch(() => {})
@@ -455,7 +455,14 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   //PopUp wenn es sich um eine neue Reihe handelt und der User den Status eingeben soll.
-  function askUserForNewMangaReiheStatus(itemId, buyButton) {
+  function purchaseDescription(preview) {
+    const summary = preview.purchaseSummary;
+    if (!summary) return "";
+    const amount = value => value == null ? "unbekannt" : String(value).replace(".", ",") + " €";
+    return `${summary.titel} · ${summary.anzahlBaende} Bände · je ${amount(summary.preisProBand)} · Anpassung ${amount(summary.gesamtpreisAenderung)} · gesamt ${amount(summary.gesamtpreis)}`;
+  }
+
+  function askUserForNewMangaReiheStatus(itemId, buyButton, preview) {
     return new Promise((resolve) => {
       console.log("PopUp zur Auswahl des Status anzeigen.");
       var statusPopup = document.querySelector(".ask-for-status-popup");
@@ -465,9 +472,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
       var confirmButton = document.getElementById("confirmStatus");
       var cancelButton = document.getElementById("cancelStatus");
+      const summary = document.createElement("p");
+      summary.textContent = purchaseDescription(preview);
+      confirmButton.before(summary);
 
       // Hilfsfunktion, um Event Listener zu entfernen
       function cleanUp() {
+        summary.remove();
         confirmButton.removeEventListener("click", onConfirm);
         cancelButton.removeEventListener("click", onCancel);
         statusPopup.style.visibility = "hidden";
@@ -485,7 +496,7 @@ document.addEventListener("DOMContentLoaded", function () {
           try {
             const data = await MangaLibFeedback.request("/buyItemCreate", {
               method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ itemId: itemId, statusId: selectedStatus })
+              body: JSON.stringify({ itemId: itemId, statusId: selectedStatus, purchaseToken: preview.purchaseToken })
             }, statusPopup, { button: confirmButton, allowConfirmation: true,
               validate: data => data.message !== "Bitte Status für neue Reihe auswählen" && validPurchaseResponse(data) });
             cleanUp();
@@ -537,17 +548,20 @@ document.addEventListener("DOMContentLoaded", function () {
       panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Kaufbände bestätigen");
       const text = document.createElement("p");
       text.textContent = `Bände ${preview.firstBand}–${preview.lastBand} in die vorhandene Reihe übernehmen? Bereits vorhandene Bände bleiben erhalten.`;
+      const summary = document.createElement("p");
+      summary.textContent = purchaseDescription(preview);
       const confirm = document.createElement("button"); confirm.type = "button";
       confirm.className = "ask-panel-confirm-button"; confirm.textContent = "Bände übernehmen";
       const cancel = document.createElement("button"); cancel.type = "button";
       cancel.className = "ask-panel-cancel-button"; cancel.textContent = "Abbrechen";
-      panel.append(text, confirm, cancel); popup.append(panel); document.body.append(popup);
+      panel.append(text, summary, confirm, cancel); popup.append(panel); document.body.append(popup);
       let attempted = false;
       cancel.addEventListener("click", () => { popup.remove(); if (!attempted) buyButton.disabled = false; resolve(false); });
       confirm.addEventListener("click", async () => {
         if (confirm.disabled) return;
         attempted = true;
-        const body = { itemId, confirmedSeriesId: preview.seriesId, firstBand: preview.firstBand, lastBand: preview.lastBand };
+      const body = { itemId, confirmedSeriesId: preview.seriesId, firstBand: preview.firstBand,
+        lastBand: preview.lastBand, purchaseToken: preview.purchaseToken };
         if (statusId !== null) body.statusId = statusId;
         try {
           const data = await MangaLibFeedback.request(statusId === null ? "/buyItemUpdate" : "/buyItemCreate", {

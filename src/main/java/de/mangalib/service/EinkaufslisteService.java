@@ -40,6 +40,111 @@ public class EinkaufslisteService {
         this.einkaufslisteRepository = einkaufslisteRepository;
     }
 
+    public List<EinkaufslisteItem> undatedItems() {
+        return einkaufslisteRepository.findByErscheinungsdatumIsNullOrderByIdAsc();
+    }
+
+    @Transactional
+    public Map<String, Object> editState(long id) {
+        return einkaufslisteRepository.findById(id).map(this::editState).orElse(null);
+    }
+
+    private Map<String, Object> editState(EinkaufslisteItem item) {
+        var detail = item.getEinkaufslisteItemDetails();
+        var state = ShoppingState.fields(item, detail);
+        state.put("editable", Boolean.FALSE.equals(item.getGekauft()));
+        state.put("editToken", ShoppingState.token(item, detail, false));
+        return state;
+    }
+
+    @Transactional
+    public Map<String, Object> updateShoppingItem(long id, Map<String, Object> input) {
+        WriteValidation.require(Set.of("editToken", "titel", "mangaIndex", "verlagId", "typId", "formatId",
+                "anzahlBaende", "preisProBand", "gesamtpreisAenderung", "erscheinungsdatum", "istEbayPreis",
+                "istVergriffen", "sammelbandTypId").containsAll(input.keySet()));
+        Object token = input.get("editToken");
+        WriteValidation.require(token instanceof String text && text.matches("[a-f0-9]{64}"));
+        var item = einkaufslisteRepository.findByIdForPurchase(id).orElse(null);
+        if (item == null) return null;
+        var detail = item.getEinkaufslisteItemDetails();
+        if (!Boolean.FALSE.equals(item.getGekauft()) || !token.equals(ShoppingState.token(item, detail, false)))
+            throw new ShoppingConflict();
+
+        boolean financial = input.containsKey("preisProBand") || input.containsKey("gesamtpreisAenderung")
+                || input.containsKey("anzahlBaende");
+        if (financial) {
+            Integer count = input.containsKey("anzahlBaende") ? integer(input.get("anzahlBaende")) : item.getAnzahlBaende();
+            WriteValidation.volumes(count);
+            BigDecimal price = input.containsKey("preisProBand") ? amount(input.get("preisProBand")) : item.getPreis();
+            BigDecimal adjustment = input.containsKey("gesamtpreisAenderung")
+                    ? amount(input.get("gesamtpreisAenderung")) : item.getAenderungGesamtpreis();
+            WriteValidation.require(price != null && adjustment != null);
+            item.setGesamtpreis(Money.amount(price.multiply(BigDecimal.valueOf(count)).add(adjustment)));
+            item.setAnzahlBaende(count);
+            item.setPreis(price);
+            item.setAenderungGesamtpreis(adjustment);
+        }
+        if (input.containsKey("titel")) {
+            String title = string(input.get("titel"));
+            WriteValidation.title(title);
+            item.setTitel(title);
+        }
+        if (input.containsKey("mangaIndex")) {
+            Object value = input.get("mangaIndex");
+            Integer index = value == null ? null : integer(value);
+            WriteValidation.index(index);
+            item.setMangaIndex(index);
+        }
+        if (input.containsKey("verlagId")) item.setVerlagId(verlagService.getVerlagById(reference(input.get("verlagId")))
+                .orElseThrow(IllegalArgumentException::new));
+        if (input.containsKey("typId")) item.setTypId(typService.getTypById(reference(input.get("typId")))
+                .orElseThrow(IllegalArgumentException::new));
+        if (input.containsKey("formatId")) item.setFormatId(formatService.getFormatById(reference(input.get("formatId")))
+                .orElseThrow(IllegalArgumentException::new));
+        if (input.containsKey("erscheinungsdatum")) {
+            Object date = input.get("erscheinungsdatum");
+            item.setErscheinungsdatum(date == null ? null : LocalDate.parse(string(date)));
+        }
+        if (input.containsKey("istEbayPreis")) item.setIstEbayPreis(flag(input.get("istEbayPreis")));
+        if (input.containsKey("istVergriffen")) item.setIstVergriffen(flag(input.get("istVergriffen")));
+        if (input.containsKey("sammelbandTypId")) {
+            if (detail == null || !Objects.equals(detail.getId(), item.getId()) || detail.getEinkaufslisteItem() == null
+                    || !Objects.equals(detail.getEinkaufslisteItem().getId(), item.getId())) throw new ShoppingConflict();
+            Object omnibus = input.get("sammelbandTypId");
+            detail.setSammelbaendeId(omnibus == null ? null : sammelbaendeService.findById(reference(omnibus))
+                    .orElseThrow(IllegalArgumentException::new));
+        }
+        einkaufslisteRepository.flush();
+        return editState(item);
+    }
+
+    public static final class ShoppingConflict extends RuntimeException {}
+
+    private static String string(Object value) {
+        WriteValidation.require(value instanceof String);
+        return (String) value;
+    }
+
+    private static Integer integer(Object value) {
+        WriteValidation.require(value instanceof Integer);
+        return (Integer) value;
+    }
+
+    private static boolean flag(Object value) {
+        WriteValidation.require(value instanceof Boolean);
+        return (Boolean) value;
+    }
+
+    private static long reference(Object value) {
+        String id = string(value);
+        WriteValidation.require(id.matches("[1-9][0-9]{0,18}"));
+        return Long.parseLong(id);
+    }
+
+    private static BigDecimal amount(Object value) {
+        return Money.amount(WriteValidation.money(string(value)));
+    }
+
     /**
      * Findet ein EinkaufslisteItem anhand der ID.
      * 

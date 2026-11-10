@@ -35,7 +35,7 @@ class PurchaseServiceTest {
         service = new PurchaseService(new LibraryWriteCoordinator(tx), cart, details, f.rows, f.bands, f.series);
     }
     PurchaseService.Request request(Long status, boolean confirmed) {
-        return new PurchaseService.Request(7, status, confirmed ? 42L : null, confirmed ? 4 : null, confirmed ? 4 : null);
+        return new PurchaseService.Request(7, status, confirmed ? 42L : null, confirmed ? 4 : null, confirmed ? 4 : null, confirmed || status != null ? ShoppingState.token(item, item.getEinkaufslisteItemDetails(), true) : null);
     }
     void noWrites() {
         verify(cart, never()).save(any()); verify(cart, never()).flush();
@@ -178,7 +178,7 @@ class PurchaseServiceTest {
         assertEquals(UPDATED, service.purchase(request(null, true)).outcome());
         assertEquals(BAND_CONFLICT, service.purchase(new PurchaseService.Request(8, null, 42L, 4, 4)).outcome());
         assertFalse(second.getGekauft()); assertEquals(4, f.stored.size());
-        assertEquals(UPDATED, service.purchase(new PurchaseService.Request(8, null, 42L, 5, 5)).outcome());
+        assertEquals(UPDATED, service.purchase(new PurchaseService.Request(8, null, 42L, 5, 5, ShoppingState.token(second, second.getEinkaufslisteItemDetails(), true))).outcome());
         assertEquals(5, f.stored.size()); assertTrue(second.getGekauft());
     }
 
@@ -186,7 +186,7 @@ class PurchaseServiceTest {
     void exactPurchaseRemainderAffectsOnlyNewBandsEvenWithReversedResults(String adjustment) {
         Collections.reverse(f.stored); var before = f.state();
         item.setAnzahlBaende(3); item.setAenderungGesamtpreis(new BigDecimal(adjustment));
-        assertEquals(UPDATED, service.purchase(new PurchaseService.Request(7, null, 42L, 4, 6)).outcome());
+        assertEquals(UPDATED, service.purchase(new PurchaseService.Request(7, null, 42L, 4, 6, ShoppingState.token(item, item.getEinkaufslisteItemDetails(), true))).outcome());
         before.forEach((id, values) -> assertEquals(values, f.state().get(id)));
         var added = f.stored.stream().filter(b -> b.getBandNr() >= 4).sorted(Comparator.comparing(Band::getBandNr)).toList();
         var sum = added.stream().map(Band::getAenderungPreis).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -210,6 +210,7 @@ class PurchaseServiceTest {
 
     private void prepareNewDetails() {
         var d = new EinkaufslisteItemDetails(); d.setId(7L); d.setEinkaufslisteItem(item);
+        item.setEinkaufslisteItemDetails(d);
         when(details.findById(7L)).thenReturn(Optional.of(d));
         var omnibus = mock(SammelbandService.class);
         when(omnibus.findById(1L)).thenReturn(Optional.of(f.row.getMangaDetails().getSammelbaende()));
@@ -226,6 +227,17 @@ class PurchaseServiceTest {
             MangaDetails saved = i.getArgument(0); saved.setId(saved.getMangaReihe().getId());
             saved.getMangaReihe().setMangaDetails(saved); return saved;
         }).when(f.details).save(any());
+    }
+
+    @Test void sameRangeCannotAuthorizeAnEditedPriceOrATokenlessRequest() {
+        var preview = service.purchase(request(null, false));
+        item.setPreis(new BigDecimal("7.25"));
+        assertEquals(PURCHASE_STATE_CONFLICT, service.purchase(
+                new PurchaseService.Request(7, null, 42L, 4, 4, preview.purchaseToken())).outcome());
+        assertEquals(PURCHASE_STATE_CONFLICT, service.purchase(
+                new PurchaseService.Request(7, null, 42L, 4, 4)).outcome());
+        assertFalse(item.getGekauft());
+        noWrites();
     }
 
     @ParameterizedTest @ValueSource(strings = {"0.01", "-0.01", "0.02"})

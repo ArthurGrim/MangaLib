@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -89,34 +90,35 @@ public class EinkaufslisteController {
 
             if (items != null && !items.isEmpty()) {
                 // Prüfe, ob alle Items in diesem Monat gekauft wurden
-                boolean allItemsBought = items.stream().allMatch(EinkaufslisteItem::getGekauft);
+                boolean allItemsBought = items.stream().allMatch(item -> Boolean.TRUE.equals(item.getGekauft()));
 
                 if (!allItemsBought) {
                     String monthName = getGermanMonthName(month.getMonthValue());
                     itemsByMonth.put(monthName, items);
 
-                    for (EinkaufslisteItem e : items) {
-                        System.out.println("Monat: " + month.getMonthValue());
-                        System.out.println("ID: " + e.getId());
-                        System.out.println("Verlag: " + e.getVerlagId().getName());
-                        System.out.println("Typ: " + e.getTypId().getBezeichnung());
-                        System.out.println("Format: " + e.getFormatId().getBezeichnung());
-                        System.out.println("Titel: " + e.getTitel());
-                        System.out.println("---------");
-                    }
 
-                    int totalVolumes = items.stream().mapToInt(EinkaufslisteItem::getAnzahlBaende).sum();
+                    int totalVolumes = items.stream().map(EinkaufslisteItem::getAnzahlBaende).filter(java.util.Objects::nonNull).mapToInt(Integer::intValue).sum();
                     BigDecimal totalPrice = items.stream()
-                            .map(EinkaufslisteItem::getGesamtpreis)
+                            .map(EinkaufslisteItem::getGesamtpreis).filter(java.util.Objects::nonNull)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                     totalVolumesByMonth.put(monthName, totalVolumes);
-                    totalPriceByMonth.put(monthName, df.format(totalPrice));
+                    totalPriceByMonth.put(monthName, items.stream().anyMatch(item -> item.getGesamtpreis() == null) ? "Unbekannt" : df.format(totalPrice));
                 }
             }
         }
 
         model.addAttribute("itemsByMonth", itemsByMonth);
+        var undated = einkaufslisteService.undatedItems();
+        if (!undated.isEmpty()) {
+            String group = "Ohne Erscheinungsdatum";
+            itemsByMonth.put(group, undated);
+            totalVolumesByMonth.put(group, undated.stream().map(EinkaufslisteItem::getAnzahlBaende)
+                    .filter(java.util.Objects::nonNull).mapToInt(Integer::intValue).sum());
+            totalPriceByMonth.put(group, undated.stream().anyMatch(item -> item.getGesamtpreis() == null)
+                    ? "Unbekannt" : df.format(undated.stream().map(EinkaufslisteItem::getGesamtpreis)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        }
         model.addAttribute("totalVolumesByMonth", totalVolumesByMonth);
         model.addAttribute("totalPriceByMonth", totalPriceByMonth);
         model.addAttribute("alleVerlage", alleVerlage);
@@ -172,6 +174,28 @@ public class EinkaufslisteController {
     @Autowired
     private PurchaseService purchaseService;
 
+    @GetMapping("/items/{id}/edit")
+    public ResponseEntity<?> editState(@PathVariable long id) {
+        if (id <= 0) return ResponseEntity.badRequest().build();
+        var state = einkaufslisteService.editState(id);
+        return state == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(state);
+    }
+
+    @PatchMapping(value = "/items/{id}", consumes = "application/json")
+    public ResponseEntity<?> edit(@PathVariable long id, @RequestBody Map<String, Object> data) {
+        try {
+            WriteValidation.require(id > 0);
+            var state = einkaufslisteService.updateShoppingItem(id, data);
+            return state == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(state);
+        } catch (EinkaufslisteService.ShoppingConflict conflict) {
+            return ResponseEntity.status(409).header("X-MangaLib-Purchase-Outcome", "SHOPPING_EDIT_CONFLICT").build();
+        } catch (IllegalArgumentException | java.time.DateTimeException invalid) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception failure) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @PostMapping("/buyItemUpdate")
     public ResponseEntity<?> buyItemUpdate(@RequestBody Map<String, Object> data) {
         return purchase(data, false);
@@ -189,8 +213,10 @@ public class EinkaufslisteController {
             WriteValidation.require(status == null || status > 0);
             if (id <= 0) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Keinen Item mit dieser ID gefunden");
             Long confirmed = data.containsKey("confirmedSeriesId") ? WriteRequests.purchaseId(data, "confirmedSeriesId") : null;
+            Object token = data.get("purchaseToken");
+            WriteValidation.require(!data.containsKey("purchaseToken") || token instanceof String);
             var request = new PurchaseService.Request(id, status, confirmed,
-                    rangeNumber(data, "firstBand"), rangeNumber(data, "lastBand"));
+                    rangeNumber(data, "firstBand"), rangeNumber(data, "lastBand"), (String) token);
             return purchaseResponse(purchaseService.purchase(request));
         } catch (IllegalArgumentException invalid) {
             return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
@@ -223,10 +249,16 @@ public class EinkaufslisteController {
             case NOT_FOUND, DETAILS_NOT_FOUND -> 404;
             default -> 409;
         };
-        Object body = outcome == PurchaseService.Outcome.CONFIRM_VOLUMES
-                ? Map.of("message", message, "seriesId", result.seriesId().toString(),
-                        "firstBand", result.firstBand(), "lastBand", result.lastBand())
-                : status == 404 ? message : Map.of("message", message);
+        var json = new java.util.LinkedHashMap<String, Object>();
+        json.put("message", message);
+        if (outcome == PurchaseService.Outcome.CONFIRM_VOLUMES) {
+            json.put("seriesId", result.seriesId().toString());
+            json.put("firstBand", result.firstBand());
+            json.put("lastBand", result.lastBand());
+        }
+        if (result.purchaseToken() != null) json.put("purchaseToken", result.purchaseToken());
+        if (result.purchaseSummary() != null) json.put("purchaseSummary", result.purchaseSummary());
+        Object body = status == 404 ? message : json;
         return ResponseEntity.status(status).header("X-MangaLib-Purchase-Outcome", outcome.name()).body(body);
     }
 }

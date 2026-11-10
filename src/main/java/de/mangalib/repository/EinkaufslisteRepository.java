@@ -20,6 +20,7 @@ public interface EinkaufslisteRepository extends JpaRepository<EinkaufslisteItem
     java.util.Optional<EinkaufslisteItem> findByIdForPurchase(@Param("id") Long id);
 
     List<EinkaufslisteItem> findByErscheinungsdatumBetween(LocalDate start, LocalDate end, Sort sort);
+    List<EinkaufslisteItem> findByErscheinungsdatumIsNullOrderByIdAsc();
 
     @Query("SELECT FUNCTION('MONTH', e.erscheinungsdatum), SUM(e.anzahlBaende) " +
             "FROM EinkaufslisteItem e " +
