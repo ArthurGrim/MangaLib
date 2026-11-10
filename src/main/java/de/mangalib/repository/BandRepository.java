@@ -10,7 +10,10 @@ import org.springframework.data.repository.query.Param;
 import de.mangalib.entity.Band;
 
 public interface BandRepository extends JpaRepository<Band, Long> {
-    @Query("SELECT b FROM Band b WHERE b.mangaReihe.id = :mangaReiheId AND b.bandNr = 1")
+    boolean existsByBandIndex(Integer bandIndex);
+
+    @Query("SELECT b FROM Band b WHERE b.mangaReihe.id = :mangaReiheId AND b.bandNr = "
+            + "(SELECT MIN(v.bandNr) FROM Band v WHERE v.mangaReihe.id = :mangaReiheId AND v.bandNr > 0)")
     Optional<Band> findFirstBandByMangaReiheId(@Param("mangaReiheId") Long mangaReiheId);
 
     List<Band> findByMangaReiheId(Long mangaReiheId);

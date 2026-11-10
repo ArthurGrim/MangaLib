@@ -52,6 +52,8 @@ public class BandScraper {
                 String title = safeText(h1);
                 if (!title.isBlank()) {
                     bandData.put("Titel", title);
+                    var number = java.util.regex.Pattern.compile(",\\s*Band\\s+([1-9][0-9]*)$").matcher(title);
+                    if (number.find()) bandData.put("Bandnummer", number.group(1));
                     System.out.println("Titel: " + title);
                 }
             } catch (Exception ignored) { }

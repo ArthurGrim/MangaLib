@@ -540,7 +540,7 @@ public class BandService {
         if (optionalBand.isPresent()) {
             Band band = optionalBand.get();
             WriteValidation.editableRelations(band.getMangaReihe());
-            var inventory = BandInventory.indexed(band.getMangaReihe(),
+            var inventory = BandInventory.byPublicationNumber(band.getMangaReihe(),
                     bandRepository.findByMangaReiheId(band.getMangaReihe().getId()));
             WriteValidation.require(inventory.values().stream().anyMatch(b -> Objects.equals(b.getId(), band.getId())));
             // Eine Einzelbearbeitung ist keine implizite Umnummerierung des Bestands.
@@ -664,12 +664,21 @@ public class BandService {
         }
     }
 
+    public boolean containsExternalBand(int bandIndex) {
+        return bandRepository.existsByBandIndex(bandIndex);
+    }
+
     // Wenn der MP Autofill Button gedrückt wird
     public Map<String, String> autofillBandData(String bandIndex) {
         WriteRequests.positiveInt(bandIndex);
         Map<String, String> scrapedData = WriteValidation.scrapedData(scraperGateway.scrapeVolume(bandIndex));
         Map<String, String> relevantData = new HashMap<>();
 
+        for (String field : List.of("Titel", "Bandnummer", "Veröffentlichung", "Veröffentlichungsdatum", "Erscheinungsdatum")) {
+            if (scrapedData.containsKey(field)) {
+                relevantData.put(field, scrapedData.get(field));
+            }
+        }
         if (scrapedData.containsKey("BildUrl")) {
             relevantData.put("BildUrl", scrapedData.get("BildUrl"));
         }

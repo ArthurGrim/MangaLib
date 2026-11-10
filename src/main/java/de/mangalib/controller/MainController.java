@@ -234,6 +234,24 @@ public class MainController {
     @ResponseBody // Damit der Rückgabewert als Response Body gesendet wird
     public ResponseEntity<?> addMangaReihe(@RequestBody Map<String, Object> requestData) {
         try {
+            if ("volume".equals(requestData.get("importMode"))) {
+                WriteValidation.require(Integer.valueOf(1).equals(requestData.get("anzahlBaende")));
+                var volume = new Band();
+                volume.setBandIndex(WriteRequests.positiveInt(WriteRequests.string(requestData, "bandIndex", true)));
+                volume.setBandNr(WriteRequests.positiveInt(WriteRequests.string(requestData, "bandNumber", true)));
+                volume.setPreis(WriteValidation.money(WriteRequests.string(requestData, "preisProBand", true)));
+                volume.setBildUrl(WriteValidation.toUrl(WriteValidation.optionalUrl(
+                        WriteRequests.string(requestData, "coverUrl", false))));
+                volume.setMpUrl(WriteValidation.toUrl("https://www.manga-passion.de/volumes/" + volume.getBandIndex()));
+                String target = WriteRequests.string(requestData, "targetSeriesId", false);
+                Long targetId = target == null || target.isBlank() ? null : WriteRequests.purchaseId(requestData, "targetSeriesId");
+                return ResponseEntity.ok(mangaReiheService.saveImportedVolume(
+                        targetId == null ? WriteRequests.Series.from(requestData) : null, targetId, volume));
+            }
+            // Einzelbände benötigen einen eigenen Zuordnungspfad. Niemals als Reihe speichern.
+            if (!"series".equals(requestData.getOrDefault("importMode", "series"))) {
+                throw new IllegalArgumentException("Unsupported import mode");
+            }
             var input = WriteRequests.Series.from(requestData, () -> mangaReiheService
                     .findById(WriteRequests.purchaseId(requestData, "mangaReiheId")).orElse(null));
             MangaReihe saved;
@@ -249,6 +267,8 @@ public class MainController {
                         input.omnibus(), input.adjustment(), input.read(), input.reread(), input.scraped()).orElse(null);
             }
             return ResponseEntity.ok(saved);
+        } catch (MangaReiheService.VolumeImportConflict e) {
+            return ResponseEntity.status(409).body(Map.of("error", "Band oder Zielreihe steht nicht eindeutig zur Verfügung."));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
         } catch (Exception e) {
@@ -441,7 +461,19 @@ public class MainController {
         }
     }
 
-    @PostMapping("/autofillBandData/{bandIndex}")
+    @PostMapping(value = "/autofillBandData/{bandIndex}", params = "importPreview")
+    public ResponseEntity<Map<String, String>> previewVolumeImport(@PathVariable String bandIndex) {
+        try {
+            if (bandService.containsExternalBand(WriteRequests.positiveInt(bandIndex))) {
+                return ResponseEntity.status(409).build();
+            }
+            return autofillBandData(bandIndex);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Ungültige Eingabe."));
+        }
+    }
+
+    @PostMapping(value = "/autofillBandData/{bandIndex}", params = "!importPreview")
     public ResponseEntity<Map<String, String>> autofillBandData(@PathVariable String bandIndex) {
         try {
             WriteRequests.positiveInt(bandIndex);

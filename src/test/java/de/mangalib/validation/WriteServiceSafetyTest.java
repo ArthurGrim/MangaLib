@@ -79,6 +79,14 @@ class WriteServiceSafetyTest {
                 "mpUrl", "https://www.manga-passion.de/volumes/123"), bands.autofillBandData("123"));
     }
 
+    @Test void volumeAutofillForwardsPreviewFieldsWithoutInventingSeriesIdentity() {
+        when(scraper.scrapeVolume("123")).thenReturn(Map.of(
+                "Titel", "Synthetischer Band", "Erscheinungsdatum", "12.11.2026",
+                "Beliebiges Feld", "Nicht Teil der Vorschau"));
+        assertEquals(Map.of("Titel", "Synthetischer Band", "Erscheinungsdatum", "12.11.2026",
+                "mpUrl", "https://www.manga-passion.de/volumes/123"), bands.autofillBandData("123"));
+    }
+
     static java.util.stream.Stream<String> allowedAttributes() { return MangaReiheService.SORT_ATTRIBUTES.stream(); }
 
     @ParameterizedTest @MethodSource("allowedAttributes")

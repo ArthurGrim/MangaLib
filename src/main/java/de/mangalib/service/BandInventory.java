@@ -29,6 +29,15 @@ final class BandInventory {
     }
 
     static NavigableMap<Integer, Band> indexed(MangaReihe row, List<Band> bands) {
+        var result = byPublicationNumber(row, bands);
+        // Automatische Erweiterungen benötigen weiterhin einen lückenlosen Bestand.
+        for (int number = 1; number <= bands.size(); number++) {
+            WriteValidation.require(result.containsKey(number));
+        }
+        return result;
+    }
+
+    static NavigableMap<Integer, Band> byPublicationNumber(MangaReihe row, List<Band> bands) {
         WriteValidation.require(row != null && row.getId() != null && bands != null);
         var ids = new HashSet<Long>();
         var result = new TreeMap<Integer, Band>();
@@ -38,10 +47,6 @@ final class BandInventory {
                     && band.getMangaReihe() != null
                     && Objects.equals(row.getId(), band.getMangaReihe().getId()));
             WriteValidation.require(result.putIfAbsent(band.getBandNr(), band) == null);
-        }
-        // Keine implizite Lückenfüllung oder Erzeugung bereits vorhandener Nummern.
-        for (int number = 1; number <= bands.size(); number++) {
-            WriteValidation.require(result.containsKey(number));
         }
         return result;
     }

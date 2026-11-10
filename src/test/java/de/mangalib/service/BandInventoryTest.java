@@ -57,6 +57,46 @@ class BandInventoryTest {
         assertEquals(before, f.state()); verify(f.bands, never()).save(any());
     }
 
+    @Test void importAddsExactlyOneLaterVolumeAndRejectsReplay() {
+        var f = new T03Fixtures.Library();
+        when(f.rows.findByIdForPurchase(42L)).thenReturn(Optional.of(f.row));
+        when(f.bands.saveAndFlush(any())).thenAnswer(call -> {
+            Band added = call.getArgument(0);
+            added.setId(131L);
+            f.stored.add(added);
+            return added;
+        });
+        var before = f.state();
+        Band volume = new Band();
+        volume.setBandIndex(24092);
+        volume.setBandNr(31);
+        volume.setPreis(new BigDecimal("8.50"));
+        f.series.saveImportedVolume(null, 42L, volume);
+        assertEquals(4, f.row.getAnzahlBaende());
+        assertEquals(new BigDecimal("26.50"), f.row.getGesamtpreis());
+        assertEquals(Set.of(1, 2, 3, 31), BandInventory.byPublicationNumber(f.row, f.stored).keySet());
+        before.forEach((id, state) -> assertEquals(state, f.state().get(id)));
+        when(f.bands.existsByBandIndex(24092)).thenReturn(true);
+        assertThrows(MangaReiheService.VolumeImportConflict.class,
+                () -> f.series.saveImportedVolume(null, 42L, volume));
+        verify(f.bands).saveAndFlush(volume);
+    }
+
+    @Test void editingLaterVolumePreservesGapsAndOtherVolumes() {
+        var f = new T03Fixtures.Library();
+        var later = f.stored.getLast();
+        later.setBandNr(31);
+        var before = f.state();
+        var input = new Band(); input.setId(later.getId()); input.setPreis(new BigDecimal("9.00"));
+        f.bandService.updateBand(input);
+        assertEquals(31, later.getBandNr());
+        assertEquals(new BigDecimal("21.00"), f.row.getGesamtpreis());
+        assertEquals(before.get(101L), f.state().get(101L));
+        assertEquals(before.get(102L), f.state().get(102L));
+        assertEquals(Set.of(1, 2, 31), BandInventory.byPublicationNumber(f.row, f.stored).keySet());
+        assertThrows(IllegalArgumentException.class, () -> BandInventory.indexed(f.row, f.stored));
+    }
+
     @Test void financialAggregateUsesActualCountAndKnownIndividualValues() {
         var f = new T03Fixtures.Library(); f.row.setAnzahlBaende(8);
         Collections.reverse(f.stored); var before = f.state();

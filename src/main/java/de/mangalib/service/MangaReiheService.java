@@ -1,5 +1,7 @@
 package de.mangalib.service;
 
+import de.mangalib.validation.WriteRequests;
+
 import de.mangalib.validation.WriteValidation;
 
 import de.mangalib.repository.MangaReiheRepository;
@@ -156,6 +158,15 @@ public class MangaReiheService {
             Long formatId, String titel, Integer anzahlBaende, BigDecimal preisProBand,
             Boolean istVergriffen, Boolean istEbayPreis, String anilistUrl, Long sammelbandTypId,
             BigDecimal gesamtpreisAenderung, Boolean istGelesen, Integer reread, Map<String, String> scrapedData) {
+        return saveSeries(mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende, preisProBand,
+                istVergriffen, istEbayPreis, anilistUrl, sammelbandTypId, gesamtpreisAenderung, istGelesen,
+                reread, scrapedData, null);
+    }
+
+    private MangaReihe saveSeries(Integer mangaIndex, Long statusId, Long verlagId, Long typId, Long formatId,
+            String titel, Integer anzahlBaende, BigDecimal preisProBand, Boolean istVergriffen, Boolean istEbayPreis,
+            String anilistUrl, Long sammelbandTypId, BigDecimal gesamtpreisAenderung, Boolean istGelesen,
+            Integer reread, Map<String, String> scrapedData, Band volume) {
         WriteValidation.volumes(anzahlBaende);
         WriteValidation.reread(reread);
         scrapedData = WriteValidation.scrapedData(scrapedData);
@@ -218,7 +229,12 @@ public class MangaReiheService {
         System.out.println("Details gesetzt");
 
         System.out.println("Bände werden erzeugt");
-        bandService.createAndSaveBaende(savedMangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData);
+        if (volume == null) {
+            bandService.createAndSaveBaende(savedMangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData);
+        } else {
+            volume.setMangaReihe(savedMangaReihe);
+            bandRepository.saveAndFlush(volume);
+        }
         System.out.println("Bände erzeugt");
 
         BigDecimal aenderungGesamtPreis = bandService.calculateAenderungGesamtpreis(savedMangaReihe);
@@ -236,6 +252,38 @@ public class MangaReiheService {
 
         return savedMangaReihe;
     }
+
+    /** Einzelbandanlage unter dem gemeinsamen Schreib-Advisor, einschließlich Duplikatprüfung. */
+    public MangaReihe saveImportedVolume(WriteRequests.Series input, Long targetId, Band volume) {
+        WriteValidation.require(volume.getBandIndex() != null && volume.getBandIndex() > 0
+                && volume.getBandNr() != null && volume.getBandNr() > 0);
+        if (bandRepository.existsByBandIndex(volume.getBandIndex())) throw new VolumeImportConflict();
+        if (targetId == null) {
+            WriteValidation.require(input != null && !input.edit() && input.volumes() == 1);
+            return saveSeries(null, input.status(), input.publisher(), input.type(), input.format(),
+                    input.title(), 1, volume.getPreis(), input.outOfPrint(), false, input.anilist(),
+                    input.omnibus(), BigDecimal.ZERO, false, 0, Map.of(), volume);
+        }
+        MangaReihe row = mangaReiheRepository.findByIdForPurchase(targetId).orElseThrow(VolumeImportConflict::new);
+        WriteValidation.editableRelations(row);
+        var inventory = BandInventory.byPublicationNumber(row, bandRepository.findByMangaReiheId(targetId));
+        if (inventory.containsKey(volume.getBandNr()) || !Objects.equals(row.getAnzahlBaende(), inventory.size()))
+            throw new VolumeImportConflict();
+        WriteValidation.volumes(inventory.size() + 1);
+        for (Band existing : inventory.values()) {
+            WriteValidation.require(existing.getPreis() != null && existing.getAenderungPreis() != null);
+        }
+        volume.setMangaReihe(row);
+        bandRepository.saveAndFlush(volume);
+        row.setAnzahlBaende(inventory.size() + 1);
+        row.setAenderungGesamtpreis(bandService.calculateAenderungGesamtpreis(row));
+        row.setGesamtpreis(bandService.calculateGesamtpreis(row));
+        row.setPreisProBand(row.getGesamtpreis().divide(BigDecimal.valueOf(row.getAnzahlBaende()), 2, RoundingMode.HALF_UP));
+        bandService.updateMangaDetailsIstGelesenStatus(row.getMangaDetails());
+        return mangaReiheRepository.save(row);
+    }
+
+    public static final class VolumeImportConflict extends RuntimeException { }
 
     /**
      * Erstellt eine neue MangaReihe mit den gegebenen Attributen.

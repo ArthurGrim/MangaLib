@@ -11,6 +11,53 @@ document.addEventListener("DOMContentLoaded", function () {
   const nextId = document.getElementById("id").textContent;
   const autofillButton = document.querySelector(".mp-autofill-button");
   const mangaIndexInput = document.querySelector("#manga_index");
+  const importMode = popupContainer.querySelector("#import_mode");
+  const volumeCount = popupContainer.querySelector("#anzahl_baende");
+  const volumePreview = popupContainer.querySelector("#volume_import_preview");
+  const volumeCover = popupContainer.querySelector("#volume_import_cover");
+  const volumeDate = popupContainer.querySelector("#volume_import_date");
+  const volumeNumber = popupContainer.querySelector("#volume_import_number");
+  const volumeTarget = popupContainer.querySelector("#volume_import_target");
+  const volumeSeriesTitle = popupContainer.querySelector("#volume_import_series_title");
+  let previewIndex = "";
+  let seriesVolumeCount = "";
+  let seriesTitle = "";
+  let seriesPrice = "";
+  let importRevision = 0;
+
+  importMode.addEventListener("change", () => {
+    const title = popupContainer.querySelector("#titel");
+    const price = popupContainer.querySelector("#preis_pro_band");
+    if (importMode.value === "volume") {
+      seriesVolumeCount = volumeCount.value;
+      seriesTitle = title.value;
+      seriesPrice = price.value;
+      title.value = "";
+      price.value = "";
+    } else {
+      title.value = seriesTitle;
+      price.value = seriesPrice;
+    }
+    mangaIndexInput.value = "";
+    scrapedData = {};
+    updateImportMode();
+  });
+
+  function updateImportMode() {
+    importRevision++;
+    const singleVolume = importMode.value === "volume";
+    volumeCount.value = singleVolume ? "1" : seriesVolumeCount;
+    volumeCount.readOnly = singleVolume;
+    volumePreview.hidden = !singleVolume;
+    previewIndex = "";
+    volumeNumber.value = "";
+    volumeTarget.value = "";
+    volumeSeriesTitle.value = "";
+    volumeCover.value = "";
+    volumeDate.value = "";
+    popupContainer.querySelector("#import_mode_hint").hidden = !singleVolume;
+    hideLoading();
+  }
 
   // Event-Handler, um das Pop-up anzuzeigen
   addButton.addEventListener("click", function () {
@@ -43,27 +90,51 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Event-Handler, für den MangaPassion-Autofill Button
   autofillButton.addEventListener("click", function () {
+    const singleVolume = importMode.value === "volume";
     const mangaIndex = mangaIndexInput.value.trim();
 
     // Validierung des Manga-Index
-    if (!mangaIndex || isNaN(mangaIndex)) {
+    if (!mangaIndex || (singleVolume ? !/^[1-9][0-9]*$/.test(mangaIndex) : isNaN(mangaIndex))) {
       MangaLibFeedback.show(popupContainer, "Bitte geben Sie einen gültigen Manga-Index ein.");
       return;
     }
 
+    const revision = ++importRevision;
+    if (singleVolume) {
+      previewIndex = "";
+      volumeTarget.value = "";
+      volumeSeriesTitle.value = "";
+    }
     MangaLibFeedback.clear(popupContainer);
     // Anzeigen des Lade-Labels
     showLoading();
 
     // Senden des Manga-Index an den Web Scraper
-    MangaLibFeedback.request("/scrape", {
+    const endpoint = singleVolume ? `/autofillBandData/${mangaIndex}?importPreview` : "/scrape";
+    const options = singleVolume ? { method: "POST" } : {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ mangaIndex: mangaIndex }),
-    }, popupContainer, { persist: false })
+    };
+    MangaLibFeedback.request(endpoint, options, popupContainer, { persist: false })
       .then((data) => {
+        if (revision !== importRevision) return;
+        if (singleVolume) {
+          hideLoading();
+          if (mangaIndexInput.value.trim() !== mangaIndex) return;
+          popupContainer.querySelector("#titel").value = data.Titel ?? "";
+          popupContainer.querySelector("#preis_pro_band").value = data.Preis ?? "";
+          volumeCover.value = data.BildUrl ?? "";
+          volumeDate.value = data.Veröffentlichung ?? data.Veröffentlichungsdatum ?? data.Erscheinungsdatum ?? "";
+          volumeNumber.value = data.Bandnummer ?? "";
+          if (data.Bandnummer && data.Titel) {
+            volumeSeriesTitle.value = data.Titel.replace(/,\s*Band\s+[1-9][0-9]*$/, "");
+          }
+          previewIndex = data.Titel ? mangaIndex : "";
+          return;
+        }
         // Daten in die Eingabefelder und Selects einfügen
         document.querySelector("#verlag").value = data["verlagId"];
         document.querySelector("#typ").value = data["typId"];
@@ -90,7 +161,12 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       })
       .catch((error) => {
+        if (revision !== importRevision) return;
         hideLoading();
+        if (singleVolume && error.status === 409) {
+          MangaLibFeedback.show(popupContainer, "Dieser Manga-Passion-Band ist bereits in der Bibliothek vorhanden.");
+          return;
+        }
         showError();
         // Keine Rohfehler oder Antwortbodys anzeigen.
       });
@@ -160,6 +236,20 @@ document.addEventListener("DOMContentLoaded", function () {
       .querySelector("#preis_pro_band")
       .value.trim();
     const preisProBand = preisProBandString.replace(",", ".");
+    if (importMode.value === "volume") {
+      if (!previewIndex || previewIndex !== mangaIndex || !volumeTarget.value ||
+          !/^[1-9][0-9]*$/.test(volumeNumber.value)) {
+        MangaLibFeedback.show(popupContainer, "Bitte Band laden, Bandnummer prüfen und Zielreihe wählen.");
+        return;
+      }
+      save({
+        importMode: "volume", bandIndex: previewIndex, bandNumber: volumeNumber.value,
+        targetSeriesId: volumeTarget.value === "new" ? null : volumeTarget.value,
+        coverUrl: volumeCover.value.trim(), anzahlBaende: 1, preisProBand,
+        statusId, verlagId, typId, formatId, titel: volumeSeriesTitle.value.trim()
+      });
+      return;
+    }
     const anilistUrl = document.querySelector("#anilist_url").value.trim();
     const istGelesen = document.querySelector("#istgelesen").checked;
     const reread = document.querySelector("#reread").value.trim();
@@ -244,6 +334,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Objekt erstellen, das gesendet werden soll
     const mangaReiheData = {
+      importMode: importMode.value,
       mangaIndex: mangaIndex ? parseInt(mangaIndex, 10) : null,
       statusId,
       verlagId,
@@ -266,12 +357,16 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Zu sendende Daten:", mangaReiheData);
 
     // Daten senden mit Fetch-API
+    save(mangaReiheData);
+  });
+
+  function save(data) {
     MangaLibFeedback.request("/addMangaReihe", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(mangaReiheData),
+      body: JSON.stringify(data),
     }, popupContainer)
       .then((data) => {
         console.log("Antwort vom Server:", data); // Erfolgsmeldung oder Datenverarbeitung
@@ -280,10 +375,16 @@ document.addEventListener("DOMContentLoaded", function () {
         resetPopupFields();
         window.location.reload();
       })
-      .catch(() => {}); // Die gemeinsame Hilfe zeigt die sichere Dialogmeldung.
-  });
+      .catch(error => {
+        if (data.importMode === "volume" && error.status === 409) {
+          MangaLibFeedback.show(popupContainer, "Der Band ist bereits vorhanden oder die Zielreihe ist nicht eindeutig verfügbar.");
+        }
+      });
+  }
 
   function resetPopupFields() {
+    scrapedData = {};
+    seriesVolumeCount = "";
     // Zurücksetzen aller Eingabefelder
     document
       .querySelectorAll(
@@ -307,5 +408,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Aktualisieren der Sichtbarkeit basierend auf Checkboxen
     updateVisibility();
+    updateImportMode();
   }
 });

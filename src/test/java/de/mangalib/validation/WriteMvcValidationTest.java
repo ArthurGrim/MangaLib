@@ -329,6 +329,14 @@ class WriteMvcValidationTest {
         assertEquals(400, mvc.perform(write("/autofillBandData/" + index)).andReturn().getResponse().getStatus()); noWork();
     }
 
+    @Test void duplicateVolumePreviewDoesNotStartAutofill() throws Exception {
+        when(bands.containsExternalBand(123)).thenReturn(true);
+        assertEquals(409, mvc.perform(write("/autofillBandData/123").param("importPreview", ""))
+                .andReturn().getResponse().getStatus());
+        verify(bands).containsExternalBand(123);
+        verifyNoMoreInteractions(bands);
+    }
+
     @Test void unsafeScraperOutputCannotReachReferenceLookups() throws Exception {
         when(scraper.scrapeSeries("123")).thenReturn(Map.of("Band 1 Bild Url", "javascript:alert(1)"));
         assertEquals(400, mvc.perform(write("/scrape").content("{\"mangaIndex\":\"123\"}")).andReturn().getResponse().getStatus());

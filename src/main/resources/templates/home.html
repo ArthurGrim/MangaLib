@@ -595,11 +595,49 @@
               <label id="id" class="id-label" th:text="${nextId}"></label>
             </div>
             <div class="input-group">
+              <label for="import_mode">Importart</label>
+              <select id="import_mode" name="importMode" aria-describedby="import_mode_hint">
+                <option value="series">Reihe</option>
+                <option value="volume">Einzelband</option>
+              </select>
+              <span id="import_mode_hint" hidden>Band laden, Bandnummer prüfen und die Zielreihe ausdrücklich auswählen.</span>
               <label for="manga_index">Manga Index</label>
               <input type="text" id="manga_index" name="manga_index" />
             </div>
             <div class="spacer"></div>
             <button type="button" class="save-button">Save</button>
+          </div>
+
+          <div id="volume_import_preview" hidden>
+            <div class="form-row">
+              <div class="input-group">
+                <label for="volume_import_target">Zielreihe</label>
+                <select id="volume_import_target">
+                  <option value="">Bitte wählen</option>
+                  <option value="new">Neue Reihe mit diesem Band anlegen</option>
+                  <option th:each="row : ${alleMangaReihen}" th:value="${row.id}"
+                          th:text="|${row.titel} (#${row.id})|"></option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="volume_import_number">Bandnummer</label>
+                <input type="number" id="volume_import_number" min="1" step="1" />
+              </div>
+              <div class="input-group">
+                <label for="volume_import_series_title">Reihentitel (bei neuer Reihe)</label>
+                <input type="text" id="volume_import_series_title" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label for="volume_import_cover">Cover-URL</label>
+                <input type="text" id="volume_import_cover" />
+              </div>
+              <div class="input-group">
+                <label for="volume_import_date">Veröffentlichungsdatum (Vorschau)</label>
+                <input type="text" id="volume_import_date" readonly />
+              </div>
+            </div>
           </div>
 
           <!-- Zweite Reihe -->

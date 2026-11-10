@@ -13,11 +13,16 @@ public final class SyntheticScraperGateway implements ScraperGateway {
             throw new ScraperRequestRejectedException();
     }
     public Map<String, String> scrapeVolume(String index) {
+        if ("900003".equals(index) || "900006".equals(index)) {
+            String number = "900003".equals(index) ? "31" : "2";
+            return new HashMap<>(Map.of("Titel", "MANUELL M02, Band " + number, "Bandnummer", number,
+                    "BildUrl", COVER, "Preis", "8.50 €", "Veröffentlichung", "6. November 2026"));
+        }
         check(index);
         return new HashMap<>(Map.of("BildUrl", COVER, "Preis", "6.99 €"));
     }
     public Map<String, String> scrapeSeries(String index) {
-        check(index);
+        if (!"900004".equals(index)) check(index);
         var data = new HashMap<String, String>();
         data.put("Titel", "MANUELL " + index + " – ÄÖÜ & Sonderzeichen");
         data.put("Deutsche Ausgabe Verlag", "Testverlag");

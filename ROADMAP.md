@@ -109,6 +109,8 @@ aller Updates vollständig erhalten bleiben.
 - Bei „Einzelband“ Bandanzahl automatisch auf **1** setzen und nicht editierbar machen.
 - Beim Einzelband möglichst Titel, Preis, Cover und **Veröffentlichungsdatum** auslesen und übernehmen.
 - Zugehörigkeit zur Reihe und Verhalten bei schon vorhandener Reihe/Bandnummer festlegen; keine unbeabsichtigten Duplikate.
+- Einzelbandbestand darf bei einer späteren Nummer beginnen und Lücken enthalten. Bandanzahl zählt vorhandene Bände. Fehlende Nummern erzeugen keine Platzhalter und können später gezielt ergänzt werden. Automatische Mengenerweiterungen müssen lückenhafte Bestände bis zu einem expliziten Zuordnungspfad kontrolliert ablehnen.
+- **Umsetzungsstand:** Einzelbandvorschau und transaktionale Übernahme mit ausdrücklich gewählter Zielreihe oder Neuanlage sind implementiert. Das Veröffentlichungsdatum erscheint in der Vorschau, da das Bandmodell dafür kein Feld besitzt. Geschützte MySQL-Tests bestätigten Rollback und Datenerhalt sowie HTTP 200/409 bei nachgewiesener Überlappung zweier Importe desselben Bandes. Im isolierten Browser wurden synthetischer Reihenimport mit Speicherung und Reload, Einzelband-Neuanlage, Duplikatmeldung und Ergänzung von Band 2 zu Band 31 bestätigt. Ein echter Manga-Passion-Abruf war nicht Teil dieser Abnahme.
 - **Akzeptanz:** Beide Importarten sind klar unterscheidbar, liefern korrekt normalisierte Formulardaten und können gespeichert werden.
 
 ### M03 – „Days Read“ berechnen

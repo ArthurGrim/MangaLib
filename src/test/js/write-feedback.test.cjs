@@ -67,6 +67,67 @@ async function setup(t, script = 'popup_add_reihe.js', config = {}) {
     parsed: () => parsed, textRead: () => textRead };
 }
 
+test('Einzelband lädt nur eine CSRF-geschützte Vorschau und lässt die Reihe unverändert', async t => {
+  const e = await setup(t, 'popup_add_reihe.js', { data: {
+    Titel: 'Testband & 漫画', Preis: '8,49', BildUrl: 'https://example.invalid/cover.jpg',
+    Veröffentlichung: '12.11.2026'
+  } });
+  const mode = e.d.getElementById('import_mode');
+  const count = e.d.getElementById('anzahl_baende');
+  const index = e.d.getElementById('manga_index');
+  const autofill = e.container.querySelector('.mp-autofill-button');
+  assert.equal(mode.value, 'series');
+  index.value = '2502';
+  mode.value = 'volume';
+  mode.dispatchEvent(new e.w.Event('change'));
+  assert.equal(count.value, '1');
+  assert.equal(count.readOnly, true);
+  assert.equal(index.value, '');
+  index.value = '15295';
+  autofill.click();
+  await e.save();
+  assert.deepEqual(e.calls.map(call => call.url), ['http://localhost:18080/autofillBandData/15295?importPreview']);
+  assert.equal(e.calls[0].options.method, 'POST');
+  assert.equal(new Headers(e.calls[0].options.headers).get('X-CSRF-TOKEN'), 'synthetic-token');
+  assert.equal(e.d.getElementById('titel').value, 'Testband & 漫画');
+  assert.equal(e.d.getElementById('preis_pro_band').value, '8,49');
+  assert.equal(e.d.getElementById('volume_import_cover').value, 'https://example.invalid/cover.jpg');
+  assert.equal(e.d.getElementById('volume_import_date').value, '12.11.2026');
+  mode.value = 'series';
+  mode.dispatchEvent(new e.w.Event('change'));
+  assert.equal(count.value, '2');
+  assert.equal(count.readOnly, false);
+  assert.equal(index.value, '');
+  assert.equal(autofill.disabled, false);
+  assert.equal(e.button.hidden, false);
+  await e.save();
+  assert.equal(e.d.getElementById('volume_import_cover').value, '');
+  assert.equal(JSON.parse(e.calls[1].options.body).importMode, 'series');
+});
+
+test('Einzelband sendet bestätigte Zielreihe und Bandnummer getrennt vom Bestand', async t => {
+  const e = await setup(t, 'popup_add_reihe.js', { data: {
+    Titel: 'Blue Lock, Band 31', Bandnummer: '31', Preis: '8,50'
+  } });
+  const mode = e.d.getElementById('import_mode');
+  mode.value = 'volume';
+  mode.dispatchEvent(new e.w.Event('change'));
+  e.d.getElementById('manga_index').value = '24092';
+  e.container.querySelector('.mp-autofill-button').click();
+  await settle();
+  const target = e.d.getElementById('volume_import_target');
+  target.append(new e.w.Option('Blue Lock (#42)', '42'));
+  target.value = '42';
+  await e.save();
+  assert.equal(e.calls.length, 2);
+  const data = JSON.parse(e.calls[1].options.body);
+  assert.equal(data.targetSeriesId, '42');
+  assert.equal(data.bandIndex, '24092');
+  assert.equal(data.bandNumber, '31');
+  assert.equal(data.anzahlBaende, 1);
+  assert.equal(data.titel, 'Blue Lock');
+});
+
 const failures = [
   { name: '413 Größenbegrenzung', status: 413, message: /technischen Größenbegrenzungen.*Seite.*neu/, parsed: 0, blocked: true },
   { name: '415 Anfrageformat', status: 415, message: /Anfrageformat wird nicht unterstützt/, parsed: 0, blocked: false },
