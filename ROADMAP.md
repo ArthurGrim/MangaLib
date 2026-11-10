@@ -114,9 +114,10 @@ aller Updates vollständig erhalten bleiben.
 - **Akzeptanz:** Beide Importarten sind klar unterscheidbar, liefern korrekt normalisierte Formulardaten und können gespeichert werden.
 
 ### M03 – „Days Read“ berechnen
-- Einstellbare angenommene durchschnittliche Lesezeit **pro Band** in Minuten definieren (kein voreilig festgelegter Wert).
+- Globaler Standardwert für die geschätzte Lesezeit: **45 Minuten pro Standardband** (Eigentümerentscheidung vom 10.11.2026). Sammelbände entsprechend gewichten, z. B. 3-in-1 = 135 Minuten. Die spätere Anpassung des globalen Werts erfolgt über K05 – Einstellungen.
 - Anzahl gelesener Bände in eine geschätzte Lesezeit umrechnen; Anzeige in Tagen/Stunden und konsistent mit weiteren Lesestatistiken.
-- Klären, ob und wie Rereads zusätzlich zählen, bevor die Berechnung verbindlich wird.
+- Bekannte Rereads können vorläufig per Checkbox dazugerechnet werden. Die endgültige Reread-Regel wird in S03 festgelegt.
+- **Implementiert und gezielt abgenommen (10.11.2026):** Statistikübersicht zeigt die geschätzte Lesezeit auf Basis gelesener Einzelbände und ihres Sammelbandfaktors. Bekannte Rereads können ausdrücklich per Checkbox zusätzlich gezählt werden; standardmäßig ist sie ausgeschaltet. Fehlende Faktoren werden sichtbar ausgelassen, unbekannte oder negative Rereads liefern keine zusätzlichen Lektüren. MySQL-Projektion, Rollback/Datenerhalt und drei echte Template-Endpunkte bestanden. Der lesende isolierte Browser bestätigte Anzeige und Umschaltung (9 Stunden ohne, 24 Stunden mit bekannten Rereads im synthetischen Bestand). Globale Einstellbarkeit bleibt K05.
 - **Akzeptanz:** Ergebnis ist anhand einer dokumentierten Formel nachvollziehbar und ändert sich korrekt mit Lesezeit und Lesestatus.
 
 ### M04 – Bestehende Statistiken reparieren und ausbauen
@@ -180,7 +181,7 @@ aller Updates vollständig erhalten bleiben.
 - Für den aktuellen lokalen Einzelbenutzerbetrieb ist kein Login erforderlich; bei Umsetzung von K03 ist K04 verbindlicher Bestandteil derselben Umsetzung. Die Kann-Kategorie beider Erweiterungen bleibt unverändert.
 
 ### K05 – Einstellungen
-- UI zur Verwaltung konfigurierbarer Optionen, insbesondere geschätzte Lesezeit pro Band; später gegebenenfalls profilspezifisch.
+- UI zur Verwaltung konfigurierbarer Optionen, insbesondere die globale geschätzte Lesezeit pro Standardband (M03, Standard 45 Minuten). Eine Änderung soll die Lesezeitschätzung einschließlich der Sammelbandfaktoren neu berechnen; später gegebenenfalls profilspezifisch.
 
 ### K06 – Browser-Integration für Manga-Passion (allerletzte optionale Erweiterung)
 - Beim Besuch einer Manga-Passion-Reihen-/Bandseite langfristig die direkte Übergabe an MangaLib über eine Browser-Erweiterung oder vergleichbare geeignete Lösung ermöglichen; Firefox, optional Chrome berücksichtigen.

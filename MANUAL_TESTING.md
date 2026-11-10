@@ -1,5 +1,16 @@
 # Isolierte manuelle Browserabnahme unter Windows
 
+## M03 – Lesezeitschätzung, lesend abgenommen am 10.11.2026
+
+Auf der Statistikübersicht der isolierten manual-test-Instanz wurde die
+45-Minuten-Basis angezeigt. Der vorhandene synthetische Bestand ergab
+9 Stunden ohne Rereads und 24 Stunden bei eingeschalteter Option für bekannte
+Rereads. Nach Ausschalten wurden wieder 9 Stunden angezeigt. Der Hinweis auf
+zwei unbekannte/ungültige Reread-Werte blieb sichtbar. Keine erfassten
+Konsolenfehler und keine Browser-Schreibaktion. Eigener Launcher anschließend
+per Ctrl+C geordnet beendet. Bei späteren Änderungen Anzeige, Sammelbandfaktor,
+Hinweise und beide Checkboxzustände erneut prüfen.
+
 > Aktueller T02-Abschlussstand (02.11.2026): [T02_CLOSEOUT.md](T02_CLOSEOUT.md). Technisch abgeschlossen für das lokale Einzelbenutzermodell. Codex bestätigte die 413-UI-/Reload-Behandlung mit dokumentierter Statusgrenze; der Projekteigentümer bestätigte die letzte echte HTTP-415-Abnahme. Historische Nachträge bleiben erhalten.
 
 

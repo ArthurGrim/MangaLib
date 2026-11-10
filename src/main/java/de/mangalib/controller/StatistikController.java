@@ -24,6 +24,9 @@ public class StatistikController {
     @Autowired
     private EinkaufslisteService einkaufslisteService;
 
+    @Autowired
+    private de.mangalib.service.ReadingTimeService readingTimeService;
+
     // Methode um die Statistik Overview Seite aufzurufen
     @GetMapping("/statistik/st_overview")
     public String statistikOverview(Model model) {
@@ -37,6 +40,7 @@ public class StatistikController {
         model.addAttribute("gesamtAnzahlMitMultiplikator", gesamtAnzahlMitMultiplikator);
         model.addAttribute("gesamtSummeGesamtpreis", gesamtSummeGesamtpreis);
         model.addAttribute("durchschnittlicherPreisProBand", durchschnittlicherPreisProBand);
+        model.addAttribute("readingTime", readingTimeService.estimate());
 
         return "statistik/st_overview";
     }

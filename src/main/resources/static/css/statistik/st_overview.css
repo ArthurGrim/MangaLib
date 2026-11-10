@@ -156,6 +156,16 @@ body {
   margin-top: 68px; /* Abstand nach oben */
 }
 
+.reading-time {
+  border-top: 0.125rem solid var(--blue-normal);
+  background-color: var(--bg-container);
+  color: var(--font-container);
+  padding: 24px;
+  overflow-wrap: anywhere;
+}
+
+.reading-time .werte { font-size: clamp(1.25rem, 4vw, 2rem); }
+
 .statistik-highlights{
   border-top: 0.125rem solid var(--blue-normal);
   display: flex;

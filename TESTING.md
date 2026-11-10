@@ -1,5 +1,47 @@
 # Sichere Tests für MangaLib
 
+## M03 – Datenbankfreie Lesezeitschätzung (10.11.2026)
+
+45 Minuten pro Standardband sind global im ReadingTimeService definiert.
+Die Formel summiert für jeden als gelesen markierten Band
+`45 × Sammelbandfaktor`. Bei ausdrücklich aktivierter Reread-Anzeige wird
+jeder Beitrag zusätzlich mit `1 + bekannte Rereads` multipliziert.
+NULL oder negative Rereads liefern keine zusätzliche Lektüre und werden
+sichtbar als unbekannt/ungültig ausgewiesen. Fehlende oder nicht positive
+Sammelbandfaktoren werden mit sichtbarem Hinweis ausgelassen.
+Ein Tag entspricht 1440 Minuten, die Restdauer wird in Stunden und Minuten
+angezeigt. Die Schätzung gilt unabhängig vom Reihenlesestatus und der
+Nummerierung für die tatsächlich vorhandenen gelesenen Bände.
+
+ReadingTimeServiceTest prüft Sammelbandgewichtung, optionale Rereads,
+unbekannte Werte, Tagesgrenze, leere Bestände, große Werte und rein lesenden
+Repositoryzugriff mit Mocks. reading-time.test.cjs prüft Umschalten und
+Textausgabe ohne Netzwerk. Der gezielte Offline-Gradle-Lauf nach identischem
+Dry-Run bestand mit fünf Java-Tests. Keine Datenbankverbindung in diesem
+Prüfschritt. Die neue JPQL-Projektion und das echte Thymeleaf-Rendering
+benötigen noch die geschützte Integrationsabnahme und eine Browserprüfung.
+K05 ergänzt später die Einstellung des globalen Standardwerts.
+
+### M03 – Geschützte Integration und lesender Browsernachweis
+
+Nach erneut bestandenen datenbankfreien TestDatabaseGuardTest-Prüfungen
+wurden ReadingTimeIntegrationTest (1 Fall) und TemplateRenderingTest
+(3 Fälle) offline mit vorher identisch geprüftem Dry-Run ausgeführt.
+Alle vier Fälle bestanden ohne Fehler oder übersprungene Fälle.
+Die Projektion berücksichtigt einzelne Lesestatus und Rereads nach Flush/Clear;
+das Zurücksetzen eines Fixture-Lesestatus entfernt dessen Beitrag wieder.
+Nach dem Rollback bestätigte der vollständige Daten-/Schemasnapshot den
+unveränderten Bestand. Rendering außerhalb einer Testtransaktion bestand
+für Home, Einkaufsliste und Statistik, jeweils mit Snapshotvergleich.
+Ausschließlich mangalib_test, bestehende Guards und Testprofil.
+
+assembleManualTest und Start-ManualTest.ps1 -ValidateOnly bestanden.
+Die lesende Browserprüfung mit sichtbarem Manual-Banner bestätigte
+9 Stunden Basiszeit, 24 Stunden bei eingeschalteten bekannten Rereads und
+erneut 9 Stunden nach Ausschalten. Keine erfassten Browser-Konsolenfehler.
+Keine Speicheraktion oder Scraperausführung im Browser.
+Die eigene manual-test-Instanz wurde per Ctrl+C geordnet beendet.
+
 > Aktueller T02-Abschlussstand (02.11.2026): [T02_CLOSEOUT.md](T02_CLOSEOUT.md). Technisch abgeschlossen für das lokale Einzelbenutzermodell. Dependency-Korrektur, Regression und negative UI-Abnahmen erfolgreich; 415 durch den Projekteigentümer bestätigt. Historische Nachträge und Nachweisgrenzen bleiben erhalten.
 
 

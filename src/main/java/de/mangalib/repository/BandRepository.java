@@ -10,6 +10,16 @@ import org.springframework.data.repository.query.Param;
 import de.mangalib.entity.Band;
 
 public interface BandRepository extends JpaRepository<Band, Long> {
+    interface ReadingEntry {
+        Integer getMultiplier();
+        Integer getReread();
+    }
+
+    @Query("select s.multiplikator as multiplier, b.reread as reread from Band b "
+            + "left join b.mangaReihe r left join r.mangaDetails d left join d.sammelbaende s "
+            + "where b.istGelesen = true")
+    List<ReadingEntry> readingEntries();
+
     boolean existsByBandIndex(Integer bandIndex);
 
     @Query("SELECT b FROM Band b WHERE b.mangaReihe.id = :mangaReiheId AND b.bandNr = "
