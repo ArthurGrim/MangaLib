@@ -137,6 +137,8 @@ aller Updates vollständig erhalten bleiben.
 - **Akzeptanz:** Die Statistiken stimmen bei Testdatensätzen einschließlich Jahreswechsel, Centbeträgen, unbekannten Merkmalen und mehrfacher Diagrammbedienung.
 
 ### M05 – Feld „Ebay-Preis“ sinnvoll allgemeiner benennen
+- **Lesende visuelle Abnahme bestanden (11.11.2026):** Reihenanlage/-bearbeitung, Bandbearbeitung und Einkaufsanlage/-bearbeitung zeigen die neuen Beschriftungen. Hinweise zum Vorzeichen und gespeicherte Anpassung −0,01 € bei Gesamtpreis 8,99 € bestätigt. Alle Dialoge ohne Speicherung geschlossen, keine erfassten Konsolenfehler. Eigener manueller Launcher geordnet beendet. Der folgende offene Browserhinweis beschreibt den historischen Implementierungsstand.
+- **Umgesetzt (11.11.2026):** Sichtbare Bezeichnung Preisanpassung, Betragsfeld Gesamtanpassung in € beziehungsweise Preisanpassung in € beim Einzelband. Vorzeichen erläutert. Gesamtpreis entspricht Bandanzahl × Einzelpreis + Gesamtanpassung; ein negatives Vorzeichen reduziert den Preis. Das historische Flag steuert die Formularanzeige, der gespeicherte Anpassungsbetrag bleibt für die Berechnung maßgeblich. Technische Feldnamen, JSON-Verträge und Datenbankspalten bleiben aus Kompatibilitätsgründen bestehen. Browsernachprüfung der Beschriftungen steht aus.
 - Begriff unabhängig von einer bestimmten Verkaufsplattform gestalten.
 - **Kandidaten:** „Preisabweichung“ (bei Differenz zum Normalpreis) oder „Preisanpassung“ (bei Auf-/Abschlag).
 - Vor Umbenennung Bedeutung, Vorzeichen, Berechnung, Datenbankspalte und alle UI-Verwendungen untersuchen; zunächst **kein** unkontrolliertes Umbenennen von DB-Spalten.
@@ -431,7 +433,7 @@ Die **endgültige Betriebsform bleibt offen**. Aufgabenplanung bei Anmeldung ist
 
 ## 7. Offene Fachentscheidungen
 
-- Was genau speichert „Ebay-Preis“ derzeit: Auf-/Abschlag, absoluter Preis oder Differenz?
+- M05 geklärt: Der Betrag ist eine vorzeichenbehaftete Gesamtpreisanpassung. Das historische Flag steuert die Eingabeanzeige und ist kein verlässlicher Nachweis der Verkaufsplattform.
 - Zählt ein Reread erneut zu „Days Read“ und „gelesene Bände pro Monat“?
 - Welches Datum soll für eine frühere erste Lektüre ohne bekannten Zeitpunkt gelten? (Standard: **unbekannt**, kein erfundenes Datum.)
 - Soll eine Reihe nur bei **allen** gelesenen Bänden als gelesen gelten? Wie soll ein teilweise gelesener Status dargestellt werden?

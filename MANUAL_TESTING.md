@@ -1,5 +1,20 @@
 # Isolierte manuelle Browserabnahme unter Windows
 
+## M05 – Nachprüfung der Bezeichnungen
+
+Am 11.11.2026 lesend bestanden: Reihenanlage und -bearbeitung,
+Bandbearbeitung, Einkaufsanlage und -bearbeitung. Neue Labels und
+Vorzeichenhinweise bestätigt. Der synthetische Eintrag M01_BROWSER_20261110
+zeigte −0,01 € Gesamtanpassung und 8,99 € Gesamtpreis bei Flag Nein.
+Dialoge ausschließlich ohne Speicherung geschlossen. Keine erfassten
+Konsolenfehler; eigener geschützter Manual-Launcher geordnet per Ctrl+C beendet.
+
+In Reihenanlage, Reihenbearbeitung, Einkaufsanlage und Einkaufsbearbeitung
+Preisanpassung sowie Gesamtanpassung in € prüfen. Beim Einzelband heißt das
+Betragsfeld Preisanpassung in €. Hinweise erklären Minus als Reduktion und
+Plus als Erhöhung. Die bisherigen Formular- und Nullable-Regeln gelten weiter.
+Bei einer späteren Browserprüfung ausschließlich synthetische Datensätze verwenden.
+
 ## M04 – Lesende visuelle Abnahme vom 11.11.2026
 
 Isoliertes Manual-JAR offline gebaut und mit -ValidateOnly geprüft.

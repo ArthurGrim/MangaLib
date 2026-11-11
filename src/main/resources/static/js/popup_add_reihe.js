@@ -299,7 +299,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if (istEbayPreis && !/^[-+]?\d+(\.\d+)?$/.test(gesamtpreisAenderung)) {
       MangaLibFeedback.show(popupContainer,
-        "Der eBay-Preis muss eine gültige Dezimalzahl sein (Vorzeichen relevant)."
+        "Die Gesamtanpassung muss eine gültige Dezimalzahl sein. Negative Werte reduzieren, positive erhöhen den Gesamtpreis."
       );
       return;
     }

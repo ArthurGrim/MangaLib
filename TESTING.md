@@ -1,5 +1,32 @@
 # Sichere Tests für MangaLib
 
+## M05 – Plattformneutrale Preisbezeichnungen (11.11.2026)
+
+Lesende Browserabnahme anschließend bestanden. Das isolierte Manual-Artefakt
+hatte SHA-256 A96953642E28465D6C1FB59E926E0903B15E89B91EA57DE979C0D685B1C8EAF4.
+Offline-Build nach identischem Dry-Run und ValidateOnly erfolgreich.
+Alle fünf Anlage-/Bearbeitungsdialoge geprüft und ohne Speicherung geschlossen.
+Bestehende Anpassung −0,01 € und Gesamtpreis 8,99 € im synthetischen
+M01-Eintrag sichtbar, keine erfassten Konsolenfehler. Eigene manual-test-Instanz
+per Ctrl+C geordnet beendet. Der untenstehende offene Nachprüfhinweis ist historisch.
+
+Bestandsanalyse bestätigte die Formel Anzahl × Preis pro Band + Gesamtanpassung
+in EinkaufslisteService und die bestehende Aggregation der Bandanpassungen in
+der Bibliothek. Sichtbare Flag-Bezeichnung ist nun Preisanpassung. Beträge
+heißen Gesamtanpassung in € beziehungsweise beim Einzelband Preisanpassung in €.
+Tooltip und Validierungstexte erläutern das Vorzeichen. Der M01-Editor zeigt
+weiterhin Unbekannt/Ja/Nein für historische nullable Flags.
+
+Nur Beschriftungen, Hinweise und zugehörige DOM-Testselektoren wurden angepasst.
+Technische istEbayPreis-Keys/DOM-IDs und die Spalte ist_ebay_preis bleiben bestehen.
+Der vorhandene M01-DOM-Test prüft unter den neuen Labels weiterhin, dass eine
+Flagänderung den gespeicherten Anpassungsbetrag −0,01 € nicht überschreibt.
+Java-/SQL-Berechnung und Datenmapping wurden nicht verändert.
+Die visuelle Nachprüfung der umbenannten Anlage-/Bearbeitungsdialoge bleibt offen.
+JavaScript-Syntaxprüfungen und die gesamte DOM-Suite bestanden mit 241 Tests,
+0 Fehlern und 0 übersprungenen Fällen. git diff --check erfolgreich.
+Keine Datenbankverbindung oder Anwendungsausführung für diese Textänderung.
+
 ## M04 – Monatsdiagramm, datenbankfreie Regression (11.11.2026)
 
 ### Abschlussregression vom 11.11.2026

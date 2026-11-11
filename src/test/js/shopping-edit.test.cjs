@@ -24,8 +24,8 @@ test("shopping editor sends explicit date clearing and keeps an unchanged adjust
   assert.equal(form.querySelector('input[type="text"]').value, "<b>Test</b>");
   assert.equal(form.querySelector("b"), null);
   const label = name => [...form.querySelectorAll("label")].find(node => node.firstChild.textContent === name);
-  assert.equal(label("Änderung Preis in €").querySelector("input").value, "-0.01");
-  label("eBay-Preis").querySelector("select").value = "false";
+  assert.equal(label("Gesamtanpassung in €").querySelector("input").value, "-0.01");
+  label("Preisanpassung").querySelector("select").value = "false";
   form.querySelector('input[type="date"]').value = "";
   form.dispatchEvent(new window.Event("submit", { cancelable: true }));
   assert.deepEqual(JSON.parse(calls[1][1].body), {

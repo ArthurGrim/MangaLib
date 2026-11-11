@@ -9,8 +9,8 @@
     ["sammelbandTypId", "Sammelbandtyp", "select", "sammelband_typ"],
     ["anzahlBaende", "Anzahl Bände", "number"],
     ["preisProBand", "Preis pro Band in €", "money"],
-    ["gesamtpreisAenderung", "Änderung Preis in €", "money"],
-    ["istEbayPreis", "eBay-Preis", "flag"],
+    ["gesamtpreisAenderung", "Gesamtanpassung in €", "money"],
+    ["istEbayPreis", "Preisanpassung", "flag"],
     ["istVergriffen", "Vergriffen", "flag"]
   ];
 
@@ -62,6 +62,9 @@
       } else {
         input.type = type === "money" ? "text" : type;
         if (type === "money") input.inputMode = "decimal";
+        if (key === "gesamtpreisAenderung") {
+          input.title = "Anpassung des Gesamtpreises: negative Werte reduzieren, positive erhöhen ihn.";
+        }
         input.placeholder = state[key] == null ? "Unbekannt" : "";
       }
       input.value = state[key] == null ? "" : String(state[key]);
