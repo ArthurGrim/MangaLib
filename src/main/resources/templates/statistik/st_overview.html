@@ -2,6 +2,7 @@
 <html lang="de_DE" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>MangaLib Statistik</title>
     <link
       rel="stylesheet"
@@ -128,6 +129,14 @@
           </div>
         </div>
 
+        <section class="statistics-distributions" aria-label="Verteilung der Bibliothek">
+          <p id="distributions-status" role="status">Verteilungen werden geladen.</p>
+          <div id="distributions-grid"></div>
+        </section>
+        <section class="statistics-distributions" aria-label="Weitere Auswertungen">
+          <p id="statistics-details-status" role="status">Weitere Auswertungen werden geladen.</p>
+          <div id="statistics-details-grid"></div>
+        </section>
         <section class="reading-time" aria-labelledby="reading-time-heading">
           <h2 id="reading-time-heading">Geschätzte Lesezeit</h2>
           <p class="werte" id="reading-time-value" aria-live="polite"
@@ -174,7 +183,7 @@
         <div class="container-statistik-pro-monat">
           <div class="statistik-header">
             <!-- Linker Teil: Titel -->
-            <h3 class="header-title">Wert Pro Monat</h3>
+            <h3 class="header-title">Gekaufte Bände nach Erscheinungsmonat</h3>
 
             <!-- Rechter Teil: Jahr auswählen und Switch -->
             <div class="header-controls">
@@ -188,6 +197,7 @@
               </div>
             </div>
           </div>
+          <p id="monthly-chart-status" role="status"></p>
           <div class="draggable">
             <div class="statistik-pro-monat">
                 <svg class="line-chart">
@@ -205,6 +215,7 @@
 
     <!-- Einbinden Ihrer JavaScript-Datei für das Diagramm -->
     <script src="/js/statistik.js"></script>
+    <script src="/js/statistics-distributions.js"></script>
     <script src="/js/reading-time.js"></script>
   </body>
 </html>

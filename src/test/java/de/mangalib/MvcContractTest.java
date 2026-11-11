@@ -391,7 +391,7 @@ class MvcContractTest {
     }
 
     @Test
-    void monthlyStatisticsKeepStringKeysAndExistingCentTruncation() throws Exception {
+    void monthlyStatisticsKeepStringKeysAndExactCents() throws Exception {
         // Eigener Datensatz in einem vorher leeren Testjahr; keine Bestandsänderung.
         int year = 2400;
         assertEquals(0L, em.createQuery("select count(e) from EinkaufslisteItem e where year(e.erscheinungsdatum)=:year", Long.class)
@@ -401,8 +401,8 @@ class MvcContractTest {
         item.setGekauft(true);
         flushAndClear();
         number(jsonGet("/statistik/monatsdaten?jahr=" + year + "&typ=baende"), "2", 2);
-        // Bestehender Roadmap-Bug: longValue() verliert 0,98 EUR; hier ausdrücklich Baseline.
-        number(jsonGet("/statistik/monatsdaten?jahr=" + year + "&typ=geld"), "2", 14);
+        assertEquals(0, new BigDecimal("14.98").compareTo(
+                jsonGet("/statistik/monatsdaten?jahr=" + year + "&typ=geld").get("2").decimalValue()));
         request(get("/statistik/monatsdaten").param("jahr", "2400").param("typ", "unbekannt"), 400, null);
         request(get("/statistik/monatsdaten").param("typ", "geld"), 400, null);
     }

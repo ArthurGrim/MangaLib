@@ -16,6 +16,27 @@ import java.util.List;
 
 @Repository
 public interface MangaReiheRepository extends JpaRepository<MangaReihe, Long> {
+    @Query("select v.name, count(r) from MangaReihe r left join r.verlag v group by v.name")
+    List<Object[]> statisticsByPublisher();
+
+    @Query("select d.startJahr, count(r) from MangaReihe r left join r.mangaDetails d group by d.startJahr")
+    List<Object[]> statisticsByStartYear();
+
+    @Query("select t.bezeichnung, count(r) from MangaReihe r left join r.typ t group by t.bezeichnung")
+    List<Object[]> statisticsByType();
+
+    @Query("select f.bezeichnung, count(r) from MangaReihe r left join r.format f group by f.bezeichnung")
+    List<Object[]> statisticsByFormat();
+
+    @Query("select s.beschreibung, count(r) from MangaReihe r left join r.status s group by s.beschreibung")
+    List<Object[]> statisticsByStatus();
+
+    @Query("select d.herkunft, count(r) from MangaReihe r left join r.mangaDetails d group by d.herkunft")
+    List<Object[]> statisticsByOrigin();
+
+    @Query("select r.istVergriffen, count(r) from MangaReihe r group by r.istVergriffen")
+    List<Object[]> statisticsByOutOfPrint();
+
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @org.springframework.data.jpa.repository.QueryHints({
         @jakarta.persistence.QueryHint(name = "jakarta.persistence.lock.timeout", value = "5000"),

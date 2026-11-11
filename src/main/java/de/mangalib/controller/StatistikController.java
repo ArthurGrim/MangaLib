@@ -27,6 +27,21 @@ public class StatistikController {
     @Autowired
     private de.mangalib.service.ReadingTimeService readingTimeService;
 
+    @Autowired
+    private de.mangalib.service.StatisticsDistributionService distributionService;
+
+    @GetMapping("/statistik/verteilungen")
+    @ResponseBody
+    public java.util.List<de.mangalib.service.StatisticsDistributionService.Distribution> distributions() {
+        return distributionService.overview();
+    }
+
+    @GetMapping("/statistik/weitere")
+    @ResponseBody
+    public java.util.List<de.mangalib.service.StatisticsDistributionService.Distribution> details() {
+        return distributionService.details();
+    }
+
     // Methode um die Statistik Overview Seite aufzurufen
     @GetMapping("/statistik/st_overview")
     public String statistikOverview(Model model) {

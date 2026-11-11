@@ -1,5 +1,23 @@
 # Isolierte manuelle Browserabnahme unter Windows
 
+## M04 – Lesende visuelle Abnahme vom 11.11.2026
+
+Isoliertes Manual-JAR offline gebaut und mit -ValidateOnly geprüft.
+Desktop bei 1280 CSS-Pixeln zeigte sechs Kreise sowie vier weitere Übersichten.
+Die Zählbasis war mit 15 Reihen beziehungsweise 40 Bänden sichtbar; unbekannte
+Herkunft und Spezialflags erschienen separat. Wiederholte Jahres-/Typwechsel
+zeigten zwölf Monatspunkte und deutsche Geldwerte einschließlich 23,47 €/28,98 €.
+Keine erfassten Konsolenfehler und keine Browser-Schreibaktionen.
+
+Die erste Prüfung bei 390 Pixeln wies einen horizontalen Seitenüberlauf nach.
+Viewport-Metadaten und die Anordnung von Sidebar, Highlights und Diagrammsteuerung
+wurden korrigiert. Große Achsendiagramme scrollen innerhalb ihres Containers.
+Nach erneutem Offline-Build und ValidateOnly bestätigte der Browser bei 390
+Pixeln eine Dokumentbreite von 375 Pixeln einschließlich vertikaler Scrollleiste,
+einspaltige Kreise/Ranglisten, lesbare Legenden und bedienbare Diagrammwechsel.
+Beide eigenen Launcher wurden nach den jeweiligen Prüfungen per Ctrl+C geordnet
+beendet. Ausschließlich manual-test/mangalib_manual_test und synthetischer Bestand.
+
 ## M03 – Lesezeitschätzung, lesend abgenommen am 10.11.2026
 
 Auf der Statistikübersicht der isolierten manual-test-Instanz wurde die

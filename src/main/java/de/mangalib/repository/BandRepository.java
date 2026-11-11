@@ -10,6 +10,12 @@ import org.springframework.data.repository.query.Param;
 import de.mangalib.entity.Band;
 
 public interface BandRepository extends JpaRepository<Band, Long> {
+    @Query("select b.istSpecial, count(b) from Band b group by b.istSpecial")
+    List<Object[]> statisticsBySpecialState();
+
+    @Query("select b.istGelesen, count(b) from Band b group by b.istGelesen")
+    List<Object[]> statisticsByReadState();
+
     interface ReadingEntry {
         Integer getMultiplier();
         Integer getReread();

@@ -67,6 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
   
     let currentYear = new Date().getFullYear();
     let currentType = "baende";
+    let chartRequest = 0;
   
     populateYearSelector();
     console.log("Loading chart data initially");
@@ -76,21 +77,21 @@ document.addEventListener("DOMContentLoaded", function () {
       currentYear = yearSelector.value;
       console.log("Year changed, loading chart data");
       loadChartData(currentYear, currentType);
-    }, { once: true });
+    });
   
     optionBands.addEventListener("click", function () {
       currentType = "baende";
       setActiveOption(optionBands, optionSpending);
       console.log("Option switched to bands, loading chart data");
       loadChartData(currentYear, currentType);
-    }, { once: true });
+    });
   
     optionSpending.addEventListener("click", function () {
       currentType = "geld";
       setActiveOption(optionSpending, optionBands);
       console.log("Option switched to spending, loading chart data");
       loadChartData(currentYear, currentType);
-    }, { once: true });
+    });
   
     function setActiveOption(active, inactive) {
       active.classList.add("active");
@@ -109,21 +110,32 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   
     function loadChartData(year, type) {
+      const request = ++chartRequest;
       console.log(`Fetching data for year: ${year}, type: ${type}`);
       fetch(`/statistik/monatsdaten?jahr=${year}&typ=${type}`)
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) throw new Error("Monatsdaten nicht verfügbar");
+          return response.json();
+        })
         .then((data) => {
+          if (request !== chartRequest) return;
           console.log("Monatsdaten erhalten:", data);
           renderChart(data, type === "geld"); // Übergebe true für Geld ausgegeben
         })
-        .catch((error) => console.error("Fehler beim Laden der Daten:", error));
+        .catch(() => {
+          if (request !== chartRequest) return;
+          document.querySelector(".line-chart").replaceChildren();
+          document.querySelector(".x-axis-pro-monat").replaceChildren();
+          document.getElementById("monthly-chart-status").textContent = "Monatsdaten konnten nicht geladen werden.";
+        });
     }
   
     function renderChart(data, isMoney) {
       const lineChart = document.querySelector(".line-chart");
       const xAxis = document.querySelector(".x-axis-pro-monat");
-      lineChart.innerHTML = "";
-      xAxis.innerHTML = "";
+      lineChart.replaceChildren();
+      xAxis.replaceChildren();
+      document.getElementById("monthly-chart-status").textContent = "";
   
       const fullYearData = {};
       for (let i = 1; i <= 12; i++) {
@@ -134,8 +146,10 @@ document.addEventListener("DOMContentLoaded", function () {
         fullYearData[month] = parseFloat(data[month]); // Sicherstellen, dass der Wert numerisch ist
       });
   
-      const maxYValue = Math.max(...Object.values(fullYearData)) || 1;
-      const chartWidth = lineChart.clientWidth;
+      const maxYValue = Math.max(0, ...Object.values(fullYearData));
+      const minYValue = Math.min(0, ...Object.values(fullYearData));
+      const range = maxYValue - minYValue || 1;
+      const chartWidth = lineChart.clientWidth || 960;
       const paddingBottom = 20; // Abstand nach unten
       const chartHeight = 300 - paddingBottom;
   
@@ -150,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Berechne die Mitte des Labels als Position für den Punkt
         const cx = labelWidth * (index + 0.5);
         const cy = isFinite(fullYearData[month])
-          ? chartHeight - (fullYearData[month] / maxYValue) * (chartHeight - 50)
+          ? chartHeight - ((fullYearData[month] - minYValue) / range) * (chartHeight - 50)
           : NaN;
   
         if (!isNaN(cy)) {
@@ -172,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
           valueLabel.setAttribute("y", cy - 15);
           valueLabel.classList.add("value-label");
           valueLabel.textContent = isMoney
-            ? `${fullYearData[month].toFixed(2)} €`
+            ? new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(fullYearData[month])
             : fullYearData[month];
           valueLabel.style.fontSize = "14px"; // Schriftgröße ändern
           valueLabel.style.fill = "#FFFFFF"; // Schriftfarbe ändern
@@ -182,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let labelDiv = document.createElement("div");
         labelDiv.classList.add("x-axis-label");
         labelDiv.style.width = `${100 / totalMonths}%`;
-        labelDiv.innerText = new Date(0, month - 1).toLocaleString("de-DE", {
+        labelDiv.textContent = new Date(2000, month - 1).toLocaleString("de-DE", {
           month: "short",
         });
         xAxis.appendChild(labelDiv);
@@ -209,9 +223,4 @@ document.addEventListener("DOMContentLoaded", function () {
       document.querySelector(".line-chart").appendChild(path);
     }
   
-    // Initial chart load
-    const initialYear = yearSelector.value;
-    console.log("Loading chart data initially");
-    loadChartData(initialYear, currentType); // Lädt die initiale Grafik
   });
-  

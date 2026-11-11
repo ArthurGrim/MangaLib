@@ -156,12 +156,81 @@ body {
   margin-top: 68px; /* Abstand nach oben */
 }
 
+@media (max-width: 800px) {
+  .sidebar {
+    position: static;
+    width: auto;
+    margin: 85px 12px 0;
+  }
+  .statistik-container {
+    margin: 0;
+    padding: 12px;
+    min-width: 0;
+  }
+  .statistik-container .statistik-highlights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 20px;
+    padding: 20px;
+  }
+  .statistik-container .statistik-header {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 0;
+  }
+  .statistik-container .header-controls { flex-wrap: wrap; gap: 8px; }
+  .statistik-container .bar-chart-wrap,
+  .statistik-container .x-axis { min-width: 650px; }
+  .statistik-container .container-baende-bar-chart,
+  .statistik-container .draggable { overflow-x: auto; }
+  .statistik-container .statistik-pro-monat { min-width: 650px; }
+}
+
 .reading-time {
   border-top: 0.125rem solid var(--blue-normal);
   background-color: var(--bg-container);
   color: var(--font-container);
   padding: 24px;
   overflow-wrap: anywhere;
+}
+
+#distributions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+#statistics-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+#statistics-details-grid li { flex-wrap: wrap; align-items: center; }
+#statistics-details-grid meter { width: 100%; accent-color: var(--blue-normal); }
+.distribution-card {
+  background: var(--bg-container);
+  color: var(--font-container);
+  border-top: 2px solid var(--blue-normal);
+  padding: 20px;
+  overflow-wrap: anywhere;
+}
+.distribution-pie {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background-color: var(--bg-panel);
+  margin: 16px auto;
+}
+.distribution-card ul { list-style: none; padding: 0; }
+.distribution-card li { display: flex; gap: 8px; margin: 8px 0; }
+.distribution-swatch { width: 12px; height: 12px; flex: 0 0 12px; margin-top: 3px; }
+@media (max-width: 1000px) {
+  #distributions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 650px) {
+  #distributions-grid { grid-template-columns: minmax(0, 1fr); }
+  #statistics-details-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 .reading-time .werte { font-size: clamp(1.25rem, 4vw, 2rem); }

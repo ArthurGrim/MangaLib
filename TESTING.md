@@ -1,5 +1,68 @@
 # Sichere Tests für MangaLib
 
+## M04 – Monatsdiagramm, datenbankfreie Regression (11.11.2026)
+
+### Abschlussregression vom 11.11.2026
+
+Nach erfolgreicher erneuter Guard-Prüfung und identischem Offline-Dry-Run
+bestand der gemeinsame Lauf mit 14 Java-Tests ohne Fehler/übersprungene Fälle.
+Enthalten waren MonthlyStatisticsTest, StatisticsDistributionServiceTest,
+ReadingTimeServiceTest, StatisticsIntegrationTest, ReadingTimeIntegrationTest,
+TemplateRenderingTest und die beiden MVC-Vertragsmethoden für Kategorien und
+centgenaue Monatswerte. Geschützte Integration ausschließlich gegen mangalib_test,
+mit Rollback und Bestandserhaltung. Die vollständige DOM-Suite bestand mit
+241 Fällen ohne Fehler/übersprungene Fälle. diff --check erfolgreich.
+Visuelle Abnahme einschließlich korrigierter 390-Pixel-Ansicht bereits bestätigt.
+Monatliche Lesestatistik bleibt als S03-Abhängigkeit offen.
+
+Visuelle Abnahme einschließlich 1280-/390-Pixel-Ansicht und Korrektur des
+äußeren Layouts siehe MANUAL_TESTING.md. Nach der CSS-/Viewportkorrektur
+erneuter Offline-Paketbuild nach identischem Dry-Run und ValidateOnly bestanden.
+Die nachgewiesene schmale Dokumentbreite betrug 375 Pixel bei 390 Pixeln Viewport.
+Browserprüfung rein lesend; eigene Launcher anschließend geordnet beendet.
+
+### Geschützte Abfrage- und Renderingprüfung
+
+Nach bestandenen TestDatabaseGuardTest-Prüfungen und identischem Offline-Dry-Run
+bestanden StatisticsIntegrationTest (1 Fall), die gezielte Monatsvertragsmethode
+aus MvcContractTest (1 Fall) und TemplateRenderingTest (3 Fälle).
+Die echten Abfragen prüfen unbekannte Herkunft/Startjahre, nullable Spezialflags,
+die separate Bandzählung und exakte 14,98 € beim Wechsel Dezember/Januar.
+Der vollständige Snapshot nach Fixture-Rollback entsprach dem Ausgangsbestand.
+Rendering veränderte ebenfalls keine Zeilen oder Schema-Metadaten.
+Ausschließlich das geschützte Profil test auf mangalib_test wurde verwendet.
+
+Zusätzlich zeigen Verlags-/Formatranglisten Anzahlen und Anteile als Balken,
+die Jahresauswertung verwendet Reihen-Startjahr und Spezialbände zählen
+vorhandene Bandzeilen. Der neue DOM-Ranglistentest bestätigt Sortierung,
+Zähler und Nenner. Alle vier Verteilungs-DOM-Tests bestanden.
+Die echte Browserabnahme dieser neuen Elemente steht aus.
+
+Zusätzlich implementiert sind die sechs Bibliotheksverteilungen mit gruppierten
+Repository-Abfragen. StatisticsDistributionServiceTest prüft unbekannte/leere
+Herkunft, nullable Vergriffenheit, die separate Bandzählung und ausschließlich
+lesende Repositoryaufrufe. statistics-distributions.test.cjs prüft Prozentanteile,
+leere Bestände, ungültige Antworten und HTML-Sonderzeichen ohne HTML-Ausführung.
+Der gezielte Offline-Lauf mit StatisticsDistributionServiceTest und
+MonthlyStatisticsTest bestand nach identischem Dry-Run (2 Tests).
+Die gesamte DOM-Suite bestand mit 240 Tests ohne Fehler/übersprungene Fälle.
+Echte JPQL-Ausführung und visuelle Browserabnahme sind noch erforderlich.
+
+MonthlyStatisticsTest bestätigt exakte Monatsbeträge einschließlich 14,98 €
+und −0,02 € sowie Weitergabe der gewählten Jahre an das Repository.
+Der gezielte Offline-Gradle-Lauf bestand nach identischem Dry-Run (1 Test).
+Die DOM-Suite bestand mit 237 Tests, ohne Fehler oder übersprungene Fälle.
+statistics.test.cjs prüft wiederholte Jahres-/Typwechsel, genau einen
+initialen Monatsrequest, veraltete Antworten, deutsche Geldanzeige,
+negative Werte, zwölf Monatspunkte und Erholung nach einer HTTP-Fehlantwort.
+
+Die Centverlust-Charakterisierung in MvcContractTest wurde auf die jetzt
+beabsichtigte exakte Dezimalantwort 14,98 umgestellt. Diese datenbankabhängige
+Assertion wurde in diesem Schritt ausschließlich kompiliert. Ihre reale
+Ausführung und die Browserabnahme stehen aus. Keine Datenbankverbindung,
+kein Anwendungsstart oder Live-Scraper in diesem Prüfschritt.
+Die Zeitachse bleibt das Erscheinungsdatum gekaufter Einkaufspositionen.
+
 ## M03 – Datenbankfreie Lesezeitschätzung (10.11.2026)
 
 45 Minuten pro Standardband sind global im ReadingTimeService definiert.

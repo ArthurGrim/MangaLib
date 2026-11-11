@@ -229,14 +229,18 @@ public class EinkaufslisteService {
     }
 
     /**
-     * Holt die Gesamtausgaben pro Monat für ein bestimmtes Jahr und formatiert den Betrag mit einem Euro-Zeichen.
+     * Liefert die exakten Monatsbeträge gekaufter Positionen nach Erscheinungsdatum.
      * 
      * @param jahr Das Jahr, für das die Daten abgerufen werden.
-     * @return Eine Map, die den Monat als Schlüssel und den formatierten Betrag (als String) mit Euro-Zeichen als Wert enthält.
+     * @return Monate und unformatierte Dezimalbeträge.
      */
-    public Map<Integer, Long> getGeldProMonat(int jahr) {
+    public Map<Integer, BigDecimal> getGeldProMonat(int jahr) {
         List<Object[]> results = einkaufslisteRepository.findGeldProMonat(jahr);
-        return mapResultsToLong(results);
+        Map<Integer, BigDecimal> amounts = new HashMap<>();
+        for (Object[] result : results) {
+            amounts.put(((Number) result[0]).intValue(), (BigDecimal) result[1]);
+        }
+        return amounts;
     }
 
     /**
