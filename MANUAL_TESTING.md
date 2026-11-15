@@ -1,5 +1,13 @@
 # Isolierte manuelle Browserabnahme unter Windows
 
+## S02 – Nachprüfung des ersten Aufklappens
+
+Die nach dem S02-Commit ergänzte Korrektur berücksichtigt auch einen leeren
+Inline-Displaywert. Zwei DOM-Regressionen sichern ersten Klick, Schließen und
+Wiederöffnen ab. Die visuelle Nachprüfung der Korrektur steht noch aus:
+Nach Neuladen einer vorhandenen Reihe einmal auf den Bandpfeil klicken,
+Bandanzeige erwarten, schließen und erneut öffnen. Keine Speicherung nötig.
+
 ## S02 – Coverübernahme, 15.11.2026
 
 Synthetischer Reihen-Autofill 900007 im Manual-Double, auf einen Einkaufsband

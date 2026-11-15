@@ -129,7 +129,9 @@ function toggleBands(mangaReiheId) {
     console.log(`Toggling bands for ID ${mangaReiheId}`);
     const bandsContainer = document.getElementById('bands-' + mangaReiheId);
     if (bandsContainer) {
-        if (bandsContainer.style.display === 'none') {
+        // Ein noch nicht initialisierter, leerer Inline-Zustand gilt ebenfalls
+        // als eingeklappt. Erst das erfolgreiche Laden setzt explizit "block".
+        if (bandsContainer.style.display === 'none' || bandsContainer.style.display === '') {
             // AJAX-Aufruf, um die Bände zu laden
             return fetch('/mangaReihe/' + mangaReiheId + '/bands')
                 .then(response => response.json())

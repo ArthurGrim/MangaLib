@@ -1,5 +1,19 @@
 # Sichere Tests für MangaLib
 
+## Nachtrag S02 – Erster Klick auf die Bandanzeige (15.11.2026)
+
+S02 wurde lokal mit ce0d7ab gesichert. Die anschließende UI-Korrektur behandelt
+auch einen leeren Inline-Displaywert als eingeklappt. Zuvor setzte der erste
+Klick diesen Wert lediglich auf none, ohne Bände abzurufen. Das aktuelle
+Home-Template setzt bereits explizit none; die Entstehung des im Browser
+beobachteten leeren Werts ist damit nicht abschließend erklärt.
+Zwei Regressionen prüfen beide initialen Zustände, jeweils ersten Abruf,
+Schließen ohne weiteren Abruf und Wiederöffnen. Der neue Leerwertfall schlug
+vor der Korrektur reproduzierbar fehl. Danach bestanden alle 244 DOM-Tests mit
+node --test src/test/js/*.test.cjs. pnpm run test:dom scheiterte zuvor an einer
+Sandbox-Symlinkberechtigung, bevor Tests starteten. JavaScript-Syntaxprüfung und
+git diff --check bestanden. Kein neuer Browserlauf, Build oder Datenbankzugriff.
+
 ## S02 – Coverübernahme, datenbankfreier Zwischenstand (15.11.2026)
 
 ### Ergänzte Integration und Browserabnahme

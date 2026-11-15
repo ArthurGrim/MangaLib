@@ -57,6 +57,24 @@ function setup(t, { intersectionObserver = true } = {}) {
     };
 }
 
+for (const initialDisplay of ['', 'none']) {
+    test(`Erster Klick öffnet Bände bei initialem Inline-Display ${JSON.stringify(initialDisplay)}`, async t => {
+        const env = setup(t);
+        const container = env.document.getElementById('bands-1');
+        container.style.display = initialDisplay;
+        await env.window.toggleBands(1);
+        assert.equal(container.style.display, 'block');
+        assert.equal(container.children.length, 1);
+        assert.deepEqual(env.requests, ['/mangaReihe/1/bands']);
+        await env.window.toggleBands(1);
+        assert.equal(container.style.display, 'none');
+        assert.equal(env.requests.length, 1);
+        await env.window.toggleBands(1);
+        assert.equal(container.style.display, 'block');
+        assert.equal(env.requests.length, 2);
+    });
+}
+
 test('Normale Bandanzeige erhält DOM-Reihenfolge, CSS, Texte, Icons und Ereignisse', async t => {
     const env = setup(t);
     await env.window.toggleBands(1);
