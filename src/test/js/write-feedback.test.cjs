@@ -51,7 +51,7 @@ async function setup(t, script = 'popup_add_reihe.js', config = {}) {
     return { status: config.status ?? 200, ok: (config.status ?? 200) < 300,
       headers: new Headers({ 'Content-Type': config.type ?? 'application/json',
         ...(config.outcome ? { 'X-MangaLib-Purchase-Outcome': config.outcome } : {}) }),
-      json: async () => { parsed++; if (config.malformed || config.emptyBody) throw new SyntaxError('private parse detail'); return config.data === undefined ? { id: 3 } : config.data; },
+      json: async () => { parsed++; if (config.malformed || config.emptyBody) throw new SyntaxError('private parse detail'); return typeof config.data === 'function' ? config.data() : config.data === undefined ? { id: 3 } : config.data; },
       text: async () => { textRead++; return '<script>private SQLException secret</script>'; }
     };
   };
@@ -66,6 +66,29 @@ async function setup(t, script = 'popup_add_reihe.js', config = {}) {
     evaluate: file => vm.runInContext(read('static/js/' + file), dom.getInternalVMContext(), { filename: file }),
     parsed: () => parsed, textRead: () => textRead };
 }
+
+test('Einkaufsautofill ersetzt alte Cover und verwirft Antworten nach Abbruch', async t => {
+  let resolve;
+  const payload = cover => ({ Titel: 'Test', verlagId: '1', typId: '1', formatId: '1',
+    'Deutsche Ausgabe Bände': '1', 'Band 1 Preis': '6.99', ...(cover ? { BildUrl: cover } : {}) });
+  let data = payload('https://example.invalid/old.jpg');
+  const e = await setup(t, 'einkaufsliste.js', { data: () => data });
+  e.d.getElementById('manga_index').value = '123';
+  const fill = () => e.container.querySelector('.mp-autofill-button').click();
+  fill(); await settle();
+  data = payload(null);
+  fill(); await settle();
+  await e.save();
+  const saved = JSON.parse(e.calls.find(call => call.url.endsWith('/addToEinkaufsliste')).options.body);
+  assert.equal(saved.scrapedData.BildUrl, undefined);
+  // Neue Antwort bleibt bis nach Abbrechen/Reset offen.
+  data = new Promise(r => { resolve = r; });
+  fill(); await settle();
+  e.container.querySelector('.cancel-button').click();
+  resolve(payload('https://example.invalid/stale.jpg'));
+  await settle();
+  assert.equal(e.d.getElementById('titel').value, '');
+});
 
 test('Einzelband lädt nur eine CSRF-geschützte Vorschau und lässt die Reihe unverändert', async t => {
   const e = await setup(t, 'popup_add_reihe.js', { data: {

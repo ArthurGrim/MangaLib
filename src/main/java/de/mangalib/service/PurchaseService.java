@@ -132,12 +132,21 @@ public class PurchaseService {
             return Result.of(Outcome.BAND_CONFLICT);
         if (!ShoppingState.token(item, item.getEinkaufslisteItemDetails(), true).equals(request.purchaseToken()))
             return Result.of(Outcome.PURCHASE_STATE_CONFLICT);
+        Map<String, String> imported = new HashMap<>();
+        imported.put("itemId", item.getId().toString());
+        var detail = item.getEinkaufslisteItemDetails();
+        // Ein einzelnes Cover lässt sich nur bei einem Einzelkauf eindeutig zuordnen.
+        // Reihencover und sämtliche vorhandenen Bandcover bleiben hierbei erhalten.
+        if (item.getAnzahlBaende() == 1 && detail != null && detail.getCoverUrl() != null
+                && !detail.getCoverUrl().isBlank()) {
+            imported.put("Band " + first + " Bild Url", WriteValidation.optionalUrl(detail.getCoverUrl()));
+        }
         // Fehlende konkrete externe Bandindices werden nicht aus dem Reihenindex erfunden.
         var result = library.updateMangaReihe(row.getId(), row.getMangaIndex(), row.getStatus().getStatusId(),
                 row.getVerlag().getVerlagId(), row.getTyp().getTypId(), row.getFormat().getFormatId(), row.getTitel(), last,
                 item.getPreis(), row.getIstVergriffen(), row.getIstEbayPreis(), row.getMangaDetails().getAnilistUrl(),
                 row.getMangaDetails().getCoverUrl(), row.getMangaDetails().getSammelbaende().getId(),
-                item.getAenderungGesamtpreis(), false, row.getMangaDetails().getReread(), Map.of("itemId", item.getId().toString()));
+                item.getAenderungGesamtpreis(), false, row.getMangaDetails().getReread(), imported);
         if (result.isEmpty() || !Objects.equals(result.get().getId(), row.getId()))
             throw new IllegalStateException("Kaufänderung nicht bestätigt.");
         finish(item, result.get(), existing);

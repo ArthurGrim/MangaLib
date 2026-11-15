@@ -1,5 +1,17 @@
 # Isolierte manuelle Browserabnahme unter Windows
 
+## S02 – Coverübernahme, 15.11.2026
+
+Synthetischer Reihen-Autofill 900007 im Manual-Double, auf einen Einkaufsband
+begrenzt, Titel S02_BROWSER_20261115. Erster Kauf erzeugte die neue Reihe,
+zweiter Einzelkauf ergänzte nach ausdrücklicher Bereichsbestätigung Band 2.
+Nach Reload zeigten beide Bandcover die lokale manual-test/cover.svg und waren
+vollständig geladen; Gesamtpreis 13,98 €. Altbestände wurden nicht bedient.
+Zwei eigene gekaufte Positionen und eine Reihe mit zwei Bänden bleiben erhalten.
+Keine erfassten Konsolenfehler; eigener Launcher geordnet beendet.
+Separater UI-Befund: Bei initial leerem Inline-Displayzustand benötigte das
+Aufklappen der Bände zwei Klicks. Coverprüfung anschließend erfolgreich.
+
 ## M05 – Nachprüfung der Bezeichnungen
 
 Am 11.11.2026 lesend bestanden: Reihenanlage und -bearbeitung,

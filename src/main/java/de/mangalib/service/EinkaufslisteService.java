@@ -332,9 +332,7 @@ public class EinkaufslisteService {
             System.out.println(einkaufslistenItemDetails.getSammelbaendeId().getId());
         }
 
-        if (scrapedData.containsKey("Band 1 Bild Url")) {
-            einkaufslistenItemDetails.setCoverUrl(scrapedData.get("Band 1 Bild Url"));
-        }
+        einkaufslistenItemDetails.setCoverUrl(WriteValidation.importedCover(scrapedData));
 
         if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
             einkaufslistenItemDetails.setStatusDe(String.valueOf(scrapedData.get("Deutsche Ausgabe Status")));

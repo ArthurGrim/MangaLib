@@ -152,4 +152,13 @@ public final class WriteValidation {
         });
         return result;
     }
+
+    /** Reihencover beziehungsweise Cover des ersten gelieferten Bands, ohne Abruf. */
+    public static String importedCover(Map<String, String> data) {
+        for (String key : java.util.List.of("Band 1 Bild Url", "Cover URL", "BildUrl", "coverUrl", "Cover")) {
+            String value = data.get(key);
+            if (value != null && !value.isBlank()) return optionalUrl(value);
+        }
+        return null;
+    }
 }

@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
   let scrapedData = {};
+  let autofillRevision = 0;
 
   const deleteButtons = document.querySelectorAll(".delete-button");
 
@@ -68,6 +69,8 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   function resetPopupFields() {
+    scrapedData = {};
+    autofillRevision++;
     // Zurücksetzen aller Eingabefelder
     document
       .querySelectorAll(
@@ -299,6 +302,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const autofillButton = document.querySelector(".mp-autofill-button");
   const mangaIndexInput = document.querySelector("#manga_index");
+  mangaIndexInput.addEventListener("input", () => {
+    scrapedData = {};
+    autofillRevision++;
+    hideLoading();
+  });
 
   function showLoading() {
     document.getElementById("popupContainer").querySelector(".loading-label").style.display = "block";
@@ -328,6 +336,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     MangaLibFeedback.clear(document.getElementById("popupContainer"));
+    const revision = ++autofillRevision;
+    scrapedData = {};
     // Anzeigen des Lade-Labels
     showLoading();
 
@@ -340,6 +350,7 @@ document.addEventListener("DOMContentLoaded", function () {
       body: JSON.stringify({ mangaIndex: mangaIndex }),
     }, document.getElementById("popupContainer"), { persist: false })
       .then((data) => {
+        if (revision !== autofillRevision || mangaIndexInput.value.trim() !== mangaIndex) return;
         // Daten in die Eingabefelder und Selects einfügen
         document.querySelector("#verlag").value = data["verlagId"];
         document.querySelector("#typ").value = data["typId"];
@@ -401,11 +412,10 @@ document.addEventListener("DOMContentLoaded", function () {
         delete data["formatId"];
 
         // Speichern der gesamten Map für den Save-Button
-        Object.keys(data).forEach((key) => {
-          scrapedData[key] = data[key];
-        });
+        scrapedData = { ...data };
       })
       .catch((error) => {
+        if (revision !== autofillRevision) return;
         hideLoading();
         showError();
         // Keine Rohfehler oder Antwortbodys anzeigen.

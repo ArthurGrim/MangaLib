@@ -1,5 +1,59 @@
 # Sichere Tests für MangaLib
 
+## S02 – Coverübernahme, datenbankfreier Zwischenstand (15.11.2026)
+
+### Ergänzte Integration und Browserabnahme
+
+Nach bestandenen Guards wurde ShoppingCoverIntegrationTest zusammen mit den
+beiden Unitklassen offline nach identischem Dry-Run ausgeführt. Der abschließende
+Lauf bestand mit 118 Java-Fällen, ohne Fehler oder übersprungene Fälle.
+Der Test prüft Aliasübernahme in Einkaufsdetails, Kaufneuanlage und bestätigten
+Einzelbandkauf in eine bestehende Reihe nach Flush/Clear. Vorhandenes Band- und
+Reihencover blieb erhalten; der neue Band erhielt das abweichende Einkaufcover.
+Der vollständige Snapshot nach Rollback entsprach dem Ausgangsbestand.
+Zwei vorausgegangene Fixturefehler wurden korrigiert: fehlendes erneutes Laden
+der inversen Detailbeziehung und fehlende externe Editionskennung für die
+Bestandszuordnung. Der zweite Fehlversuch bestätigte ebenfalls Snapshot-Erhaltung;
+beim ersten endete die Assertion vor dem damaligen Snapshotvergleich.
+
+242 DOM-Tests bestanden. Der neue Autofilltest prüft fehlendes Cover bei der
+zweiten Antwort und eine verspätete Antwort nach Abbrechen. Importdaten werden
+ersetzt; Reset und Indexeingaben entwerten laufende Antworten.
+
+Manual-Paket offline gebaut, ValidateOnly bestanden. Der ausschließlich
+synthetische Reihenindex 900007 wurde im Manual-Double für diese Abnahme ergänzt.
+Browser legte zwei eigene Einzelkaufpositionen S02_BROWSER_20261115 an,
+kaufte die erste als neue Reihe und die zweite nach Bestätigung als Band 2.
+Nach Reload wurden beide lokalen Cover geladen und Gesamtpreis 13,98 € angezeigt.
+Die neue Reihe mit zwei Bänden sowie zwei gekaufte Einkaufspositionen verbleiben
+absichtlich in mangalib_manual_test. Keine erfassten Konsolenfehler, eigene
+Testinstanz anschließend per Ctrl+C geordnet beendet.
+Beim Aufklappen waren zunächst zwei Klicks nötig, da der initiale Inline-
+Displayzustand vom Toggle als offen interpretiert wurde. Dies bleibt ein
+separater UI-Folgepunkt. Keine echten Scraper oder Produktivdatenzugriffe.
+
+Branch codex/s02-shopping-covers basiert auf dem sauberen M05-Abschluss d06e5f0.
+Nachgewiesene Lücken: Einkaufsanlage nutzte nur Band 1 Bild Url; der Kaufpfad
+für bestehende Reihen gab keinerlei Einkaufcover an die neuen Bände weiter.
+WriteValidation.importedCover berücksichtigt nun in dieser Reihenfolge
+Band 1 Bild Url, Cover URL, BildUrl, coverUrl und Cover, mit vorhandener
+HTTP(S)-URL-Prüfung ohne Abruf. NULL/leere Werte werden ausgelassen.
+PurchaseService übergibt bei genau einem neuen Band dessen gespeichertes
+Einkaufcover unter der bestätigten neuen Bandnummer. Die bisherigen Cover
+der Reihe und Altbände werden erhalten. Bei Mehrbandkäufen fehlen einzelne
+Coverzuordnungen; ein generisches Einkaufcover wird daher nicht verteilt.
+Bei Kaufneuanlage bleibt die vorhandene Übernahme in Reihe/ersten Band erhalten.
+
+Zwei gezielte Offline-Läufe nach jeweils identischem Dry-Run bestanden.
+Der letzte Lauf umfasste 55 PurchaseServiceTest- und 62 WriteValidationTest-Fälle,
+insgesamt 117, ohne Fehler oder übersprungene Fälle. Die neuen Regressionen
+prüfen Aliase/Priorität, Leer-/NULL-Werte, unsichere URLs, beide Kaufpfade,
+unveränderte Altcover und den Mehrbandfall. Repositories und Transaktionsmanager
+sind Fakes/Mocks. Kein Nachweis echten MySQL-Commitverhaltens durch diesen Lauf.
+Keine Datenbankverbindung, Anwendung, Browser oder Scraper gestartet.
+Geschützte Persistenz- und Browserabnahme sowie der wiederholte Autofillpfad
+bleiben als nächste S02-Prüfschritte offen. git diff --check erfolgreich.
+
 ## M05 – Plattformneutrale Preisbezeichnungen (11.11.2026)
 
 Lesende Browserabnahme anschließend bestanden. Das isolierte Manual-Artefakt

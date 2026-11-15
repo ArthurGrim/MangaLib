@@ -22,7 +22,7 @@ public final class SyntheticScraperGateway implements ScraperGateway {
         return new HashMap<>(Map.of("BildUrl", COVER, "Preis", "6.99 €"));
     }
     public Map<String, String> scrapeSeries(String index) {
-        if (!"900004".equals(index)) check(index);
+        if (!java.util.Set.of("900004", "900007").contains(index)) check(index);
         var data = new HashMap<String, String>();
         data.put("Titel", "MANUELL " + index + " – ÄÖÜ & Sonderzeichen");
         data.put("Deutsche Ausgabe Verlag", "Testverlag");

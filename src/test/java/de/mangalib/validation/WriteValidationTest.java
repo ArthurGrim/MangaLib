@@ -87,6 +87,20 @@ class WriteValidationTest {
         assertThrows(IllegalArgumentException.class, () -> WriteValidation.money(text));
     }
 
+    @Test void coverAliasesPreferExplicitFirstVolumeAndIgnoreEmptyValues() {
+        for (String key : java.util.List.of("Band 1 Bild Url", "Cover URL", "BildUrl", "coverUrl", "Cover")) {
+            assertEquals("https://example.invalid/cover.jpg",
+                    WriteValidation.importedCover(Map.of(key, "https://example.invalid/cover.jpg")));
+        }
+        assertEquals("https://example.invalid/first.jpg", WriteValidation.importedCover(Map.of(
+                "Band 1 Bild Url", "https://example.invalid/first.jpg", "Cover URL", "https://example.invalid/series.jpg")));
+        assertEquals("https://example.invalid/fallback.jpg", WriteValidation.importedCover(Map.of(
+                "Band 1 Bild Url", " ", "BildUrl", "https://example.invalid/fallback.jpg")));
+        assertNull(WriteValidation.importedCover(Map.of()));
+        assertThrows(IllegalArgumentException.class,
+                () -> WriteValidation.importedCover(Map.of("BildUrl", "javascript:alert(1)")));
+    }
+
     @Test void optionalMissingImportFieldsAreOmittedAndInputIsNotMutated() {
         var source = new HashMap<String, String>(); source.put("Band 1 Bild Url", null);
         source.put("Erstveröffentlichung Herkunft", null); source.put("Band 1 Preis", "6,99 €");

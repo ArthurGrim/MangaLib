@@ -208,6 +208,51 @@ class PurchaseServiceTest {
         assertFalse(f.stored.getFirst().isIstGelesen());
     }
 
+    @Test void singlePurchaseTransfersCoverOnlyToNewVolume() {
+        var d = new EinkaufslisteItemDetails();
+        d.setId(item.getId()); d.setEinkaufslisteItem(item);
+        d.setCoverUrl("https://example.invalid/purchased-cover.jpg");
+        item.setEinkaufslisteItemDetails(d);
+        var before = f.state();
+        String seriesCover = f.row.getMangaDetails().getCoverUrl();
+        assertEquals(UPDATED, service.purchase(request(null, true)).outcome());
+        before.forEach((id, state) -> assertEquals(state, f.state().get(id)));
+        assertEquals(seriesCover, f.row.getMangaDetails().getCoverUrl());
+        assertEquals(d.getCoverUrl(), f.stored.getLast().getBildUrl().toExternalForm());
+    }
+
+    @ParameterizedTest @NullAndEmptySource @ValueSource(strings = {"   "})
+    void emptyPurchaseCoverPreservesExistingCovers(String cover) {
+        var d = new EinkaufslisteItemDetails();
+        d.setId(item.getId()); d.setEinkaufslisteItem(item); d.setCoverUrl(cover);
+        item.setEinkaufslisteItemDetails(d);
+        var before = f.state();
+        assertEquals(UPDATED, service.purchase(request(null, true)).outcome());
+        before.forEach((id, state) -> assertEquals(state, f.state().get(id)));
+    }
+
+    @Test void bulkPurchaseDoesNotGuessWhichNewVolumeOwnsTheCover() {
+        var d = new EinkaufslisteItemDetails();
+        d.setId(item.getId()); d.setEinkaufslisteItem(item);
+        d.setCoverUrl("https://example.invalid/ambiguous.jpg");
+        item.setEinkaufslisteItemDetails(d);
+        item.setAnzahlBaende(2);
+        assertEquals(UPDATED, service.purchase(new PurchaseService.Request(7, null, 42L, 4, 5,
+                ShoppingState.token(item, d, true))).outcome());
+        assertTrue(f.stored.stream().filter(b -> b.getBandNr() > 3)
+                .noneMatch(b -> d.getCoverUrl().equals(b.getBildUrl().toExternalForm())));
+    }
+
+    @Test void newSeriesPurchaseTransfersCoverToFirstVolumeAndSeries() {
+        when(f.rows.findByMangaIndex(123)).thenReturn(List.of());
+        prepareNewDetails();
+        item.getEinkaufslisteItemDetails().setCoverUrl("https://example.invalid/cover.jpg");
+        assertEquals(CREATED, service.purchase(request(1L, false)).outcome());
+        assertEquals("https://example.invalid/cover.jpg", f.stored.getFirst().getBildUrl().toExternalForm());
+        assertEquals("https://example.invalid/cover.jpg",
+                f.stored.getFirst().getMangaReihe().getMangaDetails().getCoverUrl());
+    }
+
     private void prepareNewDetails() {
         var d = new EinkaufslisteItemDetails(); d.setId(7L); d.setEinkaufslisteItem(item);
         item.setEinkaufslisteItemDetails(d);
