@@ -2,6 +2,14 @@
 
 ## S02 – Nachprüfung des ersten Aufklappens
 
+Nachtrag 15.11.2026: Mit neu gebautem Manual-Artefakt und erfolgreichem
+ValidateOnly bestanden. Eigene PID 91336, ausschließlich 127.0.0.1:18080,
+Profil manual-test und sichtbares Testbanner bestätigt. S02_BROWSER_20261115
+öffnete beide Bände beim ersten Klick, schloss sie und öffnete sie erneut.
+Beide lokalen Cover visuell sichtbar. Ausschließlich lesende Bedienung,
+keine Speicherung. Eigene Instanz anschließend per Ctrl+C geordnet beendet.
+Die folgende ausstehende Nachprüfung ist damit historisch erledigt.
+
 Die nach dem S02-Commit ergänzte Korrektur berücksichtigt auch einen leeren
 Inline-Displaywert. Zwei DOM-Regressionen sichern ersten Klick, Schließen und
 Wiederöffnen ab. Die visuelle Nachprüfung der Korrektur steht noch aus:

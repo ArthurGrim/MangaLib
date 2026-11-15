@@ -1,5 +1,15 @@
 # Sichere Tests für MangaLib
 
+## S02 – Visueller Abschluss (15.11.2026)
+
+Offline assembleManualTest nach identischem Dry-Run und ValidateOnly erfolgreich.
+In-app Browser bestätigte ersten Klick, Schließen und Wiederöffnen der beiden
+Bände von S02_BROWSER_20261115 einschließlich sichtbarer lokaler Cover.
+Nur geschützter Manual-Launcher, manual-test, PID 91336 auf 127.0.0.1:18080.
+Keine Schreibaktionen oder zusätzlichen Testläufe. Geordneter Shutdown per
+Ctrl+C und freier Port anschließend bestätigt. Die zuvor dokumentierte visuelle
+Nachprüfung ist erledigt; die 244 bestandenen DOM-Tests bleiben unverändert.
+
 ## Nachtrag S02 – Erster Klick auf die Bandanzeige (15.11.2026)
 
 S02 wurde lokal mit ce0d7ab gesichert. Die anschließende UI-Korrektur behandelt
