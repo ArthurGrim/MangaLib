@@ -26,6 +26,15 @@ public interface BandRepository extends JpaRepository<Band, Long> {
             + "where b.istGelesen = true")
     List<ReadingEntry> readingEntries();
 
+    interface ReadingState extends ReadingEntry {
+        Long getId();
+        Boolean getReadState();
+    }
+
+    @Query("select b.id as id, b.istGelesen as readState, b.reread as reread, s.multiplikator as multiplier from Band b "
+            + "left join b.mangaReihe r left join r.mangaDetails d left join d.sammelbaende s")
+    List<ReadingState> readingStates();
+
     boolean existsByBandIndex(Integer bandIndex);
 
     @Query("SELECT b FROM Band b WHERE b.mangaReihe.id = :mangaReiheId AND b.bandNr = "

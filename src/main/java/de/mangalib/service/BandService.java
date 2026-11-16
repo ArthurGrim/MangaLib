@@ -26,6 +26,9 @@ import java.util.regex.Pattern;
 @Service
 public class BandService {
 
+    @Autowired(required = false)
+    private ReadingHistoryService readingHistory;
+
     /** Vollständiger Preisplan vor dem ersten Save; ungültige Imports sind kein Fallbackauftrag. */
     static List<BigDecimal> newPrices(int first, int last, BigDecimal fallback, Map<String, String> imported) {
         var prices = new ArrayList<BigDecimal>();
@@ -106,6 +109,7 @@ public class BandService {
         if (id == null) {
             throw new IllegalArgumentException("ID darf nicht null sein");
         }
+        if (readingHistory != null && !readingHistory.history(id).isEmpty()) throw new ReadingHistoryService.Conflict();
         bandRepository.deleteById(id);
     }
 
@@ -167,8 +171,15 @@ public class BandService {
             throw new IllegalArgumentException("ID und Lesestatus dürfen nicht null sein");
         }
         return bandRepository.findById(bandId).map(band -> {
+            if (readingHistory != null) WriteValidation.editableRelations(band.getMangaReihe());
+            boolean previouslyRead = band.isIstGelesen();
             band.setIstGelesen(istGelesen);
-            return bandRepository.save(band);
+            Band saved = bandRepository.save(band);
+            if (readingHistory != null) {
+                readingHistory.recordTransition(saved, previouslyRead);
+                updateMangaDetailsIstGelesenStatus(saved.getMangaReihe().getMangaDetails());
+            }
+            return saved;
         });
     }
 
@@ -249,6 +260,7 @@ public class BandService {
             Band band = new Band();
             band.setMangaReihe(mangaReihe);
             band.setBandNr(i);
+            if (readingHistory != null) band.setReread(0);
 
             String bildUrlKey = "Band " + i + " Bild Url";
             String mpUrlKey = "Band " + i + " href";
@@ -424,6 +436,7 @@ public class BandService {
                 band = new Band();
                 band.setMangaReihe(mangaReihe);
                 band.setBandNr(i);
+                if (readingHistory != null) band.setReread(0);
                 band.setIstGelesen(false);
                 System.out.println("Es wurde ein neuer Band erstellt mit der Nr.:" + i);
                 band.setPreis(preisProBand);
@@ -539,6 +552,8 @@ public class BandService {
         Optional<Band> optionalBand = bandRepository.findById(bandData.getId());
         if (optionalBand.isPresent()) {
             Band band = optionalBand.get();
+            boolean previouslyRead = band.isIstGelesen();
+            if (readingHistory != null) readingHistory.requireUnchangedCounter(band.getReread(), bandData.getReread());
             WriteValidation.editableRelations(band.getMangaReihe());
             var inventory = BandInventory.byPublicationNumber(band.getMangaReihe(),
                     bandRepository.findByMangaReiheId(band.getMangaReihe().getId()));
@@ -608,6 +623,7 @@ public class BandService {
             bandRepository.save(band);
 
             // Berechne und speichere die neuen Gesamtpreise
+            if (readingHistory != null) readingHistory.recordTransition(band, previouslyRead);
             MangaReihe mangaReihe = band.getMangaReihe();
             if (financialChange) {
                 System.out.println("Alte Aenderung Gesamtpreis: " + mangaReihe.getAenderungGesamtpreis());

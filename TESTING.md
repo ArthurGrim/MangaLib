@@ -1,5 +1,194 @@
 # Sichere Tests für MangaLib
 
+## S03 – Browserabnahme und UI-Nachprüfung bestanden (16.11.2026)
+
+Nach vom Eigentümer ausgeführtem Manual-DDL und minimalem tabellenbezogenem
+GRANT bestand der neue READ-ONLY-Snapshot. Anschließend isolierte Browserabnahme
+auf manual-test/127.0.0.1:18080 mit neuen eigenen Daten S03_BROWSER_20261116_R01:
+Erstlektüre über Statuswechsel und ausdrückliche Aktion, Metadatenspeichern ohne
+Doppelereignis, Datumskorrektur, Reread, Reset ohne Historienverlust und
+Doppelklickschutz jeweils nach Reload bestätigt. Zwei Bände, vier Ereignisse.
+Monate Oktober 1/0/45 Minuten und November 1/2/135 Minuten korrekt.
+
+Kontrastmangel der Monatstabelle mit bestehenden Designvariablen korrigiert;
+fester S03-Fachtext für 409 ergänzt, keine Fehlerbodys gelesen und kein Retry.
+403-/CSRF-/Host-/Sessionregeln unverändert. Nachprüfung im separat paketierten
+Kandidaten bestätigte Kontrast, kontrollierten Datumskonflikt und unveränderte
+gespeicherte Daten. Keine erfassten Browserkonsolenfehler. HTTP-Status im Connector
+nicht direkt gemessen; UI-Meldungen ersetzen keine HTTP-Vertragsprüfung.
+
+Neue Offline-Ergebnisse: 253 DOM-Tests (9 Historyfälle), 94 Manual-Schutztests,
+jeweils 0 Fehler/übersprungen; Gradle-Dry-Run identisch vor Ausführung. Der direkte
+package.json-Befehl node --test src/test/js/*.test.cjs bestand. pnpm run test:dom
+war zuvor durch Sandbox-EPERM bei lokaler Projektregistrierung blockiert und
+führte keine Tests aus. Keine Downloads/Installationen. Kein Java-Fachcode geändert.
+Die vorher bestandenen 234 ausgewählten Javafälle und zwei realen Rollbackfälle
+sind getrennte, nicht erneut ausgeführte Nachweise.
+
+Alle ursprünglichen manuellen Zeilen und Schemaabschnitte vollständig unverändert,
+nur eigene Reihe/Details 17, Bände 43/44 und vier zugehörige Ereignisse ergänzt.
+Endsnapshot f19146da1fbc0c7840242fee81ec12d87e6a8d90720ac5927298bf1596c42c33;
+nach rein negativer UI-Nachprüfung identisch. Eigene PIDs 25536/3444 per Ctrl+C
+geordnet beendet. Ausführliche Matrix, Artefakthashes und Nachweisgrenzen:
+S03_ACCEPTANCE.md. Die folgenden Rechte-/Startblocker sind historische Stände.
+Echte S03-Paralleltransaktionen, Endregression und Produktion bleiben offen.
+
+## S03 – Manuelle Nachprüfung: Berechtigungsblocker (16.11.2026)
+
+Nach bestätigter manueller Tabellenanlage READ-ONLY-Snapshot vor Appstart
+versucht. SELECT auf band_reading_events wurde verweigert (MySQL 1142), kein
+Snapshot gespeichert, kein Anwendungs-/Browserstart und keine Schreiboperation.
+Begrenzte separate Identitätsprüfung bestätigte den tatsächlichen Account
+mangalib_manual_test_user@127.0.0.1 auf mangalib_manual_test. Keine automatische
+Wiederholung des Snapshotlaufs. Ursache: bestehende tabellenweise Rechte decken
+die neue Ereignistabelle nicht ab. Enger Admin-GRANT nur für diese Tabelle
+vorbereitet, noch nicht ausgeführt. Testdatenbank-Abnahme bleibt bestanden;
+manuelle Abnahme bleibt blockiert. Historische Nachweise unverändert.
+
+## S03 – Reale Rollbackabnahme bestanden (16.11.2026)
+
+Nach bestätigter Admin-Anlage der Testtabelle s03SchemaTest in Phase AFTER
+bestanden: elf InnoDB-Tabellen, leere Ereignistabelle, Unique-/FK-Grenzen,
+78 Stammdatensätze und unveränderte Altdaten-/Altschemahashes.
+Neuer vollständiger Nachmigrationshash
+77fce665515396821a2fb21f36f074a3abccdac48de04c09f1f065be1c9e814f.
+Danach s03HistoryTest: 2 bestanden, 0 Fehler/übersprungen. Tatsächliche JPA-/MySQL-
+Schreiboperationen ausschließlich auf neuen synthetischen Fixtures mit
+erzwungenem Rollback, erneutes Laden, Lesezeit, Replays, Datumskorrektur und
+Historienerhaltung nach Statuswechsel geprüft. Beide vollständigen Vorher-/
+Nachher-Snapshots und alle Ereigniszeilen identisch. Keine verbliebenen Fixtures;
+AUTO_INCREMENT nicht zurückgesetzt. Vor jedem Lauf identischer Dry-Run, offline
+und ohne Daemon. Vor dem Schreibtest eine testlokale Coordinator-Fixture statt
+des auf Spring-Testtransaktionen beschränkten gemeinsamen Helfers eingeführt;
+dessen Guards weder geändert noch umgangen.
+Nach beiden Schreib-/Rollbackfällen außerdem s03SchemaTest erneut rein lesend
+mit dem Nachmigrations-Gesamthash und beiden alten Teilhashes bestanden: 1 Fall,
+0 Fehler/übersprungen. Ereignistabelle leer, keine dauerhafte Datenänderung.
+
+Manuelle Umgebung ausschließlich mit dem bestehenden READ-ONLY-Snapshotverfahren
+vorbereitet, keine Anwendung gestartet: zehn InnoDB-Tabellen, 16 Reihen/Details,
+42 Bände, 11 Einkaufspositionen/Details, 17 Stammdaten. Originaldateien erhalten;
+neue ignorierte Nachweise unter .gradle/s03-manual-preflight-20261116.
+Keine Verbindung zu mangalib, keine DDL durch Codex, kein Zählerreset.
+Separates Manual-DDL zur Admin-Ausführung vorbereitet, noch nicht ausgeführt.
+
+## S03 – Abnahme begonnen, 16.11.2026
+
+Aktueller Branch, Testpasswortpräsenz ohne Wertausgabe, fehlende Framework-/JVM-
+Overrides und unveränderte Datenbankguards geprüft. Nach identischem Dry-Run
+s03SchemaTest offline/ohne Daemon ausgeführt: 1 bestanden, 0 Fehler/übersprungen.
+Identität/Rechte, zehn InnoDB-Tabellen und 78 Stammdatensätze bestätigt.
+Gesamtfingerabdruck weiterhin
+0330d003b812c6cfa4d676ab4898f4a49c17c8020a77cc40f4852c2aeac285b0;
+beide Teilfingerabdrücke aus S03_ACCEPTANCE.md ebenfalls identisch.
+Nur SELECT/SHOW, keine Fixtures/DDL oder anderen Schreiboperationen.
+Der Eigentümer übernimmt die Admin-Ausführung des geprüften Test-DDL selbst.
+Bis zu dessen Bestätigung keine AFTER-/S03-Persistenz- oder Browserabnahme.
+
+## S03 – Implementierung und Abnahmevorbereitung, Nachtrag 16.11.2026
+
+Fortsetzung nach Unterbrechung: gespeicherten Arbeitsstand und die nachstehenden
+Testberichte abgeglichen, keine bereits bestandene Suite unnötig wiederholt.
+Opt-in-Abnahme um Lesezeitassertions nach Flush/Clear ergänzt und nach identischem
+Dry-Run compileT03IntegrationJava offline/ohne Daemon erfolgreich ausgeführt.
+Diese neuen realen Assertions sind weiterhin nur kompiliert, nicht ausgeführt.
+Alle 92 Klassen des separaten Manual-Kandidaten stimmen bytegenau mit der
+aktuellen Kompilierung überein. git diff --check erfolgreich. Kein neuer
+Datenbankzugriff oder Anwendungsserver-/Browserstart bei dieser Fortsetzung.
+Das reine Test-DDL erhält eine gezielte .gitignore-Ausnahme und eol=lf-Bindung,
+damit sein Freigabehash durch Windows-Checkouts nicht verändert wird.
+
+Gespeicherter Abschlussprüfstand vom 15.11.2026:
+
+- 234 ausgewählte Java-Fälle, 0 Fehler, 0 übersprungen. Auswahl: ReadingHistory*
+  Service-/Store-/Aktivierungs-/Statistik-/Charakterisierungstests,
+  ReadingHistoryControllerTest mit echten Host-/Origin-/CSRF-/Größenfiltern,
+  ReadingTimeServiceTest, ReadingStatusExtensionTest, LegacyEditCharacterizationTest,
+  LibraryWriteCoordinatorTest, RequestLimitsMvcTest und TestDatabaseGuardTest.
+- 94 Manual-Schutz-/Archiv-/Mock-/Templatefälle bestanden, 0 Fehler/übersprungen.
+- 250 DOM-Tests bestanden, einschließlich sechs neuer Historienfälle für
+  deaktivierte Schemas, explizite Requests, Datumskorrektur, sichere Fehlertexte,
+  Monatsansicht und Sperre nach unbestätigtem Schreiben über Dialogwechsel.
+- Offline bootJar und compileT03IntegrationJava erfolgreich. Jeder tatsächliche
+  Gradle-Aufruf mit --offline --no-daemon nach identischem kontrolliertem Dry-Run.
+- Separates mangalib-manual-test-s03.jar erstellt und per -ReadingHistory
+  -ValidateOnly geprüft. Keine Datenbank/kein Listener in ValidateOnly.
+  Altes Artefakt mit diesem Flag abgewiesen; alte Manual-JARs hashgleich erhalten.
+
+Korrigierte Zwischenfehler: DOM-Harness benötigte Headers und einen gemeinsamen
+VM-Kontext für die existierenden Feedbackhelfer. Die Aktivierungs-Doubles werden
+als fertige Singletons registriert, damit der reine Testkontext keinen JPA-Store
+initialisiert. Ein Mockito-Fehlerszenario wurde ohne Auslösen des vorherigen
+Throw-Stubs neu konfiguriert. Keine erforderlichen Tests deaktiviert.
+
+Zusätzlich gefundene ältere Manual-Testlücken: fehlende inverse Detail-ID;
+zu früh eingefrorener manualSafetyTest-Classpath ohne ProductionScraperClient;
+veraltete Erwartung eines Bandsaves bei bloßer Titeländerung und impliziter
+Finanzreparatur. Fixtures auf vollständige Beziehungen, Classpath auf späte
+Auflösung und Assertions auf den geltenden T03-Vertrag umgestellt. Reine
+Metadatenbearbeitung prüft nun ausdrücklich keinen Bandsave, Finanzänderung
+einen ausdrücklichen Betrag, Flag, Bandsave und exakte Summe 7,50 €. Ein
+zusätzlicher Fall sichert ausbleibende Reparatur historischer Flags ab.
+Kein Produktionscode wurde geändert, um diese alten Erwartungen zu erfüllen.
+
+Zwei geschützte rein lesende S03-Vorprüfungen bestanden. Kein Fixture-Setup,
+kein INSERT/UPDATE/DELETE/DDL. MySQL 8.0.36, mangalib_test_user@localhost auf
+mangalib_test, serverseitige Rechteprüfung, zehn InnoDB-Tabellen und 78
+Stammdatensätze bestätigt. Vollständiger aktueller Vorher-/Nachher-Fingerabdruck
+0330d003b812c6cfa4d676ab4898f4a49c17c8020a77cc40f4852c2aeac285b0.
+Der zweite Lauf ergänzte getrennte Erhaltungshashes und verglich die erste
+Aufnahme; Altdaten/Altschema unverändert. Keine Aussage, dass ältere historische
+T03-Gesamtfingerabdrücke mit diesem jetzigen Bestand identisch wären.
+
+Neue Opt-in-Tasks: s03SchemaTest (BEFORE/AFTER, ausschließlich SELECT/SHOW),
+s03HistoryTest (nur separat migriertes mangalib_test; zwei vorbereitete,
+kompilierte Rollbackfälle). s03HistoryTest wurde nicht ausgeführt; ebenso
+keine Migration und keine echte S03-Browser-/Commitabnahme. Fake-TM-Tests
+beweisen nicht MySQL-Commit/Konkurrenz oder tatsächliche JDBC-Bindung.
+S03_ACCEPTANCE.md enthält Hashes, genaue Befehle und nächste Freigabegrenzen.
+Kein Zugriff auf mangalib oder mangalib_manual_test, kein Anwendungslistener,
+kein echter Browser/Scraper/Worker, keine Installation, kein Git-Commit/Push.
+
+## S03 – Datierte Monatsauswertung (15.11.2026)
+
+Neun neue ReadingHistoryStatisticsTest-Fälle bestanden: Monats-/Jahresgrenze,
+Schalttag/Rückdatierung, getrennte Lektürearten, identische Wiederholungen,
+mehrere bewusste Lektüren am gleichen Tag, Sammelaktionsschlüssel pro Band,
+widersprüchliche Inhalte, fehlende Pflichtwerte und unveränderliches Ergebnis.
+Gemeinsam mit den vier zuvor ausgewählten Klassen: 115 bestanden, 0 Fehler,
+0 übersprungen. Offline --no-daemon nach identischem erfolgreichen Dry-Run.
+Reine Java-Berechnung, keine Spring-/JPA-/JDBC-/Browserkontexte; keine neuen
+Abhängigkeiten. Noch kein Nachweis von Persistenz, Konkurrenz oder SQL-Syntax.
+Die Migrationstemplates sind nicht ausgeführt und nicht automatisch geladen.
+
+## S03 – M06-Fixtures korrigiert, Schritt 2 geplant (15.11.2026)
+
+ReadingStatusExtensionTest nutzt bei bestätigten Käufen nun die aktuellen
+purchaseTokens und prüft die vollständige 417-Vorschau mit Kaufzusammenfassung.
+Die Neuanlage-Fixture setzt die Detailbeziehung in beide Richtungen.
+Erster Korrekturlauf: 105/106 bestanden; anschließend 106/106 bestanden,
+0 Fehler, 0 übersprungen: neue Charakterisierung 8, Lesezeit 5, M06 40,
+Altbestandseditor 53. Alle ursprünglichen fachlichen M06-Assertions erhalten.
+Jeder Gradle-Lauf offline/ohne Daemon nach identischem Dry-Run. Kein Kontext
+oder JDBC, keine Anwendungs-/Browser-/Scraperstarts. Produktionscode unverändert.
+S03_MIGRATION_PLAN.md ist ein nicht ausführbarer Plan, keine Schemaabnahme.
+Die folgenden vier offenen Fixturefehler sind damit historisch behoben.
+
+## S03 Schritt 1 – Datenbankfreie Charakterisierung (15.11.2026)
+
+Auf codex/s03-reading-history acht neue ReadingHistoryCharacterizationTest-Fälle
+und fünf ReadingTimeServiceTest-Fälle erfolgreich. Beide Klassen verwenden
+ausschließlich Mocks/Objekte ohne Boot-Kontext oder Datenbankverbindung.
+Erweiterte Auswahl mit ReadingStatusExtensionTest und
+LegacyEditCharacterizationTest: 106 Fälle, 102 bestanden, vier Fehler, keine
+übersprungenen Fälle. Drei alte M06-Kaufrequests lassen den inzwischen nötigen
+purchaseToken aus (409), ein weiterer Fall erwartet die 417-Antwort ohne Token
+und purchaseSummary. Keine Assertions abgeschwächt; Nachbesserung der älteren
+Testfixtures vor produktiver S03-Arbeit erforderlich. Details und Abgrenzung
+des Ist-Verhaltens in S03_IMPLEMENTATION_PLAN.md. Alle Aufrufe ausschließlich
+offline/ohne Daemon nach identischem Dry-Run. Keine Schemaänderung, JDBC-,
+Anwendungs-, Browser- oder Scraperausführung, kein Commit.
+
 ## S02 – Visueller Abschluss (15.11.2026)
 
 Offline assembleManualTest nach identischem Dry-Run und ValidateOnly erfolgreich.
@@ -14901,3 +15090,65 @@ Abschluss-SHA-256
 stimmte mit dem Snapshot vor der Sessionprobe überein. Tomcat/JPA
 geordnet beendet, PID und Port freigegeben. Fallresultate und
 Nachweisgrenzen stehen im R02-Nachtrag von `T03_6C_APPROVAL.md`.
+
+## S03 – Layout, echte Konkurrenz und Gesamtregression (16.11.2026)
+
+Aktueller Abschlussstatus: REGRESSION_BLOCKED, kein Git-Abschluss.
+
+- Historie in denselben Statistikcontainer verschoben. Unter 1000px reserviert
+  die Sidebar keine linke Inhaltsbreite. Monats-SVG mit fester Höhe 300px und
+  verfügbarer Breite; keine 650px-Mindestbreite für das Monatsdiagramm mehr.
+- Reale rein lesende Browserprüfung bei 1280x900 und 600x900 bestanden. Diagramm
+  und Historie jeweils gleich breit (945px bzw. 561px), kein horizontaler
+  Seitenüberlauf, keine erfassten Konsolenfehler. Kandidat separat unter
+  .gradle/s03-final-20261116, SHA-256
+  097f9c54836397d7c649a802bbaa7349806f0ee24cba46667ccefe0b1452a2c5.
+  ValidateOnly und eigene PID 24272/127.0.0.1:18080 geprüft; anschließend Ctrl+C,
+  Tomcat/JPA geordnet geschlossen, Prozess beendet, Port frei. Nur lesende UI.
+- Neuer strikt getrennter s03ConcurrencyTest, Freigabewert
+  -Ps03ConcurrencyApproval=OWN_SYNTHETIC_COMMIT_AND_CLEANUP. Ein realer Test mit
+  zwei Threads und echten Transaktionen bestanden: identische FIRST_READ-UUID
+  erzeugt genau ein Ereignis; zwei unterschiedliche REREAD-UUIDs erzeugen zwei
+  weitere Ereignisse und Reread 2 nach Clear/Reload. Nur ein eigener neuer Graph
+  (Reihe/Details/zwei Bände) wird committed und nach Threadabschluss anhand
+  Titel und exakter Band-IDs wieder entfernt. Vorher/Nachher aller Altzeilen,
+  Schema-Metadaten und Ereigniszeilen identisch. Kein crashfestes Cleanupversprechen;
+  bei fehlendem Threadabschluss keine Entfernung. AUTO_INCREMENT nicht zurückgesetzt.
+- s03HistoryTest bleibt ausdrücklich auf die zwei Rollbackfälle beschränkt und
+  bestanden. Neuer Commitfall durch eigene Filter-/Freigabebarriere getrennt.
+- Vorher und nach Gesamtregression geschützter s03SchemaTest bestanden:
+  mangalib_test/mangalib_test_user, Profil test, Minimalrechte, elf InnoDB-Tabellen,
+  78 Stammdaten, Gesamtfingerabdruck unverändert
+  77fce665515396821a2fb21f36f074a3abccdac48de04c09f1f065be1c9e814f.
+  Beide früheren Altdaten-/Altschemahashes identisch. Keine Migration/DDL.
+- Gesamtaufuf test manualSafetyTest bootJar: test meldete 1456 Fälle,
+  1369 bestanden, 85 fehlgeschlagen, 2 übersprungen. bootJar wurde vorher gebaut;
+  manualSafetyTest danach separat mit 94/94 bestanden. Alle Gradle-Aufrufe
+  offline/ohne Daemon, vorab jeweils identischer Dry-Run; kein clean.
+- 84 Fehler betreffen ältere Integrationstests mit äußeren Spring-Testtransaktionen:
+  LegacyEditIntegrationTest 39, MvcContractTest 9, ReadingStatusIntegrationTest 34,
+  RequestLimitsIntegrationTest 1, ServiceTest 1. Der Coordinator verbietet eine
+  äußere Transaktion ausdrücklich; ServiceTest zeigt genau diese Exception.
+  HTTP-500 statt erwartetem Erfolgs-/Validierungsstatus ist damit nicht als grün
+  umzudeuten. Keine Produktionsbarriere und keine Assertions abgeschwächt.
+- Ein weiterer alter Unitfall BandIntegrityCharacterizationTest verwendete eine
+  Kaufbestätigung ohne den seit M01 erforderlichen purchaseToken. Nur Fixture
+  ergänzt; alle 29 Klassenfälle anschließend datenbankfrei bestanden. Der obige
+  Gesamtlauf bleibt historisch fehlgeschlagen; keine Behauptung einer grünen
+  Gesamtwiederholung. Beide übersprungenen Fälle liegen in ShoppingEditIntegrationTest
+  und VolumeImportIntegrationTest; bestehende Platzhalter, nicht neu deaktiviert.
+- DOM-Suite 254/254 bestanden, einschließlich Layout-/Strukturregression.
+- Manueller Endsnapshot unverändert
+  f19146da1fbc0c7840242fee81ec12d87e6a8d90720ac5927298bf1596c42c33.
+  Keine manuellen Schreibaktionen in der Layoutnachprüfung, keine Produktions-
+  verbindung. Alle alten Manual-JARs erhalten, neue Ausgaben separat.
+
+Nächster notwendiger Arbeitsschritt: ältere Integrationstests auf die tatsächliche
+T03-Transaktionsgrenze portieren, mit gleichwertigen echten Commit-/Rollback- und
+Bestandserhaltungsnachweisen. Keine testlokale Umgehung des Coordinators, kein
+Ignorieren der 84 Fehler. Danach Gesamtregression erneut ausführen. Git-Staging,
+Commit, Push und Merge sind bis dahin nicht vorbereitet/freigegeben; Arbeitsstand
+bleibt uncommittet. Produktionsmigration/-reset/-aktivierung weiterhin gesondert.
+
+## S03 – Abschlussnachtrag 16.11.2026
+S03_TECHNICALLY_ACCEPTED: Die älteren Integrationstests sind auf den echten Coordinator mit erzwungenem Rollback portiert. Vollständiger Java-Lauf: 1454 bestanden, 0 Fehler, 2 bestehende M01-/M02-Commit-Opt-ins übersprungen (keine Platzhalter). Alle 29 MVC-Verträge grün; 254 DOM-Fälle erfolgreich. S03-Konkurrenzfall und zwei reale Rollbackfälle bestanden; abschließender lesender Testschemafingerabdruck 77fce665515396821a2fb21f36f074a3abccdac48de04c09f1f065be1c9e814f unverändert. Frühere REGRESSION_BLOCKED-Nachträge sind damit historische Zwischenstände. Keine Produktionsmigration/-aktivierung oder Reread-Initialisierung; diese bleiben separat abgesicherte Ausrollschritte. Keine Git-Schreibaktionen. Vollständige Abschlussmatrix und Nachweisgrenzen: S03_CLOSEOUT.md.

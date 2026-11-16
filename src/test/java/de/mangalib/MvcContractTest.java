@@ -46,8 +46,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Transactional
-@Rollback
+@org.junit.jupiter.api.extension.ExtendWith(CoordinatorRollback.class)
+
 class MvcContractTest {
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper mapper;
@@ -58,14 +58,14 @@ class MvcContractTest {
     private MockedStatic<BandScraper> bandScraper;
     private Map<String, List<List<Object>>> before;
 
-    @BeforeTransaction
+    @CoordinatorRollback.Capture
     void captureExistingData() {
-        assertFalse(TestTransaction.isActive());
+        assertFalse(CoordinatorRollback.isActive());
         assertInstanceOf(GuardedTestDataSource.class, dataSource);
         before = snapshot();
     }
 
-    @BeforeEach
+    @CoordinatorRollback.Before
     void prepareOnlyTransactionalFixturesAndBlockScrapers() throws Exception {
         // Jackson 2 bleibt transitiv vorhanden; MVC muss die getestete Jackson-3-Bean verwenden.
         var adapter = mvc.getDispatcherServlet().getWebApplicationContext()
@@ -81,13 +81,13 @@ class MvcContractTest {
             throw new AssertionError("Scraper-Aufruf im MVC-Vertragstest gesperrt.");
         });
         // Prüft vor INSERT außerdem tatsächliches Schema, Benutzer und InnoDB.
-        graph = PersistenceTestFixtures.persistGraph(em);
+        graph = PersistenceTestFixtures.persistCoordinatorGraph(em);
         graph.series().setIstVergriffen(false);
         graph.shoppingItem().setErscheinungsdatum(LocalDate.now().plusMonths(1).withDayOfMonth(15));
         flushAndClear();
     }
 
-    @AfterEach
+    @CoordinatorRollback.After
     void verifyNoScrapingAndReleaseMocks() {
         try {
             if (mangaScraper != null) mangaScraper.verifyNoInteractions();
@@ -98,9 +98,9 @@ class MvcContractTest {
         }
     }
 
-    @AfterTransaction
+    @CoordinatorRollback.Preserve
     void verifyActualRollbackAndPreservedRows() {
-        assertFalse(TestTransaction.isActive());
+        assertFalse(CoordinatorRollback.isActive());
         var after = snapshot();
         assertNotNull(before);
         assertAll(before.keySet().stream().map(table -> () ->
@@ -356,11 +356,11 @@ class MvcContractTest {
                 .setParameter("index", item.getMangaIndex()).setParameter("title", item.getTitel()).getSingleResult());
         flushAndClear();
         var pending = jsonPost("/buyItemUpdate", "{\"itemId\":\"" + item.getId() + "\"}", 417);
-        assertEquals(Set.of("message"), fields(pending));
+        assertEquals(Set.of("message", "purchaseToken", "purchaseSummary"), fields(pending));
         assertEquals("Bitte Status für neue Reihe auswählen", pending.get("message").stringValue());
         var bought = jsonPost("/buyItemCreate", """
-                {"itemId":"%s","statusId":"%s"}
-                """.formatted(item.getId(), graph.series().getStatus().getStatusId()), 200);
+                {"itemId":"%s","statusId":"%s","purchaseToken":"%s"}
+                """.formatted(item.getId(), graph.series().getStatus().getStatusId(), pending.get("purchaseToken").stringValue()), 200);
         assertEquals(Set.of("message"), fields(bought));
         assertEquals("Neue MangaReihe erfolgreich gespeichert", bought.get("message").stringValue());
         flushAndClear();
@@ -418,12 +418,12 @@ class MvcContractTest {
                 graph.series().getTyp().getTypId(), graph.series().getFormat().getFormatId(),
                 edit ? "MVC Reihe geändert" : "MVC Reihe " + UUID.randomUUID(), edit,
                 edit ? ",\"mangaReiheId\":\"" + graph.series().getId() + "\",\"coverUrl\":\"https://example.invalid/edit.jpg\""
-                        : ",\"preisProBand\":\"5.99\",\"gesamtpreisAenderung\":\"0\"");
+                        : ",\"preisProBand\":\"5.99\",\"gesamtpreisAenderung\":\"0\"").replace("\"mangaIndex\":12345", edit ? "\"mangaIndex\":12345" : "\"mangaIndex\":null");
     }
 
     private MvcResult request(RequestBuilder builder, int status, MediaType type) throws Exception {
-        assertTrue(TestTransaction.isActive());
-        assertTrue(TestTransaction.isFlaggedForRollback());
+        assertTrue(CoordinatorRollback.isActive());
+        assertTrue(CoordinatorRollback.isFlaggedForRollback());
         // Neue lokale Requestgrenze erfüllen; sämtliche bisherigen fachlichen Assertions bleiben bestehen.
         var local = (MockHttpServletRequestBuilder) builder;
         local.header("Host", "localhost:8080").with(request -> {
@@ -432,7 +432,7 @@ class MvcContractTest {
         }).with(csrf().asHeader());
         var result = mvc.perform(local).andReturn();
         assertFalse(result.getRequest().isAsyncStarted(), "Keine asynchronen Schreibpfade im Test.");
-        assertTrue(TestTransaction.isActive());
+        assertTrue(CoordinatorRollback.isActive());
         assertEquals(status, result.getResponse().getStatus());
         if (type != null) assertTrue(type.isCompatibleWith(MediaType.parseMediaType(result.getResponse().getContentType())));
         return result;

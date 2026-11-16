@@ -34,8 +34,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @ActiveProfiles("test")
-@Transactional
-@Rollback
+@org.junit.jupiter.api.extension.ExtendWith(CoordinatorRollback.class)
+
 class ReadingStatusIntegrationTest {
     @Autowired EntityManager em;
     @Autowired DataSource dataSource;
@@ -50,24 +50,24 @@ class ReadingStatusIntegrationTest {
     private MockedStatic<MangaScraper> seriesScraper;
     private MockedStatic<BandScraper> volumeScraper;
 
-    @BeforeTransaction void beforeTransaction() {
-        assertFalse(TestTransaction.isActive());
+    @CoordinatorRollback.Capture void beforeTransaction() {
+        assertFalse(CoordinatorRollback.isActive());
         assertInstanceOf(GuardedTestDataSource.class, dataSource);
         initial = TestDatabaseSnapshot.capture(em);
     }
 
-    @BeforeEach void fixtures() throws Exception {
-        assertTrue(TestTransaction.isActive()); assertTrue(TestTransaction.isFlaggedForRollback());
+    @CoordinatorRollback.Before void fixtures() throws Exception {
+        assertTrue(CoordinatorRollback.isActive()); assertTrue(CoordinatorRollback.isFlaggedForRollback());
         seriesScraper = mockStatic(MangaScraper.class, invocation -> { throw new AssertionError("Live-Scraper gesperrt"); });
         volumeScraper = mockStatic(BandScraper.class, invocation -> { throw new AssertionError("Live-Scraper gesperrt"); });
-        graph = PersistenceTestFixtures.persistGraph(em); // Prüft vor INSERT DB/Benutzer/InnoDB.
+        graph = PersistenceTestFixtures.persistCoordinatorGraph(em); // Prüft vor INSERT DB/Benutzer/InnoDB.
         graph.series().setMangaIndex(unusedIndex());
         flushClear();
     }
 
-    @AfterEach void noScrapersOrTransactionEscape() {
+    @CoordinatorRollback.After void noScrapersOrTransactionEscape() {
         try {
-            assertTrue(TestTransaction.isActive()); assertTrue(TestTransaction.isFlaggedForRollback());
+            assertTrue(CoordinatorRollback.isActive()); assertTrue(CoordinatorRollback.isFlaggedForRollback());
             if (seriesScraper != null) seriesScraper.verifyNoInteractions();
             if (volumeScraper != null) volumeScraper.verifyNoInteractions();
         } finally {
@@ -76,8 +76,8 @@ class ReadingStatusIntegrationTest {
         }
     }
 
-    @AfterTransaction void proveActualRollback() {
-        assertFalse(TestTransaction.isActive()); assertNotNull(initial);
+    @CoordinatorRollback.Preserve void proveActualRollback() {
+        assertFalse(CoordinatorRollback.isActive()); assertNotNull(initial);
         assertEquals(initial, TestDatabaseSnapshot.capture(em), "Fixtures/Altbestand/Schema nach Rollback unverändert");
     }
 
@@ -135,7 +135,7 @@ class ReadingStatusIntegrationTest {
         input.put("statusId", r.getStatus().getStatusId().toString()); input.put("verlagId", r.getVerlag().getVerlagId().toString());
         input.put("typId", r.getTyp().getTypId().toString()); input.put("formatId", r.getFormat().getFormatId().toString());
         input.put("sammelbandTypId", d == null ? null : d.getSammelbaende().getId().toString());
-        input.put("titel", "M06 geändert " + r.getId()); input.put("anzahlBaende", target);
+        input.put("titel", "M06 geändert " + r.getId()); input.put("anzahlBaende", target); input.put("extendVolumes", target > volumes().size());
         input.put("preisProBand", "6.99"); input.put("gesamtpreisAenderung", "-0.02");
         input.put("istGelesen", true); input.put("reread", 9);
         input.put("anilistUrl", "https://example.invalid/new-metadata");
@@ -179,16 +179,25 @@ class ReadingStatusIntegrationTest {
 
     private EinkaufslisteItem purchaseFixture(boolean indexMatch, int count) {
         var r = row(); var item = shopping.findById(graph.shoppingItem().getId()).orElseThrow();
-        item.setMangaIndex(indexMatch ? r.getMangaIndex() : unusedIndex()); item.setTitel(r.getTitel());
+        item.setMangaIndex(indexMatch ? r.getMangaIndex() : null); item.setTitel(r.getTitel());
         item.setAnzahlBaende(count); return item;
     }
 
     @ParameterizedTest @CsvSource({"true,full", "false,full", "true,partial", "false,partial", "true,unread", "false,unread"})
-    void bothPurchasePathsPreservePersistedOldVolumes(boolean indexMatch, String mode) throws Exception {
+    void indexedPurchasePreservesVolumesAndTitleCandidateIsRejected(boolean indexMatch, String mode) throws Exception {
         for (Band b : volumes()) b.setIstGelesen(mode.equals("full") || mode.equals("partial") && b.getBandNr() == 1);
         row().getMangaDetails().setIstGelesen(mode.equals("full")); row().getMangaDetails().setReread(null);
         var item = purchaseFixture(indexMatch, 2); flushClear(); var before = state();
-        var response = postJson("/buyItemUpdate", Map.of("itemId", item.getId().toString()), 200);
+        if (!indexMatch) {
+            var snapshot = TestDatabaseSnapshot.capture(em);
+            assertEquals("AMBIGUOUS_SERIES", postJson("/buyItemUpdate", Map.of("itemId", item.getId().toString()), 409).getHeader("X-MangaLib-Purchase-Outcome"));
+            flushClear(); assertEquals(snapshot, TestDatabaseSnapshot.capture(em));
+            assertEquals(before, state()); assertFalse(shopping.findById(item.getId()).orElseThrow().getGekauft());
+            return;
+        }
+        var preview = mapper.readTree(postJson("/buyItemUpdate", Map.of("itemId", item.getId().toString()), 200).getContentAsString());
+        assertEquals("Bitte Bände bestätigen", preview.get("message").stringValue());
+        var response = postJson("/buyItemUpdate", Map.of("itemId", item.getId().toString(), "confirmedSeriesId", preview.get("seriesId").stringValue(), "firstBand", preview.get("firstBand").intValue(), "lastBand", preview.get("lastBand").intValue(), "purchaseToken", preview.get("purchaseToken").stringValue()), 200);
         assertEquals("Reihe aktualisiert", mapper.readTree(response.getContentAsString()).get("message").stringValue());
         assertExtension(before, 4, null);
         assertTrue(shopping.findById(item.getId()).orElseThrow().getGekauft());
@@ -218,7 +227,7 @@ class ReadingStatusIntegrationTest {
         }
         var item = purchaseFixture(true, 1); flushClear();
         var before = TestDatabaseSnapshot.capture(em);
-        if (purchase) postJson("/buyItemUpdate", Map.of("itemId", item.getId().toString()), 400);
+        if (purchase) assertEquals("INVALID_INVENTORY", postJson("/buyItemUpdate", Map.of("itemId", item.getId().toString()), 409).getHeader("X-MangaLib-Purchase-Outcome"));
         else postJson("/addMangaReihe", edit(target), 400);
         flushClear();
         assertEquals(before, TestDatabaseSnapshot.capture(em), "Abgewiesene Aktion darf keinerlei Zeile verändern");
@@ -226,7 +235,7 @@ class ReadingStatusIntegrationTest {
     }
 
     @Test void foreignSeriesVolumesAreNeitherAggregatedNorModified() throws Exception {
-        var other = PersistenceTestFixtures.persistGraph(em);
+        var other = PersistenceTestFixtures.persistCoordinatorGraph(em);
         other.seriesDetails().setIstGelesen(true); other.volumes().forEach(b -> b.setIstGelesen(true));
         flushClear();
         var foreign = bands.findByMangaReiheId(other.series().getId()).stream().map(BandState::of).sorted(Comparator.comparing(BandState::id)).toList();
@@ -269,10 +278,10 @@ class ReadingStatusIntegrationTest {
     @Test void purchaseAsNewSeriesRetainsStatusSelectionAndUnreadDefault() throws Exception {
         var item = shopping.findById(graph.shoppingItem().getId()).orElseThrow();
         item.setMangaIndex(unusedIndex()); item.setTitel("M06 neuer Kauf " + UUID.randomUUID()); flushClear();
-        postJson("/buyItemUpdate", Map.of("itemId", item.getId().toString()), 417);
+        var preview = mapper.readTree(postJson("/buyItemUpdate", Map.of("itemId", item.getId().toString()), 417).getContentAsString());
         assertFalse(shopping.findById(item.getId()).orElseThrow().getGekauft());
         postJson("/buyItemCreate", Map.of("itemId", item.getId().toString(),
-                "statusId", row().getStatus().getStatusId().toString()), 200);
+                "statusId", row().getStatus().getStatusId().toString(), "purchaseToken", preview.get("purchaseToken").stringValue()), 200);
         flushClear(); assertTrue(shopping.findById(item.getId()).orElseThrow().getGekauft());
         var created = rows.findByTitel(item.getTitel()); assertEquals(1, created.size());
         assertFalse(created.get(0).getMangaDetails().isIstGelesen());

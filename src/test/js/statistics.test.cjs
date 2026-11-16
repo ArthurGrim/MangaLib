@@ -54,3 +54,11 @@ test('Monatsdiagramm verarbeitet wiederholte Wechsel, Centbeträge und veraltete
     assert.equal(d.getElementById('monthly-chart-status').textContent, '');
   } finally { dom.window.close(); }
 });
+
+test('Statistiklayout reserviert auf schmalen Ansichten keine Sidebarbreite und hält SVG-Höhe stabil', () => {
+  const css = fs.readFileSync(path.resolve(__dirname, '../../main/resources/static/css/statistik/st_overview.css'), 'utf8');
+  assert.match(css, /@media\s*\(max-width:\s*1000px\)/);
+  assert.match(css, /\.statistik-container\s*\{\s*margin:\s*0;/);
+  assert.match(css, /\.statistik-container \.statistik-pro-monat\s*\{\s*min-width:\s*0;/);
+  assert.match(css, /\.line-chart\s*\{[^}]*width:\s*100%;[^}]*height:\s*300px;/);
+});

@@ -269,6 +269,8 @@ public class MainController {
             return ResponseEntity.ok(saved);
         } catch (MangaReiheService.VolumeImportConflict e) {
             return ResponseEntity.status(409).body(Map.of("error", "Band oder Zielreihe steht nicht eindeutig zur Verfügung."));
+        } catch (de.mangalib.service.ReadingHistoryService.Conflict conflict) {
+            return ResponseEntity.status(409).build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
         } catch (Exception e) {
@@ -454,6 +456,8 @@ public class MainController {
                     .findById(WriteRequests.purchaseId(bandData, "id")).orElse(null));
             bandService.updateBand(band);
             return ResponseEntity.noContent().build();
+        } catch (de.mangalib.service.ReadingHistoryService.Conflict conflict) {
+            return ResponseEntity.status(409).build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {

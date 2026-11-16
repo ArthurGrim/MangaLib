@@ -12,6 +12,7 @@
     />
     <link rel="stylesheet" href="/css/write-feedback.css" />
     <link rel="stylesheet" href="/css/content-layout.css" />
+    <link rel="stylesheet" href="/css/reading-history.css" />
     <link rel="icon" type="image/x-icon" href="/svg/favicon.ico" />
     <link th:if="${manualTestEnvironment == true}" rel="stylesheet" href="/manual-test/banner.css" />
     <script th:if="${manualTestEnvironment == true}" src="/manual-test/banner.js" defer></script>
@@ -1006,6 +1007,7 @@
             </div>
 
             <!-- Letzte Reihe -->
+            <section id="band-reading-history" class="reading-history" hidden aria-label="Lesehistorie"></section>
             <div class="form-row form-row-5">
               <button
                 type="button"
@@ -1028,6 +1030,7 @@
     </div>
 
     <script src="/js/security.js"></script>
+    <script src="/js/reading-history.js"></script>
     <script src="/js/scrollToTop.js"></script>
     <script src="/js/popup_add_reihe.js"></script>
     <script src="/js/popup_edit_reihe.js"></script>

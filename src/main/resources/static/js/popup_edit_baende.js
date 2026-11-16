@@ -40,6 +40,7 @@ function editBand(bandId) {
       MangaLibFeedback.clear(document.getElementById("editBaendePopupContainer"));
       document.getElementById("editBaendePopupContainer").style.display =
         "flex";
+      window.mangaLibLoadReadingHistory?.(data.id);
     })
     .catch(() => {
       const popup = document.getElementById("editBaendePopupContainer");

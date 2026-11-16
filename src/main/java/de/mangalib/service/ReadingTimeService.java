@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReadingTimeService {
     public static final int MINUTES_PER_STANDARD_VOLUME = 45;
     private final BandRepository bands;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private ReadingHistoryService history;
 
     public ReadingTimeService(BandRepository bands) { this.bands = bands; }
 
@@ -22,7 +24,7 @@ public class ReadingTimeService {
     }
 
     @Transactional(readOnly = true)
-    public Estimate estimate() { return calculate(bands.readingEntries()); }
+    public Estimate estimate() { return history == null ? calculate(bands.readingEntries()) : history.readingTime(); }
 
     static Estimate calculate(List<BandRepository.ReadingEntry> entries) {
         long minutes = 0, repeated = 0;

@@ -1,5 +1,98 @@
 # Isolierte manuelle Browserabnahme unter Windows
 
+## S03 – Aktueller Browsernachweis (16.11.2026)
+
+Die folgenden vorbereitenden Rechte-/DDL-Blocker sind historisch überwunden:
+Eigentümer führte Tabellenanlage und engen GRANT aus. Nur neue synthetische Reihe
+S03_BROWSER_20261116_R01 (17), Bände 43/44 geändert. Erstlektüre, ausdrücklicher
+Reread, Datumsverschiebung über Monatsgrenze, Metadatenspeichern ohne neue Lektüre,
+Reset auf ungelesen ohne Historienverlust und Doppelklickschutz nach Reload
+bestanden. Zweiter Band ausdrücklich erstgelesen; Monatszählung korrekt.
+
+Kontrastkorrektur und fester Datumskonflikttext in separater Offline-Paketierung
+anschließend visuell bestätigt. Kein automatischer Replay; ursprüngliche Daten
+nach ungültiger Datumskorrektur unverändert. Erste negative Probe wurde von der
+Sicherheitsgrenze abgefangen und beweist keinen Fachkonflikt; Nachprüfung mit
+frischer Sitzung separat bestanden. HTTP-Status nicht direkt beobachtet.
+Keine erfassten Konsolenfehler oder nativen Alerts.
+
+Alle ursprünglichen 16 Reihen/42 Bände, 11 Einkäufe/Details, 17 Stammdaten und
+Schema-Metadaten zeilenweise unverändert. Neue eigene Daten bleiben erhalten:
+eine Reihe/Details, zwei Bände, vier Leseereignisse. Abschlussfingerabdruck
+f19146da1fbc0c7840242fee81ec12d87e6a8d90720ac5927298bf1596c42c33,
+vor/nach zweiter UI-Prüfung identisch. Eigene Instanzen per Ctrl+C beendet.
+Historische JARs, private Snapshots und Screenshots erhalten; keine Produktion,
+kein Scraper, kein Reset. Details und Kandidatenbindung: S03_ACCEPTANCE.md.
+
+Diese Browserabnahme ersetzt weder die noch offene echte S03-Parallelprüfung
+noch eine Produktionsmigration/-aktivierung oder den gesonderten Reread-Reset.
+
+## S03 – Vorbereitete Browserabnahme, 16.11.2026
+
+Aktueller Blocker: SELECT auf die neue Tabelle wurde dem tatsächlichen Konto
+mangalib_manual_test_user@127.0.0.1 verweigert (1142). Keine App gestartet.
+Vor der nächsten Prüfung 03_manual_runtime_grants.sql separat als Admin ausführen;
+es ergänzt ausschließlich SELECT/INSERT/UPDATE auf der neuen Ereignistabelle.
+Die bestehende tabellenweise Rechtebegrenzung bleibt erhalten.
+
+Nachtrag: Schema lesend geprüft, zehn InnoDB-Tabellen, baende.id signed BIGINT.
+16 Reihen/Details, 42 Bände und 11 Einkaufspositionen/Details unverändert erfasst.
+Neues ausschließlich manuelles DDL liegt in
+database/migrations/S03_001_reading_events/01_mangalib_manual_test.sql,
+SHA-256 1d869637abf4c6138b1c359592e58da694ec432d951c328fe6fc98d62835fb64.
+Wartet auf Eigentümer-Admin-Ausführung, keine App gestartet. Neue private
+Snapshotnachweise unter .gradle/s03-manual-preflight-20261116, keine historischen
+Nachweise geändert. Die Testdatenbank-Migration und zwei S03-Rollbackfälle sind
+bereits erfolgreich abgenommen; dies ersetzt keine Browserabnahme.
+
+Noch nicht durchgeführt. Voraussetzung ist eine separat freigegebene, verifizierte
+S03-Migration ausschließlich in mangalib_manual_test; das Test-DDL ist kein
+freigegebenes Skript für die Manual-Datenbank. Keine Bestandsbereinigung oder
+Normalisierung vorhandener positiver synthetischer Rereads.
+
+Separater Kandidat: build/libs/mangalib-manual-test-s03.jar,
+SHA-256 2dfeddab263e54a1c2f1b95a24166bff62440ab98bd1e901166c6fabe9625fe0.
+Offline gebaut, Archiv-/Manual-Schutztests und Startskript -ValidateOnly bestanden.
+Die vorher vorhandenen Manual-JARs wurden nicht ersetzt.
+Nach Schema- und Startfreigabe den bestehenden Startweg verwenden:
+
+```powershell
+.\scripts\Start-ManualTest.ps1 -ArtifactPath .\build\libs\mangalib-manual-test-s03.jar -ReadingHistory -ValidateOnly
+# Erst nach erfolgreicher Konfigurations-/Schema-/Portprüfung und ausdrücklicher Startfreigabe:
+.\scripts\Start-ManualTest.ps1 -ArtifactPath .\build\libs\mangalib-manual-test-s03.jar -ReadingHistory
+```
+
+ValidateOnly ist datenbankfrei und prüft keine tatsächliche Tabellenstruktur.
+Der zusätzliche Schalter aktiviert nur das Fachfeature im Kindprozess; sämtliche
+bestehenden Manual-DB-/Profil-/Loopback-/Scraper-Guards bleiben unverändert.
+Ohne Schalter bleiben alte Schemas und Editorfunktionen unverändert nutzbar.
+
+Geplante Abnahme nur mit neu angelegter eindeutig benannter S03-Testreihe:
+
+1. Banner, Profil, eigenen Listener auf 127.0.0.1:18080 und Ausgangsbestand prüfen.
+2. Ungelesenen Testband markieren und speichern: genau eine Erstlektüre mit
+   heutigem Datum; Neuladen und erneutes Metadatenspeichern erzeugen kein Ereignis.
+3. Explizit erneut gelesen mit gewähltem Datum: genau ein Reread, Zähler +1;
+   Doppelklick sendet nur einen Request. Mehrere bewusste Tageslektüren zählen separat.
+4. Datum einer Erstlektüre korrigieren: Revision steigt, Monatszuordnung ändert
+   sich, Reread-Zähler bleibt gleich. Datum nach bekanntem Reread wird abgewiesen.
+5. Status auf ungelesen setzen: Historie und nachgewiesene Lesezeit bleiben erhalten.
+   Erneutes Setzen des Status erhöht keinen Reread-Zähler.
+6. Explizite Reihen-Lesestatusoption kontrollieren: Zielbände/heutiges Datum
+   erkennen, nur tatsächlich geänderte Bände erhalten neue Erstlektüren.
+7. Monate und Lesezeit prüfen: Erstlektüren/Rereads getrennt, 45 Minuten × Faktor;
+   Reread-Ereignisse nicht zusätzlich zum bereits erhöhten Gesamtzähler zählen.
+8. Ungültiges oder zukünftiges Datum, veraltete Korrektur und unbestätigte Antwort
+   kontrolliert behandeln; keine Rohfehler/Alerts, keine automatische Wiederholung.
+   Nach unbestätigtem Schreiben auch nach Dialogwechsel bis Reload gesperrt.
+9. Neue Bände/Kauf prüfen: alte Lesestatus und Historien unverändert, neue Bände
+   standardmäßig ungelesen mit Reread 0. Keine echten Autofill-/Scraperaufrufe.
+10. Fremde Bestandsdaten per Vorher-/Nachher-Nachweis unverändert bestätigen,
+    ausschließlich eigene Instanz geordnet beenden. Keine automatische Bereinigung.
+
+Bei fehlendem Banner, unklarer Zuordnung oder unbestätigter Speicherung STOP.
+S03_ACCEPTANCE.md hält den Stand und die noch offenen realen Nachweise fest.
+
 ## S02 – Nachprüfung des ersten Aufklappens
 
 Nachtrag 15.11.2026: Mit neu gebautem Manual-Artefakt und erfolgreichem
@@ -1715,3 +1808,9 @@ DOM-Prüfungen für diese Bediensemantik bestanden (225 gesamte DOM-Suite);
 keine echte Browser-/Datenbankprüfung in diesem Auftrag. Neue externe Bandindices
 werden weder erfunden noch durch die Bestätigung bewiesen. Vollständige reale
 Abnahme und sichere Anpassung der Integrationstest-Transaktionen bleiben T03-6.
+
+## S03 – Responsive Layoutnachprüfung 16.11.2026
+Diagramm und Lesehistorie bei 1280 und 600 Pixeln im gemeinsamen Inhaltsbereich bestätigt, kein horizontaler Seitenüberlauf. Nur lesende Aktionen, manueller Gesamtsnapshot unverändert. Eigene PID 24272 geordnet beendet, Port frei. Gesamtregression hat weiterhin 84 nicht korrigierte ältere Transaktionstestfehler; kein S03-Gesamtabschluss. Details und Evidenzen: letzter Nachtrag in S03_ACCEPTANCE.md.
+
+## S03 – Abschlussnachtrag 16.11.2026
+S03_TECHNICALLY_ACCEPTED: Die älteren Integrationstests sind auf den echten Coordinator mit erzwungenem Rollback portiert. Vollständiger Java-Lauf: 1454 bestanden, 0 Fehler, 2 bestehende M01-/M02-Commit-Opt-ins übersprungen (keine Platzhalter). Alle 29 MVC-Verträge grün; 254 DOM-Fälle erfolgreich. S03-Konkurrenzfall und zwei reale Rollbackfälle bestanden; abschließender lesender Testschemafingerabdruck 77fce665515396821a2fb21f36f074a3abccdac48de04c09f1f065be1c9e814f unverändert. Frühere REGRESSION_BLOCKED-Nachträge sind damit historische Zwischenstände. Keine Produktionsmigration/-aktivierung oder Reread-Initialisierung; diese bleiben separat abgesicherte Ausrollschritte. Keine Git-Schreibaktionen. Vollständige Abschlussmatrix und Nachweisgrenzen: S03_CLOSEOUT.md.

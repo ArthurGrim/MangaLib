@@ -201,8 +201,12 @@ class ReadingStatusExtensionTest {
         var preview = cart.buyItemUpdate(Map.of("itemId", "77"));
         assertEquals(200, preview.getStatusCode().value());
         assertEquals("CONFIRM_VOLUMES", preview.getHeaders().getFirst("X-MangaLib-Purchase-Outcome"));
+        var previewBody = (Map<?, ?>) preview.getBody();
+        String token = (String) previewBody.get("purchaseToken");
+        assertEquals(ShoppingState.token(item, item.getEinkaufslisteItemDetails(), true), token);
         assertOldState(before); verify(shoppingRepository, never()).save(any());
-        var response = cart.buyItemUpdate(Map.of("itemId", "77", "confirmedSeriesId", "42", "firstBand", 3, "lastBand", 3));
+        var response = cart.buyItemUpdate(Map.of("itemId", "77", "confirmedSeriesId", "42", "firstBand", 3, "lastBand", 3,
+                "purchaseToken", token));
         assertEquals(200, response.getStatusCode().value()); assertEquals(Map.of("message", "Reihe aktualisiert"), response.getBody());
         assertOldState(before); assertFalse(details.isIstGelesen()); assertEquals(3, details.getReread());
         assertEquals(3, stored.size()); assertFalse(stored.get(2).isIstGelesen()); assertTrue(item.getGekauft());
@@ -241,6 +245,28 @@ class ReadingStatusExtensionTest {
         assertEquals(2, stored.size()); assertEquals(read, details.isIstGelesen());
         assertTrue(stored.stream().allMatch(b -> b.isIstGelesen() == read));
         assertEquals(3, stored.get(0).getReread()); assertEquals(5, stored.get(1).getReread());
+    }
+
+    @Test void enabledHistoryRecordsOnlyActuallyChangedReadFlags() {
+        var history = mock(ReadingHistoryService.class);
+        ReflectionTestUtils.setField(service, "readingHistory", history);
+        stored.get(0).setIstGelesen(false); stored.get(1).setIstGelesen(true);
+        var input = request(2); input.put("istGelesen", true); input.put("reread", 3);
+        input.put("extendVolumes", false); input.put("applyReadToVolumes", true);
+        assertEquals(200, main.addMangaReihe(input).getStatusCode().value());
+        verify(history).recordTransition(stored.get(0), false);
+        verify(history, never()).recordTransition(eq(stored.get(1)), anyBoolean());
+        assertEquals(5, stored.get(1).getReread());
+    }
+
+    @Test void enabledHistoryRejectsLegacyRereadBulkEvenWithSameSeriesCounter() {
+        var history = mock(ReadingHistoryService.class);
+        ReflectionTestUtils.setField(service, "readingHistory", history);
+        var before = oldState();
+        var input = request(2); input.put("istGelesen", false); input.put("reread", 3);
+        input.put("extendVolumes", false); input.put("applyRereadToVolumes", true);
+        assertEquals(409, main.addMangaReihe(input).getStatusCode().value());
+        assertOldState(before); verify(history, never()).recordTransition(any(), anyBoolean());
     }
 
     private void prepareCreation() {
@@ -291,14 +317,21 @@ class ReadingStatusExtensionTest {
         item.setAnzahlBaende(2); item.setPreis(new BigDecimal("6.99")); item.setAenderungGesamtpreis(BigDecimal.ZERO);
         when(shoppingRepository.findByIdForPurchase(77L)).thenReturn(Optional.of(item));
         var itemDetails = new EinkaufslisteItemDetails(); itemDetails.setId(77L); itemDetails.setEinkaufslisteItem(item);
+        item.setEinkaufslisteItemDetails(itemDetails);
         when(shoppingDetails.findById(77L)).thenReturn(Optional.of(itemDetails));
         var detailService = mock(EinkaufslisteItemDetailsService.class);
         when(detailService.findItemDetailsById(77L)).thenReturn(Optional.of(itemDetails));
         ReflectionTestUtils.setField(cart, "einkaufslisteItemDetailsService", detailService);
         var pending = cart.buyItemUpdate(Map.of("itemId", "77"));
         assertEquals(417, pending.getStatusCode().value());
-        assertEquals(Map.of("message", "Bitte Status für neue Reihe auswählen"), pending.getBody());
-        var result = cart.buyItemCreate(Map.of("itemId", "77", "statusId", "1"));
+        String token = ShoppingState.token(item, itemDetails, true);
+        var summary = new LinkedHashMap<String, Object>();
+        summary.put("titel", "Neue Kaufreihe"); summary.put("anzahlBaende", 2);
+        summary.put("preisProBand", "6.99"); summary.put("gesamtpreisAenderung", "0");
+        summary.put("gesamtpreis", null);
+        assertEquals(Map.of("message", "Bitte Status für neue Reihe auswählen",
+                "purchaseToken", token, "purchaseSummary", summary), pending.getBody());
+        var result = cart.buyItemCreate(Map.of("itemId", "77", "statusId", "1", "purchaseToken", token));
         assertEquals(200, result.getStatusCode().value());
         assertEquals(Map.of("message", "Neue MangaReihe erfolgreich gespeichert"), result.getBody());
         assertEquals(2, stored.size()); assertTrue(stored.stream().noneMatch(Band::isIstGelesen));

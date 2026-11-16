@@ -46,6 +46,7 @@ class SeriesEditRegressionTest {
         var type = new Typ(); type.setTypId(1L); series.setTyp(type);
         var format = new Format(); format.setFormatId(1L); series.setFormat(format);
         series.setMangaDetails(details); details.setMangaReihe(series);
+        details.setId(series.getId());
         details.setCoverUrl("http://localhost:18080/manual-test/cover.svg"); details.setAnilistUrl(null);
         details.setHerkunft("Japan"); details.setStatusDe("Abgeschlossen"); details.setStartJahr(2025);
         details.setIstGelesen(true); details.setReread(1);
@@ -101,7 +102,8 @@ class SeriesEditRegressionTest {
         assertSame(image, band.getBildUrl()); assertSame(link, band.getMpUrl()); assertNull(band.getIstSpecial());
         assertEquals(new BigDecimal("7.49"), band.getPreis()); assertEquals(BigDecimal.ZERO, band.getAenderungPreis());
         assertTrue(band.isIstGelesen()); assertEquals(1, band.getReread()); assertEquals(900002, band.getBandIndex());
-        verify(seriesRepository).save(series); verify(bandRepository).save(band);
+        // Seit T03 ist eine reine Titeländerung kein Speichervorgang an vorhandenen Bänden.
+        verify(seriesRepository).save(series); verify(bandRepository, never()).save(any());
     }
 
     static Stream<Arguments> transitions() {
@@ -121,7 +123,18 @@ class SeriesEditRegressionTest {
     }
     @Test void existingPriceAdjustmentStillSetsPriceFlag() {
         band.setAenderungPreis(new BigDecimal("0.01")); series.setAenderungGesamtpreis(new BigDecimal("0.01"));
-        assertEquals(200, controller.addMangaReihe(request(null, null)).getStatusCode().value());
+        var input = request(null, null);
+        // Expliziter Finanzauftrag statt einer impliziten Reparatur bei Metadatenbearbeitung.
+        input.put("gesamtpreisAenderung", "0.01");
+        assertEquals(200, controller.addMangaReihe(input).getStatusCode().value());
         assertTrue(series.getIstEbayPreis()); assertEquals(new BigDecimal("0.01"), series.getAenderungGesamtpreis());
+        assertEquals(new BigDecimal("7.50"), series.getGesamtpreis()); verify(bandRepository).save(band);
+    }
+
+    @Test void metadataEditDoesNotRepairHistoricalAdjustmentFlag() {
+        band.setAenderungPreis(new BigDecimal("0.01")); series.setAenderungGesamtpreis(new BigDecimal("0.01"));
+        assertEquals(200, controller.addMangaReihe(request(null, null)).getStatusCode().value());
+        assertNull(series.getIstEbayPreis()); assertEquals(new BigDecimal("0.01"), band.getAenderungPreis());
+        verify(bandRepository, never()).save(any());
     }
 }

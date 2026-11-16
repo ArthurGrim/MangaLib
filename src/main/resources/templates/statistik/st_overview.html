@@ -10,6 +10,7 @@
       href="../static/css/statistik/st_overview.css"
     />
     <link rel="icon" type="image/x-icon" href="/svg/favicon.ico" />
+    <link rel="stylesheet" href="/css/reading-history.css" />
     <link th:if="${manualTestEnvironment == true}" rel="stylesheet" href="/manual-test/banner.css" />
     <script th:if="${manualTestEnvironment == true}" src="/manual-test/banner.js" defer></script>
   </head>
@@ -148,7 +149,7 @@
           <p th:if="${readingTime.unknownVolumes() > 0}"
              th:text="|${readingTime.unknownVolumes()} gelesene Bände wegen fehlendem Sammelbandfaktor ausgelassen.|"></p>
           <p th:if="${readingTime.unknownRereads() > 0}"
-             th:text="|Bei ${readingTime.unknownRereads()} Bänden ist die Reread-Anzahl unbekannt oder ungültig. Hier zählt nur die erste Lektüre.|"></p>
+             th:text="|Bei ${readingTime.unknownRereads()} Bänden ist die Reread-Anzahl unbekannt oder ungültig. Unbekannte zusätzliche Lektüren werden nicht geschätzt.|"></p>
         </section>
 
         <!-- Container für das Säulendiagramm -->
@@ -209,6 +210,9 @@
             </div>
           </div>
         </div>
+      <section id="reading-history-months" class="reading-history" hidden aria-label="Lektüren nach Abschlussmonat">
+        <h3>Lektüren nach Abschlussmonat</h3>
+      </section>
       </div>
     </main>
     <script src="/js/scrollToTop.js"></script>
@@ -217,5 +221,7 @@
     <script src="/js/statistik.js"></script>
     <script src="/js/statistics-distributions.js"></script>
     <script src="/js/reading-time.js"></script>
+    <script src="/js/security.js"></script>
+    <script src="/js/reading-history.js"></script>
   </body>
 </html>

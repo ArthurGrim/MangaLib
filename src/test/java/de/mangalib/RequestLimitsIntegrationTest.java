@@ -40,8 +40,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @ActiveProfiles("test")
-@Transactional
-@Rollback
+@org.junit.jupiter.api.extension.ExtendWith(CoordinatorRollback.class)
+
 class RequestLimitsIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired EntityManager em;
@@ -62,27 +62,27 @@ class RequestLimitsIntegrationTest {
     private MockedStatic<MangaScraper> seriesScraper;
     private MockedStatic<BandScraper> volumeScraper;
 
-    @BeforeTransaction void beforeTransaction() {
+    @CoordinatorRollback.Capture void beforeTransaction() {
         assertInstanceOf(GuardedTestDataSource.class, dataSource);
         initial = TestDatabaseSnapshot.capture(em);
     }
 
-    @BeforeEach void forbidScrapers() {
-        assertTrue(TestTransaction.isActive()); assertTrue(TestTransaction.isFlaggedForRollback());
+    @CoordinatorRollback.Before void forbidScrapers() {
+        assertTrue(CoordinatorRollback.isActive()); assertTrue(CoordinatorRollback.isFlaggedForRollback());
         seriesScraper = mockStatic(MangaScraper.class, i -> { throw new AssertionError("Live-Scraper gesperrt"); });
         volumeScraper = mockStatic(BandScraper.class, i -> { throw new AssertionError("Live-Scraper gesperrt"); });
         clearWork();
     }
 
-    @AfterEach void noEscapes() {
+    @CoordinatorRollback.After void noEscapes() {
         try {
-            assertTrue(TestTransaction.isActive()); assertTrue(TestTransaction.isFlaggedForRollback());
+            assertTrue(CoordinatorRollback.isActive()); assertTrue(CoordinatorRollback.isFlaggedForRollback());
             seriesScraper.verifyNoInteractions(); volumeScraper.verifyNoInteractions();
         } finally { seriesScraper.close(); volumeScraper.close(); }
     }
 
-    @AfterTransaction void unchangedAfterRollback() {
-        assertFalse(TestTransaction.isActive());
+    @CoordinatorRollback.Preserve void unchangedAfterRollback() {
+        assertFalse(CoordinatorRollback.isActive());
         assertEquals(initial, TestDatabaseSnapshot.capture(em), "Zeilen und Schema nach Rollback unverändert");
     }
 
@@ -205,7 +205,7 @@ class RequestLimitsIntegrationTest {
     }
 
     @Test void ordinaryBandEditReplaysExplicitNullAndRetains204AfterReload() throws Exception {
-        var graph = PersistenceTestFixtures.persistGraph(em);
+        var graph = PersistenceTestFixtures.persistCoordinatorGraph(em);
         long id = graph.volumes().getFirst().getId();
         graph.volumes().getFirst().setReread(null);
         graph.volumes().getFirst().setIstSpecial(null);

@@ -26,6 +26,16 @@ final class PersistenceTestFixtures {
     static Graph persistGraph(EntityManager entityManager) throws Exception {
         assertTrue(TestTransaction.isActive(), "Testdaten benötigen eine Spring-Testtransaktion.");
         assertTrue(TestTransaction.isFlaggedForRollback(), "Testdaten dürfen nicht committed werden.");
+        return persistVerifiedGraph(entityManager);
+    }
+
+    static Graph persistCoordinatorGraph(EntityManager entityManager) throws Exception {
+        assertTrue(CoordinatorRollback.isActive(), "Nur im erzwungenen Coordinator-Rollbackrahmen.");
+        assertTrue(CoordinatorRollback.isFlaggedForRollback());
+        return persistVerifiedGraph(entityManager);
+    }
+
+    private static Graph persistVerifiedGraph(EntityManager entityManager) throws Exception {
         assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
         verifyTransactionalTestDatabase(entityManager);
 

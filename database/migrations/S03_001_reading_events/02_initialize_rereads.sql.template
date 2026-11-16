@@ -1,0 +1,10 @@
+-- ENTWURF. Eigene Freigabe, Backup und exklusive Wartung erforderlich.
+-- Nur für die bestätigte einmalige Ausgangssituation ohne Rereads.
+-- Neue Ereignistabelle muss leer sein; Vorher-Werte/Zeilenzahlen extern sichern.
+START TRANSACTION;
+UPDATE `__APPROVED_SCHEMA__`.`baende`
+    SET reread = 0 WHERE reread IS NULL OR reread <> 0;
+UPDATE `__APPROVED_SCHEMA__`.`mangadetails`
+    SET reread = 0 WHERE reread IS NULL OR reread <> 0;
+-- Kein COMMIT: Werte und betroffene Zeilenzahlen vor gesonderter Bestätigung prüfen.
+-- Bei Abweichung ROLLBACK, keine automatische Korrektur oder Wiederholung.

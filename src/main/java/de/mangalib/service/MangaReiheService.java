@@ -35,6 +35,9 @@ import java.util.*;
 @Service
 public class MangaReiheService {
 
+    @Autowired(required = false)
+    private ReadingHistoryService readingHistory;
+
     // Das Repository für die MangaReihe-Entität
     private final MangaReiheRepository mangaReiheRepository;
     private final StatusRepository statusRepository;
@@ -169,6 +172,10 @@ public class MangaReiheService {
             Integer reread, Map<String, String> scrapedData, Band volume) {
         WriteValidation.volumes(anzahlBaende);
         WriteValidation.reread(reread);
+        if (readingHistory != null) {
+            readingHistory.requireUnchangedCounter(0, reread);
+            if (reread == null) reread = 0;
+        }
         scrapedData = WriteValidation.scrapedData(scrapedData);
         System.out.println("SaveMangaReihe gestartet");
         Money.amount(preisProBand);
@@ -234,6 +241,10 @@ public class MangaReiheService {
         } else {
             volume.setMangaReihe(savedMangaReihe);
             bandRepository.saveAndFlush(volume);
+            if (readingHistory != null) {
+                if (volume.getReread() == null) volume.setReread(0);
+                readingHistory.recordTransition(volume, false);
+            }
         }
         System.out.println("Bände erzeugt");
 
@@ -255,6 +266,10 @@ public class MangaReiheService {
 
     /** Einzelbandanlage unter dem gemeinsamen Schreib-Advisor, einschließlich Duplikatprüfung. */
     public MangaReihe saveImportedVolume(WriteRequests.Series input, Long targetId, Band volume) {
+        if (readingHistory != null) {
+            readingHistory.requireUnchangedCounter(0, volume.getReread());
+            if (volume.getReread() == null) volume.setReread(0);
+        }
         WriteValidation.require(volume.getBandIndex() != null && volume.getBandIndex() > 0
                 && volume.getBandNr() != null && volume.getBandNr() > 0);
         if (bandRepository.existsByBandIndex(volume.getBandIndex())) throw new VolumeImportConflict();
@@ -275,6 +290,7 @@ public class MangaReiheService {
         }
         volume.setMangaReihe(row);
         bandRepository.saveAndFlush(volume);
+        if (readingHistory != null) readingHistory.recordTransition(volume, false);
         row.setAnzahlBaende(inventory.size() + 1);
         row.setAenderungGesamtpreis(bandService.calculateAenderungGesamtpreis(row));
         row.setGesamtpreis(bandService.calculateGesamtpreis(row));
@@ -443,6 +459,8 @@ public class MangaReiheService {
         }
         boolean knownPrices = existing.stream().allMatch(b -> b.getPreis() != null && b.getAenderungPreis() != null);
         boolean extension = operation == BandInventory.Operation.EXTENSION;
+        if (readingHistory != null && !extension && applyReread) throw new ReadingHistoryService.Conflict();
+        if (readingHistory != null && !extension) readingHistory.requireUnchangedCounter(oldDetails.getReread(), effectiveReread);
         if (extension) {
             validateExtension(mangaReihe, existing, anzahlBaende);
         }
@@ -885,6 +903,7 @@ public class MangaReiheService {
                 if (!band.isIstGelesen()) {
                     band.setIstGelesen(true);
                     bandRepository.save(band);
+                    if (readingHistory != null) readingHistory.recordTransition(band, false);
                 }
             });
         } else {

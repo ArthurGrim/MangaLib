@@ -29,7 +29,8 @@ class BandIntegrityCharacterizationTest {
         ReflectionTestUtils.setField(controller, "purchaseService", new PurchaseService(
                 new LibraryWriteCoordinator(new FakeLibraryTransactionManager()), shoppingRows,
                 mock(de.mangalib.repository.EinkaufslisteItemDetailsRepository.class), f.rows, f.bands, f.series));
-        var confirmed = Map.<String,Object>of("itemId", "7", "confirmedSeriesId", "42", "firstBand", 4, "lastBand", 4);
+        var confirmed = Map.<String,Object>of("itemId", "7", "confirmedSeriesId", "42", "firstBand", 4, "lastBand", 4,
+                "purchaseToken", ShoppingState.token(item, item.getEinkaufslisteItemDetails(), true));
         assertEquals(200, controller.buyItemUpdate(confirmed).getStatusCode().value());
         assertTrue(item.getGekauft()); assertEquals(4, f.stored.size());
         assertEquals(200, controller.buyItemUpdate(Map.of("itemId", "7")).getStatusCode().value());

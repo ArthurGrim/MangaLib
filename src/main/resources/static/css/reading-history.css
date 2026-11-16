@@ -1,0 +1,11 @@
+.reading-history { margin: 16px 0; padding: 12px; border: 1px solid #444; border-radius: 6px; color: var(--font-page); background: var(--bg-container); }
+.reading-history[hidden] { display: none; }
+.reading-history label { display: inline-flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.reading-history button { margin: 6px; padding: 8px 12px; cursor: pointer; background: var(--blue-normal); color: var(--font-light); border: 1px solid var(--blue-dark); border-radius: 4px; }
+.reading-history button:disabled { opacity: .55; cursor: default; }
+.reading-history input { color: var(--font-page); background: var(--bg-page); border: 1px solid #555; border-radius: 4px; padding: 6px; }
+.reading-history ul { padding-left: 20px; }
+.reading-history li { margin: 8px 0; overflow-wrap: anywhere; }
+.reading-history table { width: 100%; border-collapse: collapse; }
+.reading-history th, .reading-history td { padding: 8px; border-bottom: 1px solid #444; text-align: left; }
+#reading-history-months { overflow-x: auto; }

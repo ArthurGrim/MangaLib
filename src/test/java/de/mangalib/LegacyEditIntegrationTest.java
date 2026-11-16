@@ -35,8 +35,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @ActiveProfiles("test")
-@Transactional
-@Rollback
+@org.junit.jupiter.api.extension.ExtendWith(CoordinatorRollback.class)
+
 class LegacyEditIntegrationTest {
     @Autowired EntityManager em;
     @Autowired DataSource dataSource;
@@ -52,23 +52,23 @@ class LegacyEditIntegrationTest {
     private MockedStatic<MangaScraper> seriesScraper;
     private MockedStatic<BandScraper> volumeScraper;
 
-    @BeforeTransaction void captureBefore() {
-        assertFalse(TestTransaction.isActive());
+    @CoordinatorRollback.Capture void captureBefore() {
+        assertFalse(CoordinatorRollback.isActive());
         assertInstanceOf(GuardedTestDataSource.class, dataSource);
         initial = TestDatabaseSnapshot.capture(em);
     }
 
-    @BeforeEach void fixtures() throws Exception {
-        assertTrue(TestTransaction.isActive()); assertTrue(TestTransaction.isFlaggedForRollback());
+    @CoordinatorRollback.Before void fixtures() throws Exception {
+        assertTrue(CoordinatorRollback.isActive()); assertTrue(CoordinatorRollback.isFlaggedForRollback());
         seriesScraper = mockStatic(MangaScraper.class, i -> { throw new AssertionError("Live-Scraper gesperrt"); });
         volumeScraper = mockStatic(BandScraper.class, i -> { throw new AssertionError("Live-Scraper gesperrt"); });
-        graph = PersistenceTestFixtures.persistGraph(em);
+        graph = PersistenceTestFixtures.persistCoordinatorGraph(em);
         flushClear();
     }
 
-    @AfterEach void noEscapesOrScrapers() {
+    @CoordinatorRollback.After void noEscapesOrScrapers() {
         try {
-            assertTrue(TestTransaction.isActive()); assertTrue(TestTransaction.isFlaggedForRollback());
+            assertTrue(CoordinatorRollback.isActive()); assertTrue(CoordinatorRollback.isFlaggedForRollback());
             if (seriesScraper != null) seriesScraper.verifyNoInteractions();
             if (volumeScraper != null) volumeScraper.verifyNoInteractions();
         } finally {
@@ -77,8 +77,8 @@ class LegacyEditIntegrationTest {
         }
     }
 
-    @AfterTransaction void proveRollback() {
-        assertFalse(TestTransaction.isActive()); assertNotNull(initial);
+    @CoordinatorRollback.Preserve void proveRollback() {
+        assertFalse(CoordinatorRollback.isActive()); assertNotNull(initial);
         assertEquals(initial, TestDatabaseSnapshot.capture(em), "Altbestand und Schema nach echtem Rollback unverändert");
     }
 
@@ -98,12 +98,12 @@ class LegacyEditIntegrationTest {
     }
 
     private MockHttpServletResponse write(String path, Map<String, Object> input, int status) throws Exception {
-        assertTrue(TestTransaction.isActive()); assertTrue(TestTransaction.isFlaggedForRollback());
+        assertTrue(CoordinatorRollback.isActive()); assertTrue(CoordinatorRollback.isFlaggedForRollback());
         var result = mvc.perform(post("http://localhost:8080" + path).header("Host", "localhost:8080")
                 .header("Origin", "http://localhost:8080").with(csrf()).contentType("application/json")
                 .content(requestMapper.writeValueAsString(input))).andReturn();
         assertFalse(result.getRequest().isAsyncStarted(), "Schreibaktion muss in der Testtransaktion bleiben");
-        assertTrue(TestTransaction.isActive()); assertTrue(TestTransaction.isFlaggedForRollback());
+        assertTrue(CoordinatorRollback.isActive()); assertTrue(CoordinatorRollback.isFlaggedForRollback());
         var response = result.getResponse();
         assertEquals(status, response.getStatus(), "POST " + path);
         assertFalse(response.getContentAsString().contains("Exception"));
@@ -127,8 +127,8 @@ class LegacyEditIntegrationTest {
             input.put(key, data.hasNonNull(key) ? data.get(key).booleanValue() : null);
         for (String key : List.of("anilistUrl", "coverUrl"))
             input.put(key, data.hasNonNull(key) ? data.get(key).stringValue() : null);
-        input.put("preisProBand", row().getPreisProBand() == null ? "0" : row().getPreisProBand().toPlainString());
-        input.put("gesamtpreisAenderung", row().getAenderungGesamtpreis() == null ? "0" : row().getAenderungGesamtpreis().toPlainString());
+        // Unveränderte Preise werden vom aktuellen Editor nicht gesendet.
+
         input.put("scrapedData", Map.of("istEdit", "true"));
         return input;
     }
@@ -138,7 +138,7 @@ class LegacyEditIntegrationTest {
         var input = new HashMap<String, Object>();
         for (String key : List.of("id", "bandNr", "bandIndex")) input.put(key, Long.toString(data.get(key).longValue()));
         for (String key : List.of("preis", "aenderungPreis"))
-            input.put(key, data.hasNonNull(key) ? data.get(key).decimalValue().setScale(2).toPlainString() : null);
+            if (data.hasNonNull(key)) input.put(key, data.get(key).decimalValue().setScale(2).toPlainString());
         input.put("istGelesen", data.get("istGelesen").booleanValue());
         input.put("reread", data.get("rereadNull").booleanValue() ? null : Integer.toString(data.get("reread").intValue()));
         input.put("istSpecial", data.get("specialNull").booleanValue() ? null : data.get("istSpecial").booleanValue());

@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [switch]$ValidateOnly,
+    [switch]$ReadingHistory,
     [string]$JavaPath = '',
     [string]$ArtifactPath = (Join-Path $PSScriptRoot '../build/libs/mangalib-manual-test.jar')
 )
@@ -47,6 +48,13 @@ try {
         'BOOT-INF/classes/de/mangalibmanual/SyntheticScraperGateway.class')) {
         if (-not $archive.GetEntry($required)) { throw 'Manueller Schutz oder Double fehlt.' }
     }
+    if ($ReadingHistory) {
+        foreach ($required in @('BOOT-INF/classes/de/mangalib/service/ReadingHistoryService.class',
+            'BOOT-INF/classes/de/mangalib/service/ReadingHistoryStore.class',
+            'BOOT-INF/classes/de/mangalib/controller/ReadingHistoryController.class')) {
+            if (-not $archive.GetEntry($required)) { throw 'Artefakt unterstützt S03 nicht.' }
+        }
+    }
 } finally { $archive.Dispose() }
 if (-not $ValidateOnly) {
     $listeners = @(Get-NetTCPConnection -State Listen -LocalPort 18080 -ErrorAction SilentlyContinue)
@@ -74,6 +82,10 @@ try {
         if ($name -like 'MANGALIB_*') { $startInfo.EnvironmentVariables.Remove($name) }
     }
     $startInfo.EnvironmentVariables['MANGALIB_MANUAL_DB_PASSWORD'] = $manualPassword
+    if ($ReadingHistory) {
+        $startInfo.EnvironmentVariables['MANGALIB_READING_HISTORY_ENABLED'] = 'true'
+        Write-Host 'S03 angefordert; Schemafreigabe erforderlich. ValidateOnly prüft keine Datenbankstruktur.'
+    }
     Write-Host 'MANUELLE TESTUMGEBUNG — 127.0.0.1:18080 — ausschließlich synthetische Scraper'
     $process = [System.Diagnostics.Process]::Start($startInfo)
     Write-Host ('Java-PID: ' + $process.Id)

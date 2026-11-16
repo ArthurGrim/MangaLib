@@ -1,0 +1,4 @@
+# Hashgebundenes S03-Test-DDL muss auch nach Windows-Checkouts bytegleich bleiben.
+database/migrations/S03_001_reading_events/01_mangalib_test.sql text eol=lf
+database/migrations/S03_001_reading_events/01_mangalib_manual_test.sql text eol=lf
+database/migrations/S03_001_reading_events/03_manual_runtime_grants.sql text eol=lf

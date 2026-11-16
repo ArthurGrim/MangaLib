@@ -62,6 +62,73 @@ val t03Integration by sourceSets.creating {
 }
 configurations[t03Integration.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
 configurations[t03Integration.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
+// S03 bleibt vom regulären Testlauf getrennt, bis das neue Schema separat abgenommen ist.
+val s03SchemaTest by tasks.registering(Test::class) {
+    description = "Opt-in S03-Vorprüfung: nur SELECT/SHOW, keine Fixtures oder Migration."
+    group = "verification"
+    testClassesDirs = t03Integration.output.classesDirs
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    include("**/S03SchemaPreflightTest.class")
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("s03SchemaApproval").orNull == "READ_ONLY_CURRENT_TEST_SCHEMA") { "Separate lesende S03-Freigabe erforderlich." }
+        require(includes == setOf("**/S03SchemaPreflightTest.class") && excludes.isEmpty()
+                && filter.includePatterns.isEmpty() && filter.excludePatterns.isEmpty()) { "S03-Vorprüfung verändert: STOP" }
+        systemProperty("s03.schema.approved", "true")
+        val phase = providers.gradleProperty("s03SchemaPhase").orElse("BEFORE").get()
+        require(phase in setOf("BEFORE", "AFTER")) { "Unbekannte S03-Schemaphase." }
+        systemProperty("s03.schema.phase", phase)
+        if (phase == "AFTER") {
+            listOf("s03ExpectedRows" to "s03.schema.expectedRows", "s03ExpectedOldSchema" to "s03.schema.expectedOldSchema").forEach { (option, property) ->
+                val fingerprint = providers.gradleProperty(option).get()
+                require(fingerprint.matches(Regex("[a-f0-9]{64}"))) { "Historischer Teilfingerabdruck fehlt." }
+                systemProperty(property, fingerprint)
+            }
+        }
+        providers.gradleProperty("s03ExpectedFingerprint").orNull?.let {
+            require(it.matches(Regex("[a-f0-9]{64}"))) { "Ungültiger Referenzfingerabdruck." }
+            systemProperty("s03.schema.expectedFingerprint", it)
+        }
+    }
+}
+val s03HistoryTest by tasks.registering(Test::class) {
+    description = "Opt-in S03-Lesehistorie; nur separat migriertes Testschema, synthetische Rollbackfixtures."
+    group = "verification"
+    testClassesDirs = t03Integration.output.classesDirs
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    include("**/S03ReadingHistoryAcceptanceTest.class")
+    filter { excludeTestsMatching("*.concurrentActionsCommitExactlyOnceAndKeepCountersConsistent") }
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("s03Approval").orNull == "ROLLBACK_ONLY_MIGRATED_TEST_SCHEMA") {
+            "Separate S03-Schema-/Testfreigabe erforderlich."
+        }
+        require(includes == setOf("**/S03ReadingHistoryAcceptanceTest.class") && excludes.isEmpty()
+                && filter.includePatterns.isEmpty() && filter.excludePatterns == setOf("*.concurrentActionsCommitExactlyOnceAndKeepCountersConsistent")) { "S03-Testauswahl verändert: STOP" }
+        systemProperty("s03.history.approved", "true")
+    }
+}
+val s03ConcurrencyTest by tasks.registering(Test::class) {
+    description = "Opt-in S03: eigene synthetische Commitfixture, Parallelaktionen und identitätsgebundene Entfernung."
+    testClassesDirs = t03Integration.output.classesDirs
+    classpath = files(providers.provider { t03Integration.runtimeClasspath })
+    include("**/S03ReadingHistoryAcceptanceTest.class")
+    filter { includeTestsMatching("de.mangalib.S03ReadingHistoryAcceptanceTest.concurrentActionsCommitExactlyOnceAndKeepCountersConsistent") }
+    maxParallelForks = 1
+    failFast = true
+    outputs.upToDateWhen { false }
+    doFirst {
+        require(providers.gradleProperty("s03ConcurrencyApproval").orNull == "OWN_SYNTHETIC_COMMIT_AND_CLEANUP") { "S03-Commitfreigabe fehlt." }
+        require(includes == setOf("**/S03ReadingHistoryAcceptanceTest.class") && excludes.isEmpty()
+            && filter.includePatterns == setOf("de.mangalib.S03ReadingHistoryAcceptanceTest.concurrentActionsCommitExactlyOnceAndKeepCountersConsistent")
+            && filter.excludePatterns.isEmpty()) { "S03-Konkurrenzauswahl verändert: STOP" }
+        systemProperty("s03.history.approved", "true")
+    }
+}
 val t03CommitTest by tasks.registering(Test::class) {
     description = "Opt-in T03-Commitabnahme; hinterlässt registrierte synthetische Zeilen, kein Cleanup."
     group = "verification"
@@ -228,7 +295,7 @@ val manualCheck by sourceSets.creating {
 tasks.register<Test>("manualSafetyTest") {
     description = "Datenbankfreie Prüfungen des manuellen Startwegs; kein Boot-Start."
     testClassesDirs = manualCheck.output.classesDirs
-    classpath = manualCheck.runtimeClasspath
+    classpath = files(providers.provider { manualCheck.runtimeClasspath })
 }
 
 val manualBootJar by tasks.registering(org.springframework.boot.gradle.tasks.bundling.BootJar::class) {
@@ -254,6 +321,12 @@ val manualBootJar by tasks.registering(org.springframework.boot.gradle.tasks.bun
 }
 tasks.register("assembleManualTest") {
     dependsOn(manualBootJar)
+}
+
+// Gleicher geprüfter Paketierungsweg, fester separater Dateiname: Altartefakte bleiben erhalten.
+providers.gradleProperty("s03ManualCandidate").orNull?.let {
+    require(it == "true") { "s03ManualCandidate akzeptiert ausschließlich true." }
+    manualBootJar.configure { archiveFileName.set("mangalib-manual-test-s03.jar") }
 }
 tasks.named<Test>("manualSafetyTest") {
     dependsOn(manualBootJar)

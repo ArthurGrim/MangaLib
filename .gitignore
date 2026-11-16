@@ -128,6 +128,10 @@ dumps/
 !/Inserts.sql
 # Ausschließlich geprüfte synthetische manuelle Fixtures, keine lokalen Schemaexports.
 !/src/manualTest/setup/fixtures.sql
+# Geprüfte additive S03-DDL, ohne Daten oder Zugangsdaten. Keine allgemeine SQL-Ausnahme.
+!/database/migrations/S03_001_reading_events/01_mangalib_test.sql
+!/database/migrations/S03_001_reading_events/01_mangalib_manual_test.sql
+!/database/migrations/S03_001_reading_events/03_manual_runtime_grants.sql
 
 # Lokale Installation der JavaScript-Testabhängigkeiten.
 /node_modules/

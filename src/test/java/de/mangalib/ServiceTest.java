@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional
-@Rollback
+@org.junit.jupiter.api.extension.ExtendWith(CoordinatorRollback.class)
+
 class ServiceTest {
     @Autowired
     private MangaReiheService mangaReiheService;
