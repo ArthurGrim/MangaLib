@@ -73,26 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function resetPopupFields() {
     scrapedData = {};
     autofillRevision++;
-    // Zurücksetzen aller Eingabefelder
-    document
-      .querySelectorAll(
-        '.popup input[type="text"], .popup input[type="number"]'
-      )
-      .forEach((input) => {
-        input.value = "";
-      });
-
-    // Zurücksetzen aller Select-Elemente
-    document.querySelectorAll(".popup select").forEach((select) => {
-      select.selectedIndex = 0;
-    });
-
-    // Zurücksetzen der Checkboxen
-    document
-      .querySelectorAll('.popup input[type="checkbox"]')
-      .forEach((checkbox) => {
-        checkbox.checked = false;
-      });
+    mangaLibResetInputs(document.getElementById("popupContainer"));
 
     // Aktualisieren der Sichtbarkeit basierend auf Checkboxen
     updateVisibility();

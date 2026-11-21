@@ -399,26 +399,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   function resetPopupFields() {
-    // Zurücksetzen aller Eingabefelder
-    document
-      .querySelectorAll(
-        '.popup-edit input[type="text"], .popup-edit input[type="number"]'
-      )
-      .forEach((input) => {
-        input.value = "";
-      });
-
-    // Zurücksetzen aller Select-Elemente
-    document.querySelectorAll(".popup-edit select").forEach((select) => {
-      select.selectedIndex = 0;
-    });
-
-    // Zurücksetzen der Checkboxen
-    document
-      .querySelectorAll('.popup-edit input[type="checkbox"]')
-      .forEach((checkbox) => {
-        checkbox.checked = false;
-      });
+    mangaLibResetInputs(document.getElementById("editPopupContainer"));
 
     // Aktualisieren der Sichtbarkeit basierend auf Checkboxen
     updateVisibility();

@@ -345,3 +345,16 @@ test('Späte Reihen-Autofillantwort nach Indexänderung überschreibt keine Form
   assert.equal(d.getElementById('titel').value,'Meine neue Eingabe');
   assert.equal(d.querySelector('.loading-label').style.display,'none');
 });
+
+test('Gemeinsamer Formularreset bleibt lokal und erhält Replay-Sperren und fremde Felder', async t => {
+  const e=await setup(t);
+  const d=e.w.document;
+  const host=d.createElement('div'); host.innerHTML='<input type="text" value="alt"><input type="checkbox" checked><select><option>a</option><option selected>b</option></select><button disabled>Save</button>';
+  const outside=d.createElement('input'); outside.value='erhalten'; d.body.append(host,outside);
+  e.w.mangaLibResetInputs(host);
+  assert.equal(host.querySelector('input').value,'');
+  assert.equal(host.querySelector('input[type=checkbox]').checked,false);
+  assert.equal(host.querySelector('select').selectedIndex,0);
+  assert.equal(host.querySelector('button').disabled,true);
+  assert.equal(outside.value,'erhalten'); assert.equal(e.calls.length,0);
+});

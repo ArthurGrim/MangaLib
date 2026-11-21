@@ -127,6 +127,13 @@ const MangaLibFeedback = (() => {
   return { show, clear, read, request };
 })();
 
+// Nur Eingabewerte zurücksetzen. Feedback-/Replay-Sperren bleiben bewusst erhalten.
+function mangaLibResetInputs(container) {
+  container.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => { input.value = ""; });
+  container.querySelectorAll('select').forEach(select => { select.selectedIndex = 0; });
+  container.querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = false; });
+}
+
 function mangaLibCoverPlaceholder() {
   return document.body.dataset.coverPlaceholder === "/manual-test/cover.svg"
     ? "/manual-test/cover.svg" : "/svg/filler_img2.png";

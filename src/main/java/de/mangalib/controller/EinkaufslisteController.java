@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.time.LocalDate;
 import java.util.*;
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 
 import de.mangalib.validation.WriteRequests;
 import de.mangalib.validation.WriteValidation;
@@ -74,55 +72,10 @@ public class EinkaufslisteController {
         List<Sammelband> alleSammelbaende = sammelbaendeService.findAll();
         List<Status> alleStatus = statusService.findAllSortById();
 
-        System.out.println("Der Controller wird aufgerufen");
-        // Erstellen einer Map, um die Items nach Monaten zu gruppieren
-        Map<String, List<EinkaufslisteItem>> itemsByMonth = new LinkedHashMap<>();
-        Map<String, Integer> totalVolumesByMonth = new HashMap<>();
-        Map<String, String> totalPriceByMonth = new HashMap<>();
-        DecimalFormat df = new DecimalFormat("#,##0.00 €", new DecimalFormatSymbols(Locale.GERMANY));
-
-        // Starte die Schleife bei -12, um die letzten 12 Monate rückwirkend zu
-        // überprüfen
-        LocalDate currentDate = LocalDate.now();
-        for (int i = -12; i <= 6; i++) { // -12 für die letzten 12 Monate, 6 für die kommenden Monate
-            java.time.YearMonth period = java.time.YearMonth.from(currentDate).plusMonths(i);
-            LocalDate month = period.atDay(1);
-            List<EinkaufslisteItem> items = einkaufslisteService.getItemsForMonth(month);
-
-            if (items != null && !items.isEmpty()) {
-                // Prüfe, ob alle Items in diesem Monat gekauft wurden
-                boolean allItemsBought = items.stream().allMatch(item -> Boolean.TRUE.equals(item.getGekauft()));
-
-                if (!allItemsBought) {
-                    // Derselbe Monatsname in zwei Jahren darf keine Gruppe überschreiben.
-                    String monthName = getGermanMonthName(period.getMonthValue()) + " " + period.getYear();
-                    itemsByMonth.put(monthName, items);
-
-
-                    int totalVolumes = items.stream().map(EinkaufslisteItem::getAnzahlBaende).filter(java.util.Objects::nonNull).mapToInt(Integer::intValue).sum();
-                    BigDecimal totalPrice = items.stream()
-                            .map(EinkaufslisteItem::getGesamtpreis).filter(java.util.Objects::nonNull)
-                            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                    totalVolumesByMonth.put(monthName, totalVolumes);
-                    totalPriceByMonth.put(monthName, items.stream().anyMatch(item -> item.getGesamtpreis() == null) ? "Unbekannt" : df.format(totalPrice));
-                }
-            }
-        }
-
-        model.addAttribute("itemsByMonth", itemsByMonth);
-        var undated = einkaufslisteService.undatedItems();
-        if (!undated.isEmpty()) {
-            String group = "Ohne Erscheinungsdatum";
-            itemsByMonth.put(group, undated);
-            totalVolumesByMonth.put(group, undated.stream().map(EinkaufslisteItem::getAnzahlBaende)
-                    .filter(java.util.Objects::nonNull).mapToInt(Integer::intValue).sum());
-            totalPriceByMonth.put(group, undated.stream().anyMatch(item -> item.getGesamtpreis() == null)
-                    ? "Unbekannt" : df.format(undated.stream().map(EinkaufslisteItem::getGesamtpreis)
-                            .reduce(BigDecimal.ZERO, BigDecimal::add)));
-        }
-        model.addAttribute("totalVolumesByMonth", totalVolumesByMonth);
-        model.addAttribute("totalPriceByMonth", totalPriceByMonth);
+        var overview = einkaufslisteService.overview(LocalDate.now());
+        model.addAttribute("itemsByMonth", overview.itemsByMonth());
+        model.addAttribute("totalVolumesByMonth", overview.totalVolumesByMonth());
+        model.addAttribute("totalPriceByMonth", overview.totalPriceByMonth());
         model.addAttribute("alleVerlage", alleVerlage);
         model.addAttribute("alleTypen", alleTypen);
         model.addAttribute("alleFormate", alleFormate);
@@ -130,19 +83,6 @@ public class EinkaufslisteController {
         model.addAttribute("alleStatus", alleStatus);
         return "einkaufsliste";
 
-    }
-
-    public String getGermanMonthName(int monthNumber) {
-        String[] germanMonths = {
-                "Januar", "Februar", "März", "April", "Mai", "Juni",
-                "Juli", "August", "September", "Oktober", "November", "Dezember"
-        };
-
-        if (monthNumber < 1 || monthNumber > 12) {
-            throw new IllegalArgumentException("Monatsnummer muss zwischen 1 und 12 liegen");
-        }
-
-        return germanMonths[monthNumber - 1];
     }
 
     // Methode zum Hinzufügen einer MangaReihe

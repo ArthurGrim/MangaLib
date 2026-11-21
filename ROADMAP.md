@@ -377,6 +377,24 @@ Die folgenden datierten Einträge erhalten ihren historischen Status.
 - SQL-Skript korrigieren; fachliche Fehlerfälle verbessern. Konsistente technische Fehlerdiagnose und Logging werden in T06 geplant.
 
 ### T05 – Wartbarkeit, Architektur und Performance
+
+**Technisch abgeschlossen im unten dokumentierten Umfang (21.11.2026).**
+Einkaufsaufbereitung aus dem Controller in `ShoppingOverview`/Service verlagert;
+19 Monatsabfragen durch eine Bereichsabfrage ersetzt. Am unveränderten Testbestand
+wurden **neu 18 statt zuvor 36 SQL-Anweisungen** gemessen.
+Gemeinsamer Formularreset, feste Einkaufs-Aktionsspalten und mehrzeilige mobile
+Darstellung ohne Redesign; nachgewiesen ungenutzte CSS-/Monatshelfer entfernt.
+Bestehende typisierte Schreib-/Importmodelle und hashgebundene Treiberkonfiguration
+weiterverwendet. Manueller datenbankfreier DOM-CI-Workflow vorbereitet, noch nicht
+auf GitHub ausgeführt. Keine neue Abhängigkeit oder Pagination ohne belegten Bedarf.
+**1.462 Java-Tests bestanden, 2 bestehende Commit-Opt-ins übersprungen, 0 Fehler;
+260 DOM- und 94 Manual-Schutztests bestanden.** Lesende Browserprüfung bei 390,
+768 und 1280 Pixeln, Dialogabbruch/Wiederöffnen und unveränderte Daten-/Schema-
+Fingerabdrücke bestätigt. Einzelheiten, Grenzen und Dateigruppen: `T05_CLOSEOUT.md`.
+S03/T04 wurden auf `main` fast-forward zusammengeführt und gepusht (`f40f043`);
+T05 liegt separat auf `codex/t05-maintainability`, noch ohne Git-Abschluss.
+T06 und T07 bleiben eigenständige Folgearbeiten; weitere Wartung ist fortlaufend.
+
 - Schichten entflechten; Controller entlasten, typisierte Requests und Importmodelle einführen.
 - Datenbankabfragen bündeln und messen; bei Bedarf Pagination.
 - Gemeinsame CSS-/Template-Bestandteile wiederverwenden, ohne visuelles Redesign.

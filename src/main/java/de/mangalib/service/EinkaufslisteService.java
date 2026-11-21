@@ -44,6 +44,19 @@ public class EinkaufslisteService {
         return einkaufslisteRepository.findByErscheinungsdatumIsNullOrderByIdAsc();
     }
 
+    /** Genau eine Bereichs- und eine Undatiertabfrage statt 19 Monatsabfragen.
+     * Der bisherige Zeitraum und die datumsaufsteigende Reihenfolge bleiben erhalten.
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public ShoppingOverview overview(LocalDate today) {
+        Objects.requireNonNull(today);
+        var month = java.time.YearMonth.from(today);
+        var dated = einkaufslisteRepository.findByErscheinungsdatumBetween(
+                month.minusMonths(12).atDay(1), month.plusMonths(6).atEndOfMonth(),
+                Sort.by("erscheinungsdatum").ascending());
+        return ShoppingOverview.from(dated, undatedItems());
+    }
+
     @Transactional
     public Map<String, Object> editState(long id) {
         return einkaufslisteRepository.findById(id).map(this::editState).orElse(null);

@@ -15218,3 +15218,57 @@ Die zuvor offene visuelle Checkliste ist im beschriebenen Umfang abgearbeitet.
 Frühere Hinweise „keine Browserprüfung/Git-Abschluss nicht beauftragt“ sind
 historische Stände. Lokaler T04-Commit jetzt beauftragt; kein Push oder Merge.
 Keine erneuten Tests bei ausschließlich dokumentarischem Abschluss.
+## T05 – Abschlussprüfung Wartbarkeit und Abfragebündelung (21.11.2026)
+
+Der neue Servicepfad `overview(LocalDate)` liest den bisherigen Zeitraum vom
+ersten Tag zwölf Monate zuvor bis zum letzten Tag sechs Monate danach mit einer
+Bereichsabfrage sowie die undatierten Positionen separat. `ShoppingOverview`
+bereitet die vorhandenen drei Model-Maps auf. Gemischte Monate enthalten weiterhin
+bereits gekaufte Positionen; vollständig gekaufte Monate bleiben verborgen,
+undatierte Positionen bleiben unverändert sichtbar. Monatsreihenfolge mit Jahr,
+NULL-Preis als „Unbekannt“, Nullable-Kaufstatus, Bandanzahl und BigDecimal-Summen
+sind erhalten. Keine Schreiboperation und keine neue fachliche Transaktionsregel.
+
+Tatsächlich ausgeführt, Gradle stets offline/ohne Daemon nach identischem Dry-Run:
+
+- Gezielter Lauf `test --tests '*ShoppingOverviewTest' --tests
+  '*ShoppingMonthRegressionTest' --tests '*TestDatabaseGuardTest'`: **47 bestanden**.
+- `test --tests '*ShoppingOverviewIntegrationTest'`: **1 bestanden**. Der ausschließlich
+  lesende Test vergleicht echte Gruppen/IDs mit dem bisherigen Monatspfad und misst
+  Hibernate-Statementzahlen: **alt 36, neu 18** am vorhandenen Testbestand.
+  Zwei Repositoryaufrufe bedeuten wegen bestehender Beziehungsladevorgänge nicht
+  zwei SQL-Anweisungen. Keine allgemeine Laufzeit-/Skalierungsbehauptung.
+- Vollständiges `test`: **1.464 Fälle, davon 1.462 bestanden, 0 Fehler, 2 übersprungen**.
+  Die beiden vorhandenen Commit-Opt-ins in ShoppingEditIntegrationTest und
+  VolumeImportIntegrationTest wurden nicht neu aktiviert. Keine Assertions gelockert.
+- `s03SchemaTest` vor und nach der Gesamtregression: jeweils **1/1 bestanden**;
+  unveränderter Vollfingerabdruck
+  `77fce665515396821a2fb21f36f074a3abccdac48de04c09f1f065be1c9e814f`,
+  Altzeilen `3b629c3faeac198c4d83cf8df033257724a289eca71b46d17d344fc5d523d0b9`,
+  Altschema `9ca0a1402263a0830ed9df7ffbd50edbee22f50f02ad357bf91ed468c166a6e0`.
+  Elf InnoDB-Tabellen einschließlich S03; bestehende Daten erhalten, AUTO_INCREMENT
+  weiterhin ausgenommen. Nur geschütztes `mangalib_test`, keine Produktionsverbindung.
+- DOM-Suite `node --test src/test/js/*.test.cjs`: zunächst 257/259, abschließend
+  nach mobiler Nachbesserung **260 bestanden, 0 Fehler/Skips**. Neue Prüfungen für
+  lokale Formularresets ohne Replay-Freigabe und feste/mobile Einkaufsraster.
+- `manualSafetyTest` und `bootJar`: erfolgreich; **94 Manual-Schutztests** auch am
+  endgültigen CSS-Kandidaten bestanden. Ausgabe des Manual-JAR nur in separaten
+  ignorierten Verzeichnissen. Alle sechs bestehenden Manual-JARs in build/libs
+  per SHA-256 unverändert bestätigt. Kein `clean` und keine Altartefakte ersetzt.
+- `dependencies --configuration runtimeClasspath`: lokale Offline-Inventur erfolgreich;
+  bestehender Tomcat-Override 11.0.27 und isolierte Selenium-Paketierung erhalten.
+  Keine neuen Downloads/Installationen oder Versionsänderungen. Dies ist kein neuer
+  Online-Advisory-Scan. Die historischen Dependency-Sicherheitsnachweise bleiben erhalten.
+- `node --check` für security.js, einkaufsliste.js, popup_add_reihe.js und
+  popup_edit_reihe.js erfolgreich; `git diff --check` erfolgreich.
+
+`.github/workflows/dom.yml` bietet einen ausdrücklich manuell gestarteten,
+datenbankfreien GitHub-Workflow mit Leserechten, begrenzter Laufzeit und gesperrter
+Lockfileinstallation ohne Lifecycle-Skripte. Er nutzt die bereits deklarierten
+Node-/pnpm-Versionen. Lokaler DOM-Befehl geprüft; erstmalige tatsächliche
+GitHub-Ausführung erst nach Veröffentlichung, hier nicht behauptet. Kein DB-,
+Windows-Nativ- oder Live-Scraper-CI-Lauf hinzugefügt.
+
+Die abschließende GUI-Abnahme ist in MANUAL_TESTING.md beschrieben. Kein Zugang
+zu `mangalib`, keine Migration/Normalisierung, keine echte Scraperausführung.
+T06-Logging und T07-Bereitstellung nicht vorgezogen. Abschlussmatrix: T05_CLOSEOUT.md.

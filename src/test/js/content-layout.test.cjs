@@ -74,3 +74,23 @@ test('Lange Unicode-/HTML-Titel bleiben im DOM vollständig lesbarer Text neben 
   assert.equal(dom.window.getComputedStyle(label).overflowWrap, 'anywhere');
   // jsdom hat kein Pixel-Layout: tatsächliche Kollisionen/Scrollbreiten später im Browser prüfen.
 });
+
+test('Einkaufszeile reserviert feste Spalten auch ohne optionale Bearbeitung oder Referenz', t => {
+  const {sheet,find}=rules(t);
+  assert.equal(find(sheet,'.reihe > .shopping-edit-button').style.getPropertyValue('grid-column'),'1');
+  assert.equal(find(sheet,'.reihe > .buy-button').style.getPropertyValue('grid-column'),'2');
+  assert.equal(find(sheet,'.reihe > .manga-reihe-titel').style.getPropertyValue('grid-column'),'7');
+  assert.equal(find(sheet,'.reihe > .delete-button').style.getPropertyValue('grid-column'),'11');
+  assert.equal(find(sheet,'.reihe > *').style.getPropertyValue('grid-row'),'1');
+});
+
+test('Mobile Einkaufszeilen geben Titel und Geldbeträgen eigene lesbare Zeilen', t => {
+  const {sheet, find} = rules(t);
+  const mobile = [...sheet.find(r => r.conditionText === '(max-width: 600px)').cssRules];
+  assert.equal(find(mobile, '.reihe > .manga-reihe-titel').style.getPropertyValue('grid-column'), '1 / -1');
+  assert.equal(find(mobile, '.reihe > .manga-reihe-titel').style.getPropertyValue('grid-row'), '2');
+  assert.equal(find(mobile, '.reihe > .manga-reihe-preis').style.getPropertyValue('grid-row'), '4');
+  assert.equal(find(mobile, '.reihe > .manga-reihe-gesamtpreis').style.getPropertyValue('grid-row'), '4');
+  assert.equal(find(mobile, '.reihe > .delete-button').style.getPropertyValue('grid-column'), '6');
+  assert.equal(find(mobile, '.monats-header > .preis-gesamt').style.getPropertyValue('grid-column'), '1 / -1');
+});

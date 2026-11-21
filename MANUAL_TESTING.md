@@ -1870,3 +1870,46 @@ Die zuvor offene visuelle Checkliste ist im beschriebenen Umfang abgearbeitet.
 Frühere Hinweise „keine Browserprüfung/Git-Abschluss nicht beauftragt“ sind
 historische Stände. Lokaler T04-Commit jetzt beauftragt; kein Push oder Merge.
 Keine erneuten Tests bei ausschließlich dokumentarischem Abschluss.
+## T05 – Lesende responsive Abschlussabnahme (21.11.2026)
+
+**T05_SCOPED_BROWSER_ACCEPTED.** Endkandidat im separaten ignorierten Verzeichnis
+`.gradle/t05-closeout-20261121/mobile-final/mangalib-manual-test.jar`, SHA-256
+`0c9abcb899918e27df10be5d5563dd7443523f3b944e976e0f551a730b0a43d8`.
+Startskript mit `-ReadingHistory -ValidateOnly` erfolgreich. Eigenen Launcher
+PID 28044, Profil ausschließlich manual-test und einzigen Listener
+127.0.0.1:18080 vor Browseraktionen bestätigt; synthetische Scraper und Testbanner.
+
+Im Codex In-app Browser geprüft:
+
+- Einkaufsübersicht mit datierter/undatierter Gruppe, deutschen Geldbeträgen und
+  gekauften/offenen Positionen. Bearbeiten-, Kauf- und Löschbuttons haben getrennte
+  Spalten; kein Klick auf Kauf/Löschen, kein Speichern und kein Autofill.
+- 1280 Pixel: bestehendes Tabellen-/Farbdesign erhalten. 390 Pixel: Titel, Referenzen
+  und Preise auf getrennten Zeilen lesbar, Monatsbeträge vollständig. 768 Pixel:
+  ebenfalls kein horizontaler Dokumentüberlauf. Viewportoverride abschließend entfernt.
+- Einkaufsanlage und Reihenanlage: ungespeicherten Titel/Preis eingetragen,
+  abgebrochen und wieder geöffnet; Werte leer. Reihenbearbeitung: ungespeicherten
+  Titel verworfen; nach Wiederöffnen tatsächlicher gespeicherter Eingabewert wieder da.
+  Ausschließlich Cancel und lesende Navigation; keine Schreibrequests ausgelöst.
+- Keine erfassten Browserfehler/-warnungen. Screenshots desktop.jpg/mobile.jpg nur
+  im privaten ignorierten Kandidatenverzeichnis, keine neuen Testdaten angelegt.
+
+Bei der ersten visuellen Prüfung war die einzeilige 11-Spalten-Anordnung bei 390
+Pixeln noch schlecht lesbar. Dies wurde mit einer lokalen CSS-Regel bis 600 Pixeln
+und zusätzlicher DOM-Regression korrigiert und am neuen Kandidaten nachgeprüft.
+Ein erster sandboxgestarteter Launcher war vom Host/Browser nicht erreichbar;
+nach geordnetem Ctrl+C funktionierte derselbe isolierte Startweg außerhalb der
+Tool-Sandbox. Keine Änderung an Guards, Bindadresse, Firewall oder Browserpolicy.
+Die genaue OS-Ursache des ersten Timeouts wurde nicht abschließend untersucht.
+
+Vollständige lesende Vorher-/Nachher-Snapshots identisch:
+`f19146da1fbc0c7840242fee81ec12d87e6a8d90720ac5927298bf1596c42c33`.
+17 Reihen/Details, 44 Bände, 11 Einkaufspositionen/Details, 4 Leseereignisse,
+17 Stammdaten sowie Schema-Metadaten unverändert. Alle selbst gestarteten
+Launcher kontrolliert per Ctrl+C beendet; Tomcat/JPA-Shutdown und freier Port
+18080 bestätigt. Keine Verbindung zur produktiven Datenbank, kein Seeding,
+Reset, Migration, externer Abruf oder Live-Scraper.
+
+Die geänderten Dialog-/Layoutpfade sind damit im beschriebenen Umfang nachgeprüft.
+Die Schreibverträge wurden automatisiert regressionsgeprüft, hier nicht zusätzlich
+im Browser gespeichert. CI-Erstausführung bleibt eine Veröffentlichungskontrolle.

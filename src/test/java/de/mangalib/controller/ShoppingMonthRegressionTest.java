@@ -19,20 +19,18 @@ class ShoppingMonthRegressionTest {
                 "typService", TypService.class, "formatService", FormatService.class,
                 "sammelbaendeService", SammelbandService.class, "statusService", StatusService.class).entrySet())
             ReflectionTestUtils.setField(controller, entry.getKey(), mock(entry.getValue()));
-        var service = mock(EinkaufslisteService.class);
+        var repository = mock(de.mangalib.repository.EinkaufslisteRepository.class);
+        var service = new EinkaufslisteService(repository);
         ReflectionTestUtils.setField(controller, "einkaufslisteService", service);
         var now = YearMonth.now(); var old = now.minusYears(1);
         var first = item("0.01"); var second = item("13.98"); var unknown = item(null);
-        when(service.getItemsForMonth(any())).thenAnswer(call -> {
-            LocalDate date = call.getArgument(0); assertEquals(1, date.getDayOfMonth());
-            var period = YearMonth.from(date);
-            return period.equals(old) ? List.of(first) : period.equals(now) ? List.of(second) : List.of();
-        });
-        when(service.undatedItems()).thenReturn(List.of(unknown));
+        first.setErscheinungsdatum(old.atDay(2)); second.setErscheinungsdatum(now.atDay(2));
+        when(repository.findByErscheinungsdatumBetween(any(), any(), any())).thenReturn(List.of(first, second));
+        when(repository.findByErscheinungsdatumIsNullOrderByIdAsc()).thenReturn(List.of(unknown));
         var model = new ExtendedModelMap();
         assertEquals("einkaufsliste", controller.showEinkaufsliste(model));
         var groups = (Map<?,?>) model.get("itemsByMonth");
-        String month = controller.getGermanMonthName(now.getMonthValue());
+        String month = now.format(java.time.format.DateTimeFormatter.ofPattern("MMMM", Locale.GERMANY));
         assertEquals(List.of(first), groups.get(month + " " + old.getYear()));
         assertEquals(List.of(second), groups.get(month + " " + now.getYear()));
         assertEquals(3, groups.size());
@@ -40,8 +38,9 @@ class ShoppingMonthRegressionTest {
         assertEquals("0,01 €", totals.get(month + " " + old.getYear()));
         assertEquals("13,98 €", totals.get(month + " " + now.getYear()));
         assertEquals("Unbekannt", totals.get("Ohne Erscheinungsdatum"));
-        verify(service, times(19)).getItemsForMonth(any());
-        verifyNoMoreInteractions(ignoreStubs(service));
+        verify(repository).findByErscheinungsdatumBetween(eq(old.atDay(1)), eq(now.plusMonths(6).atEndOfMonth()), eq(org.springframework.data.domain.Sort.by("erscheinungsdatum").ascending()));
+        verify(repository).findByErscheinungsdatumIsNullOrderByIdAsc();
+        verifyNoMoreInteractions(repository);
     }
     private EinkaufslisteItem item(String price) {
         var item = new EinkaufslisteItem(); item.setGekauft(false); item.setAnzahlBaende(1);
