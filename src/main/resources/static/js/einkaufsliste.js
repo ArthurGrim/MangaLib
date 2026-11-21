@@ -48,10 +48,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Ermitteln des Monatsnamens
       var monthName = container.querySelector(".monats-name").textContent;
-      var monthNumber = convertMonthNameToNumber(monthName);
+      var parts = monthName.trim().split(/\s+/);
+      var monthNumber = convertMonthNameToNumber(parts[0]);
 
       // Setzen des Monats im Pop-up
-      document.querySelector(".monat-select").value = monthNumber;
+      document.querySelector(".monat-select").value = monthNumber || "";
+      document.querySelector(".jahr-select").value = /^\d{4}$/.test(parts[1] || "") ? parts[1] : "";
 
       // Popup anzeigen
       var popup = document.getElementById("popupContainer");
@@ -94,6 +96,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Aktualisieren der Sichtbarkeit basierend auf Checkboxen
     updateVisibility();
+    hideLoading();
+    document.getElementById("popupContainer").querySelector(".error-label").style.display = "none";
   }
 
   // Referenzen auf Checkboxen, Felder und Labels

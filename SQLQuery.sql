@@ -1,37 +1,37 @@
---Drop Database mangalib;
---Create Database mangalib;
-USE mangalib;
+-- Historische Strukturvorlage, KEINE Migration und kein automatischer Bootstrap.
+-- Nur in einer ausdrücklich freigegebenen leeren isolierten Datenbank verwenden.
+-- Kein USE/CREATE DATABASE: das geprüfte Ziel muss die Admin-Sitzung selbst wählen.
 
 -- Tabelle für Verlage
 CREATE TABLE verlage (
     verlag_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL
-);
+) ENGINE=InnoDB;
 
 -- Tabelle für Status
 CREATE TABLE status (
     status_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     beschreibung VARCHAR(255) UNIQUE NOT NULL
-);
+) ENGINE=InnoDB;
 
 -- Tabelle für Typen
 CREATE TABLE typen (
     typ_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     bezeichnung VARCHAR(255) UNIQUE NOT NULL
-);
+) ENGINE=InnoDB;
 
 -- Tabelle für Formate
 CREATE TABLE formate (
     format_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     bezeichnung VARCHAR(255) UNIQUE NOT NULL
-);
+) ENGINE=InnoDB;
 
 -- Tabelle für Sammelbandarten
 CREATE TABLE sammelbaende (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     multiplikator INT NOT NULL,
     typ VARCHAR(255) NOT NULL
-);
+) ENGINE=InnoDB;
 
 -- Tabelle für die MangaReihen
 CREATE TABLE mangareihe (
@@ -54,7 +54,7 @@ CREATE TABLE mangareihe (
     FOREIGN KEY (verlag_id) REFERENCES verlage(verlag_id),
     FOREIGN KEY (typ_id) REFERENCES typen(typ_id),
     FOREIGN KEY (format_id) REFERENCES formate(format_id)
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE mangadetails (
     id BIGINT NOT NULL,
@@ -68,11 +68,11 @@ CREATE TABLE mangadetails (
     anilist_url VARCHAR(255),
     cover_url VARCHAR(255),
     ist_gelesen BOOLEAN DEFAULT FALSE,
-    reread INT DEFAULT 0
+    reread INT DEFAULT 0,
     PRIMARY KEY (id),
     FOREIGN KEY (id) REFERENCES mangareihe(id),
     FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE baende (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -89,7 +89,7 @@ CREATE TABLE baende (
     ist_gelesen BOOLEAN DEFAULT FALSE,
     reread INT DEFAULT 0,
     FOREIGN KEY (manga_reihe_id) REFERENCES mangareihe(id)
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE einkaufsliste (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -106,10 +106,10 @@ CREATE TABLE einkaufsliste (
     ist_ebay_preis BOOLEAN,
     ist_vergriffen BOOLEAN,
     gekauft BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (verlag_id) REFERENCES Verlage(verlag_id),
-    FOREIGN KEY (typ_id) REFERENCES Typen(typ_id),
-    FOREIGN KEY (format_id) REFERENCES Formate(format_id)
-);
+    FOREIGN KEY (verlag_id) REFERENCES verlage(verlag_id),
+    FOREIGN KEY (typ_id) REFERENCES typen(typ_id),
+    FOREIGN KEY (format_id) REFERENCES formate(format_id)
+) ENGINE=InnoDB;
 
 CREATE TABLE einkaufslistedetails (
     id BIGINT NOT NULL PRIMARY KEY,
@@ -124,4 +124,4 @@ CREATE TABLE einkaufslistedetails (
     sammelbaende_id BIGINT DEFAULT 1,
     FOREIGN KEY (id) REFERENCES einkaufsliste(id),
     FOREIGN KEY (sammelbaende_id) REFERENCES sammelbaende(id)
-);
+) ENGINE=InnoDB;

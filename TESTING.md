@@ -15152,3 +15152,69 @@ bleibt uncommittet. Produktionsmigration/-reset/-aktivierung weiterhin gesondert
 
 ## S03 – Abschlussnachtrag 16.11.2026
 S03_TECHNICALLY_ACCEPTED: Die älteren Integrationstests sind auf den echten Coordinator mit erzwungenem Rollback portiert. Vollständiger Java-Lauf: 1454 bestanden, 0 Fehler, 2 bestehende M01-/M02-Commit-Opt-ins übersprungen (keine Platzhalter). Alle 29 MVC-Verträge grün; 254 DOM-Fälle erfolgreich. S03-Konkurrenzfall und zwei reale Rollbackfälle bestanden; abschließender lesender Testschemafingerabdruck 77fce665515396821a2fb21f36f074a3abccdac48de04c09f1f065be1c9e814f unverändert. Frühere REGRESSION_BLOCKED-Nachträge sind damit historische Zwischenstände. Keine Produktionsmigration/-aktivierung oder Reread-Initialisierung; diese bleiben separat abgesicherte Ausrollschritte. Keine Git-Schreibaktionen. Vollständige Abschlussmatrix und Nachweisgrenzen: S03_CLOSEOUT.md.
+
+## T04 – Abschluss der automatisierten Prüfung (21.11.2026)
+
+T04_IMPLEMENTED_AUTOMATED_VERIFIED auf codex/t04-existing-bugs. Einkaufsgruppen
+enthalten Monat/Jahr ohne Überschreiben, Anker sind eindeutig und ohne Leerzeichen;
+Monatsbuttons und Jahresauswahl berücksichtigen das Vorjahr. Reihenimport verwirft
+späte Antworten nach Indexwechsel sowie gespeicherte Moduswerte nach Abbruch;
+Einkauf setzt Lade-/Fehleranzeigen zurück. Bestehende Centstatistik, Preisgrenzen
+und Diagramm-Listener durch gezielte Regressionen bestätigt. Historische SQL-
+Strukturvorlage nur als Text korrigiert, kein DDL und keine Migration ausgeführt.
+
+Gespeicherter Gesamtlauf 16.11.2026: 1461 Javafälle, 1459 bestanden, 0 Fehler,
+2 bestehende M01-/M02-Commit-Opt-ins übersprungen. Finale Template-/MVC-Nachprüfung
+21.11.: 32 bestanden, 0 Fehler/übersprungen; Manual-Schutzsuite 94 bestanden.
+DOM-Nachweis: 257 bestanden, 0 Fehler/übersprungen. JavaScript-Syntaxchecks grün.
+Offline-bootJar und getrennte Manual-Paketierung erfolgreich. Alle Gradle-Läufe
+--offline --no-daemon mit vorherigem identischem Dry-Run. Keine unnötige neue
+Gesamtwiederholung beim Fortsetzen; die letzte Templateänderung gezielt geprüft.
+
+Rein lesender S03SchemaPreflightTest als bestehender geschützter Endnachweis
+21.11. bestanden: ausschließlich mangalib_test/mangalib_test_user, Profil test,
+elf InnoDB-Tabellen, 78 Stammdaten und historischer Datenbestand unverändert;
+Gesamtfingerabdruck 77fce665515396821a2fb21f36f074a3abccdac48de04c09f1f065be1c9e814f.
+Altdaten-/Altschemahashes identisch. Keine Bestandsbereinigung oder DDL.
+
+Keine Verbindung zu mangalib oder mangalib_manual_test, keine Anwendung,
+Browser oder echten Scraper gestartet. Historische Manual-JARs erhalten.
+Neue Ausgaben/Nachweise unter ignoriertem .gradle/t04-closeout-20261116;
+keine Staging-/Commit-/Push-/Mergeaktionen. git diff --check erfolgreich.
+Eine echte neue visuelle Browserprüfung wird hier nicht behauptet.
+Vollständige Matrix und manueller Nachprüfumfang: T04_CLOSEOUT.md.
+
+## T04 – Lesende Browserabnahme und lokaler Git-Abschluss (21.11.2026)
+
+T04_SCOPED_BROWSER_ACCEPTED. Freigegebener Kandidat
+.gradle/t04-closeout-20261116/mangalib-manual-test.jar, SHA-256
+4885530467715bcabae40b3bedd5e5b740af6c711e76f3abe06dfa14f9d3dc9a.
+ValidateOnly bestanden; eigene PID 29212 mit Profil manual-test und ausschließlich
+127.0.0.1:18080, Banner und ausschließlich synthetische Scraper bestätigt.
+
+Im vorhandenen Codex In-app Browser bestanden: Navigation November 2026,
+Vorbelegung Monat 11/Jahr 2026, ausdrückliche Auswahl des Vorjahrs 2025,
+undatierte Gruppe mit leeren Monat-/Jahresfeldern, Abbrechen/Wiederöffnen sowie
+Reihe/Einzelband-Moduswechsel mit ungespeichertem Titel/Preis. Nach Abbruch kehren
+keine alten Werte zurück, Ladeanzeige verborgen. Keine erfassten Konsolenfehler.
+Keine Speicherung, Kauf-/Löschaktion, Autofill oder externe Navigation.
+
+Nachweisgrenze: Der vorhandene Bestand enthält nur eine sichtbare datierte
+Monatsgruppe. Zwei gleichnamige Gruppen verschiedener Jahre wurden daher nicht
+real dargestellt; diese Kollision ist durch ShoppingMonthRegressionTest abgedeckt.
+Keine Fixtures allein für diesen Screenshot angelegt. Die bestehenden gedrängten
+Aktionsspalten einzelner Einkaufszeilen bleiben ein möglicher T05-Layoutprüfpunkt;
+kein neuer Funktionsfehler der geprüften T04-Aktionen festgestellt.
+
+Vollständige READ-ONLY-Snapshots vorher/nachher identisch:
+f19146da1fbc0c7840242fee81ec12d87e6a8d90720ac5927298bf1596c42c33.
+17 Reihen/Details, 44 Bände, 11 Einkäufe/Details, vier Leseereignisse,
+17 Stammdaten und sämtliche Schema-Metadaten unverändert. Eigene Sitzung per
+Ctrl+C beendet; Tomcat/JPA-Shutdown bestätigt, PID beendet und Port frei.
+Private Screenshots/JSON-Nachweise unter .gradle/t04-browser-20261121 erhalten
+und ignoriert. Keine Verbindung zu mangalib, keine Migration/Schemaänderung.
+
+Die zuvor offene visuelle Checkliste ist im beschriebenen Umfang abgearbeitet.
+Frühere Hinweise „keine Browserprüfung/Git-Abschluss nicht beauftragt“ sind
+historische Stände. Lokaler T04-Commit jetzt beauftragt; kein Push oder Merge.
+Keine erneuten Tests bei ausschließlich dokumentarischem Abschluss.

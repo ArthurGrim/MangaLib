@@ -297,3 +297,51 @@ test('Alle vorhandenen schreibenden Fetch-Aufrufe verwenden die gemeinsame Hilfe
     assert.match(source(file), /MangaLibFeedback\.request\(/);
   }
 });
+
+test('Abbruch der Reihenanlage verwirft auch zwischengespeicherten Titel und Preis beim Moduswechsel', async t => {
+  const e = await setup(t, {template:'home.html', scripts:['popup_add_reihe.js']});
+  const d = e.w.document;
+  d.getElementById('addButton').click();
+  d.getElementById('titel').value='Alter Importtitel';
+  d.getElementById('preis_pro_band').value='8.50';
+  const mode=d.getElementById('import_mode');
+  mode.value='volume'; mode.dispatchEvent(new e.w.Event('change'));
+  d.querySelector('.cancel-button').click();
+  d.getElementById('addButton').click();
+  mode.value='volume'; mode.dispatchEvent(new e.w.Event('change'));
+  mode.value='series'; mode.dispatchEvent(new e.w.Event('change'));
+  assert.equal(d.getElementById('titel').value,'');
+  assert.equal(d.getElementById('preis_pro_band').value,'');
+  assert.equal(e.calls.length,0);
+});
+
+test('Einkaufs-Monatsbutton übernimmt Monat und Jahr statt des aktuellen Jahres', async t => {
+  const e = await setup(t, {template:'einkaufsliste.html', scripts:['einkaufsliste.js']});
+  const d=e.w.document;
+  const group=d.querySelector('.monats-container');
+  group.querySelector('.monats-name').textContent='November 2025';
+  // Thymeleaf rendert die dynamischen Jahresoptionen im echten Response.
+  d.querySelector('.jahr-select').append(new e.w.Option('2025','2025'));
+  group.querySelector('.add-button').click();
+  assert.equal(d.querySelector('.monat-select').value,'11');
+  assert.equal(d.querySelector('.jahr-select').value,'2025');
+  d.querySelector('.loading-label').style.display='block';
+  d.querySelector('.cancel-button').click();
+  assert.equal(d.querySelector('.loading-label').style.display,'none');
+  assert.equal(e.calls.length,0);
+});
+
+test('Späte Reihen-Autofillantwort nach Indexänderung überschreibt keine Formulareingaben', async t => {
+  const e=await setup(t,{template:'home.html',scripts:['popup_add_reihe.js']});
+  const d=e.w.document; let resolve;
+  e.w.fetch=()=>new Promise(r=>{resolve=r;});
+  d.getElementById('manga_index').value='900001';
+  d.querySelector('.mp-autofill-button').click();
+  d.getElementById('manga_index').value='900002';
+  d.getElementById('manga_index').dispatchEvent(new e.w.Event('input'));
+  d.getElementById('titel').value='Meine neue Eingabe';
+  resolve({ok:true,status:200,headers:new Headers({'Content-Type':'application/json'}),json:async()=>({Titel:'Alte Antwort','Deutsche Ausgabe Bände':'2','Band 1 Preis':'8.50'})});
+  for(let i=0;i<8;i++) await new Promise(r=>setImmediate(r));
+  assert.equal(d.getElementById('titel').value,'Meine neue Eingabe');
+  assert.equal(d.querySelector('.loading-label').style.display,'none');
+});

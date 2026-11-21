@@ -24,6 +24,12 @@ document.addEventListener("DOMContentLoaded", function () {
   let seriesTitle = "";
   let seriesPrice = "";
   let importRevision = 0;
+  mangaIndexInput.addEventListener("input", () => {
+    importRevision++;
+    scrapedData = {};
+    previewIndex = "";
+    hideLoading();
+  });
 
   importMode.addEventListener("change", () => {
     const title = popupContainer.querySelector("#titel");
@@ -385,6 +391,8 @@ document.addEventListener("DOMContentLoaded", function () {
   function resetPopupFields() {
     scrapedData = {};
     seriesVolumeCount = "";
+    seriesTitle = "";
+    seriesPrice = "";
     // Zurücksetzen aller Eingabefelder
     document
       .querySelectorAll(

@@ -61,7 +61,7 @@
             >
             <div th:each="items : ${itemsByMonth}">
               <a
-                th:href="'#' + ${items.key}"
+                th:href="${'#' + #strings.replace(items.key, ' ', '-')}"
                 th:text="${items.key}"
                 class="nav-link"
               ></a>
@@ -82,7 +82,7 @@
       <div th:each="items : ${itemsByMonth}">
         <!-- Initialisieren der Summenvariablen für jeden Monat -->
         <span th:with="gesamtBaende=0, gesamtPreis=0" th:remove="tag"></span>
-        <div class="monats-container" th:id="${items.key}">
+        <div class="monats-container" th:id="${#strings.replace(items.key, ' ', '-')}">
           <div class="monats-header">
             <!-- Button zum Hinzufügen neuer Reihen -->
             <button type="button" class="add-button" title="Hinzufügen">
@@ -343,7 +343,7 @@
                 <select name="jahrFilter" class="jahr-select">
                   <option hidden="" value="">Jahr</option>
                   <option
-                    th:each="jahr : ${#numbers.sequence(T(java.time.Year).now().getValue(), T(java.time.Year).now().getValue() + 1)}"
+                    th:each="jahr : ${#numbers.sequence(T(java.time.Year).now().getValue() - 1, T(java.time.Year).now().getValue() + 1)}"
                     th:value="${jahr}"
                     th:text="${jahr}"
                   ></option>

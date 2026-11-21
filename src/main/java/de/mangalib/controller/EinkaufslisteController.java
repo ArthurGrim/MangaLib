@@ -85,7 +85,8 @@ public class EinkaufslisteController {
         // überprüfen
         LocalDate currentDate = LocalDate.now();
         for (int i = -12; i <= 6; i++) { // -12 für die letzten 12 Monate, 6 für die kommenden Monate
-            LocalDate month = currentDate.plusMonths(i);
+            java.time.YearMonth period = java.time.YearMonth.from(currentDate).plusMonths(i);
+            LocalDate month = period.atDay(1);
             List<EinkaufslisteItem> items = einkaufslisteService.getItemsForMonth(month);
 
             if (items != null && !items.isEmpty()) {
@@ -93,7 +94,8 @@ public class EinkaufslisteController {
                 boolean allItemsBought = items.stream().allMatch(item -> Boolean.TRUE.equals(item.getGekauft()));
 
                 if (!allItemsBought) {
-                    String monthName = getGermanMonthName(month.getMonthValue());
+                    // Derselbe Monatsname in zwei Jahren darf keine Gruppe überschreiben.
+                    String monthName = getGermanMonthName(period.getMonthValue()) + " " + period.getYear();
                     itemsByMonth.put(monthName, items);
 
 
