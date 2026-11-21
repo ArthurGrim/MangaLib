@@ -274,6 +274,7 @@ public class MainController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
         } catch (Exception e) {
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.STORAGE, e);
             return ResponseEntity.internalServerError().body("Anfrage konnte nicht verarbeitet werden.");
         }
     }
@@ -319,13 +320,13 @@ public class MainController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Ungültige Eingabe."));
         } catch (Exception e) {
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.STORAGE, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/getMangaReiheData/{id}")
     public ResponseEntity<Map<String, Object>> getMangaReiheData(@PathVariable Long id) {
-        System.out.println("------------------------------Edit ID: " + id);
         Optional<MangaReihe> mangaReiheOpt = mangaReiheService.findById(id);
 
         if (!mangaReiheOpt.isPresent()) {
@@ -369,7 +370,6 @@ public class MainController {
                 response.put("istSammelband", true);
                 response.put("sammelbandTypId", details.getSammelbaende().getId());
                 response.put("sammelbandTyp", details.getSammelbaende().getTyp());
-                System.out.println("IstSammelband: " + response.get("istSammelband"));
             } else {
                 response.put("istSammelband", false);
                 response.put("sammelbandTypId", null);
@@ -461,6 +461,7 @@ public class MainController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.STORAGE, e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -488,6 +489,7 @@ public class MainController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Ungültige Eingabe."));
         } catch (Exception e) {
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.STORAGE, e);
             return ResponseEntity.internalServerError().build();
         }
     }

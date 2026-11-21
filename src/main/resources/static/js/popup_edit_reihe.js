@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".edit-button").forEach((button) => {
     button.addEventListener("click", function () {
       var mangaReiheId = this.getAttribute("data-id");
-      console.log("MangaReihe ID:", mangaReiheId);
+
       openEditPopup(mangaReiheId);
     });
   });
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".MP-button").forEach((button) => {
     button.addEventListener("click", function () {
       var mangaReiheId = this.getAttribute("data-id");
-      console.log("MangaReihe ID:", mangaReiheId);
+
       openMangaPassion(mangaReiheId);
     });
   });
@@ -21,12 +21,12 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".AL-button").forEach((button) => {
     button.addEventListener("click", function () {
       var mangaReiheId = this.getAttribute("data-id");
-      console.log("MangaReihe ID:", mangaReiheId);
+
       openAniList(mangaReiheId);
     });
   });
 
-  console.log("Skript geladen");
+
 
   let scrapedData = {};
   // Eine Checkbox kann NULL nicht darstellen. Unberührte unbekannte Werte erhalten;
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Event-Handler, um das Pop-up zu verbergen
   cancelButton.addEventListener("click", function () {
-    console.log("Cancel button clicked");
+
     editpopupContainer.style.display = "none";
   });
 
@@ -72,11 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Funktion zum Aktualisieren der Sichtbarkeit
   function updateVisibility() {
-    console.log(
-      "Update Visibility:",
-      istEbayPreisCheckbox.checked,
-      istSammelbandCheckbox.checked
-    );
+
     gesamtpreisAenderungFeld.style.display = istEbayPreisCheckbox.checked
       ? "block"
       : "none";
@@ -100,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
   istSammelbandCheckbox.addEventListener("change", updateVisibility);
 
   function openEditPopup(mangaReiheId) {
-    console.log("Edit-Button geklickt für MangaReihe ID: ", mangaReiheId);
+
 
     // Senden einer Anfrage an den Server, um die Daten der MangaReihe zu erhalten
     fetch(`/getMangaReiheData/${mangaReiheId}`)
@@ -114,10 +110,10 @@ document.addEventListener("DOMContentLoaded", function () {
         changedFlags.clear();
         document.getElementById("apply-read-edit").checked = false;
         document.getElementById("apply-reread-edit").checked = false;
-        console.log("Empfangene Daten:", data);
+
         // Setzen der Werte in die Formularfelder
         document.getElementById("id-edit").textContent = data.id;
-        console.log("ID: " + data["id"]);
+
         mangaLibSetCover(document.getElementById("editCoverImage"), data["bildUrl"]);
         document.getElementById("editTitleLabel").textContent = data.titel;
         document.getElementById("manga_index-edit").value =
@@ -148,11 +144,8 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("gesamtpreis_aenderung-edit").value = data.gesamtpreisAenderung ?? "";
         document.getElementById("sammelband_typ-edit").value =
           data.sammelbandTypId;
-        console.log("SammelbandID " + data.sammelbandTypId);
-        console.log(
-          "Select Element Inhalt:",
-          document.getElementById("sammelband_typ-edit").innerHTML
-        );
+
+
 
         updateVisibility();
         // Pop-up anzeigen
@@ -187,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Event-Handler, für den MangaPassion-Autofill Button
   autofillButton.addEventListener("click", function () {
-    console.log("Der MP-Autofill Button wurde gedrückt");
+
     const mangaIndex = mangaIndexInput.value.trim();
 
     // Validierung des Manga-Index
@@ -195,7 +188,7 @@ document.addEventListener("DOMContentLoaded", function () {
       MangaLibFeedback.show(editpopupContainer, "Bitte geben Sie einen gültigen Manga-Index ein.");
       return;
     }
-    console.log("Der MangaIndex ist", mangaIndex);
+
 
     MangaLibFeedback.clear(editpopupContainer);
     // Anzeigen des Lade-Labels
@@ -210,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
       body: JSON.stringify({ mangaIndex: mangaIndex }),
     }, editpopupContainer, { persist: false })
       .then((data) => {
-        console.log("Gescrapte Daten", data);
+
         // Daten in die Eingabefelder und Selects einfügen
         document.querySelector("#verlag-edit").value = data["verlagId"];
         document.querySelector("#typ-edit").value = data["typId"];
@@ -254,7 +247,7 @@ document.addEventListener("DOMContentLoaded", function () {
   saveButton.addEventListener("click", function (event) {
     event.preventDefault(); // Verhindert das Standardverhalten des Formulars
     MangaLibFeedback.clear(editpopupContainer);
-    console.log("Save-Button geklickt");
+
 
     // Eingabefelder und Selects auslesen
     const mangaReiheIdLabel = document.querySelector("#id-edit");
@@ -321,20 +314,20 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    console.log("Ausgelesene Werte:");
-    console.log("MangaIndex: ", mangaIndex);
-    console.log("VerlagID: ", verlagId);
-    console.log("TypId: ", typId);
-    console.log("FormatId: ", formatId);
-    console.log("Titel: ", titel);
-    console.log("Anzahl Baende: ", anzahlBaende);
-    console.log("anilistUrl: ", anilistUrl);
-    console.log("istGelesen: ", istGelesen);
-    console.log("istVergriffen: ", istVergriffen);
-    console.log("istEbayPreis: ", istEbayPreis);
-    console.log("istSammelband: ", istSammelband);
-    console.log("sammelbandTypId: ", sammelbandTypId);
-    console.log("reread: ", reread);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     scrapedData["istEdit"] = "true";
 
@@ -379,7 +372,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Loggen der zu sendenden Daten
-    console.log("Zu sendende Daten:", mangaReiheData);
+
 
     // Daten senden mit Fetch-API
     MangaLibFeedback.request("/addMangaReihe", {
@@ -407,7 +400,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Zum öffnen der entsprechenden Manga Passion Seite zur MangaReihe
   function openMangaPassion(mangaReiheId) {
-    console.log("Edit-Button geklickt für MangaReihe ID: ", mangaReiheId);
+
 
     // Senden einer Anfrage an den Server, um die Daten der MangaReihe zu erhalten
     fetch(`/getMangaReiheData/${mangaReiheId}`)
@@ -421,13 +414,13 @@ document.addEventListener("DOMContentLoaded", function () {
           );
       })
       .catch((error) => {
-        console.error("Fehler beim Abrufen der MangaReihe-Daten:", error);
+        console.error("MangaLib: Aktion fehlgeschlagen.");
       });
   }
 
   //Zum öffnen der entsprechenden AniList Seite zur MangaReihe
   function openAniList(mangaReiheId) {
-    console.log("Edit-Button geklickt für MangaReihe ID: ", mangaReiheId);
+
 
     // Senden einer Anfrage an den Server, um die Daten der MangaReihe zu erhalten
     fetch(`/getMangaReiheData/${mangaReiheId}`)
@@ -437,7 +430,7 @@ document.addEventListener("DOMContentLoaded", function () {
         else window.open(data.anilistUrl, "_blank");
       })
       .catch((error) => {
-        console.error("Fehler beim Abrufen der MangaReihe-Daten:", error);
+        console.error("MangaLib: Aktion fehlgeschlagen.");
       });
   }
 });

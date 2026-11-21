@@ -98,32 +98,26 @@ public class MangaDetailsService {
         MangaDetails details = new MangaDetails();
         details.setMangaReihe(savedMangaReihe);
         if (anilistUrl != null) {
-            System.out.println("Setze Anilist Url");
             details.setAnilistUrl(anilistUrl);
         }
         if (sammelbandTypId != null) {
             Sammelband sammelband = sammelbaendeService.findById(sammelbandTypId)
                     .orElseThrow(() -> new IllegalArgumentException("Ungültige Referenz."));
             details.setSammelbaende(sammelband);
-            System.out.println("SammelbandID: " + details.getSammelbaende().getId());
         } else {
             Sammelband defaultSammelband = sammelbaendeService.findById(1L).orElse(null);
             details.setSammelbaende(defaultSammelband);
         }
         if (istGelesen != null) {
-            System.out.println("Setze Gelesenstatus");
             details.setIstGelesen(istGelesen);
         }
         if (scrapedData.containsKey("Band 1 Bild Url")) {
-            System.out.println("Setze Cover Url");
             details.setCoverUrl(scrapedData.get("Band 1 Bild Url"));
         }
         if (scrapedData.containsKey("Deutsche Ausgabe Status")) {
-            System.out.println("Setze Deutschen Status");
             details.setStatusDe(String.valueOf(scrapedData.get("Deutsche Ausgabe Status")));
         }
         if (scrapedData.containsKey("Deutsche Ausgabe Bände")) {
-            System.out.println("Setze Anzahl in Deutschland erschienender Bände");
             try {
                 if (scrapedData.get("Deutsche Ausgabe Bände") != null) {
                     String baendeString = scrapedData.get("Deutsche Ausgabe Bände").replace("+", "").trim();
@@ -136,15 +130,12 @@ public class MangaDetailsService {
             }
         }
         if (scrapedData.containsKey("Erstveröffentlichung Status")) {
-            System.out.println("Setze Status Erstveröffentlichung");
             details.setStatusErstv(String.valueOf(scrapedData.get("Erstveröffentlichung Status")));
         }
         if (scrapedData.containsKey("Erstveröffentlichung Herkunft")) {
-            System.out.println("Setze Herkunftsland");
             details.setHerkunft(String.valueOf(scrapedData.get("Erstveröffentlichung Herkunft")));
         }
         if (scrapedData.containsKey("Erstveröffentlichung Startjahr")) {
-            System.out.println("Setze Erscheinungsjahr");
             try {
                 details.setStartJahr(Integer.parseInt(scrapedData.get("Erstveröffentlichung Startjahr")));
             } catch (NumberFormatException e) {
@@ -152,9 +143,7 @@ public class MangaDetailsService {
             }
         }
         if (scrapedData.containsKey("Erstveröffentlichung Bände")) {
-            System.out.println("Setze Anzahl Bände der Erstveröffentlichung");
             try {
-                System.out.println(scrapedData.get("Erstveröffentlichung Bände"));
                 String baendeString = scrapedData.get("Erstveröffentlichung Bände").replace("+", "").trim();
                 details.setAnzahlBaendeErstv(Integer.parseInt(baendeString));
             } catch (Exception e) {

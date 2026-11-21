@@ -23,7 +23,6 @@ public class MangaScraper {
         String baseUrl = "https://www.manga-passion.de";
         String url = ScraperDestinationPolicy.series(mangaIndex).toASCIIString();
 
-        System.out.println("Scraping URL: " + url);
 
         Map<String, String> mangaData = new HashMap<>();
         WebDriver driver = setupWebDriver();
@@ -40,18 +39,14 @@ public class MangaScraper {
                 WebElement denyAllButton = wait
                         .until(ExpectedConditions.elementToBeClickable(By.id("consent-deny-all")));
                 denyAllButton.click();
-                System.out.println("Cookie-Banner geschlossen.");
             } catch (Exception e) {
-                System.out.println("Kein Cookie-Banner gefunden.");
             }
 
             // ✅ Titel auslesen
             try {
                 WebElement titleElement = driver.findElement(By.cssSelector("h1"));
                 mangaData.put("Titel", safeText(titleElement));
-                System.out.println("Titel: " + safeText(titleElement));
             } catch (Exception e) {
-                System.out.println("Titel konnte nicht gefunden werden.");
             }
 
             // ✅ Info-Blöcke (Deutsche Ausgabe / Erstveröffentlichung / ggf. weitere) robust
@@ -117,7 +112,6 @@ public class MangaScraper {
                         String key = blockTitle + " " + label;
                         mangaData.put(key, value);
 
-                        System.out.println(key + ": " + value);
 
                     } catch (Exception ignored) {
                         // einzelne Zeilen überspringen, Scrape nicht abbrechen
@@ -184,12 +178,9 @@ public class MangaScraper {
                     mangaData.put("Band " + bandNummer + " Bild Url", bildUrl);
                     mangaData.put("Band " + bandNummer + " Preis", preis);
 
-                    System.out.println("Band " + bandNummer + ": " + href + ", Bild: " + bildUrl + ", Preis: " + preis);
                     bandNummer++;
 
                 } catch (Exception e) {
-                    System.out.println("Fehler beim Lesen eines Bandes (Band " + bandNummer + "): "
-                            + e.getClass().getSimpleName() + " - " + e.getMessage());
                 }
             }
 
@@ -258,7 +249,6 @@ public class MangaScraper {
             }
         }
 
-        System.out.println("Finale Manga-Daten: " + mangaData);
         return mangaData;
     }
 
@@ -277,6 +267,6 @@ public class MangaScraper {
     public static void main(String[] args) {
         String mangaIndex = "2502"; // Einzelband-Beispiel
         Map<String, String> mangaData = scrapeMangaData(mangaIndex);
-        mangaData.forEach((key, value) -> System.out.println(key + ": " + value));
+
     }
 }

@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("Skript geladen");
+
 
   let scrapedData = {};
 
@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Event-Handler, um das Pop-up anzuzeigen
   addButton.addEventListener("click", function () {
-    console.log("Add-Button geklickt");
+
     MangaLibFeedback.clear(popupContainer);
     popupContainer.style.display = "flex";
   });
@@ -228,7 +228,7 @@ document.addEventListener("DOMContentLoaded", function () {
   saveButton.addEventListener("click", function (event) {
     event.preventDefault(); // Verhindert das Standardverhalten des Formulars
     MangaLibFeedback.clear(popupContainer);
-    console.log("Save-Button geklickt");
+
 
     // Eingabefelder und Selects auslesen
     const mangaIndex = document.querySelector("#manga_index").value.trim();
@@ -319,22 +319,22 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    console.log("Ausgelesene Werte:");
-    console.log("MangaIndex: ", mangaIndex);
-    console.log("VerlagID: ", verlagId);
-    console.log("TypId: ", typId);
-    console.log("FormatId: ", formatId);
-    console.log("Titel: ", titel);
-    console.log("Anzahl Baende: ", anzahlBaende);
-    console.log("preisProBand: ", preisProBand);
-    console.log("anilistUrl: ", anilistUrl);
-    console.log("istGelesen", istGelesen);
-    console.log("istVergriffen: ", istVergriffen);
-    console.log("istEbayPreis: ", istEbayPreis);
-    console.log("gesamtpreisAenderung: ", gesamtpreisAenderung);
-    console.log("istSammelband: ", istSammelband);
-    console.log("sammelbandTypId: ", sammelbandTypId);
-    console.log("reread: ", reread);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     scrapedData["istEdit"] = "false";
 
@@ -360,7 +360,7 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     // Loggen der zu sendenden Daten
-    console.log("Zu sendende Daten:", mangaReiheData);
+
 
     // Daten senden mit Fetch-API
     save(mangaReiheData);
@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", function () {
       body: JSON.stringify(data),
     }, popupContainer)
       .then((data) => {
-        console.log("Antwort vom Server:", data); // Erfolgsmeldung oder Datenverarbeitung
+
         // Schließen des Popups
         document.querySelector("#popupContainer").style.display = "none";
         resetPopupFields();

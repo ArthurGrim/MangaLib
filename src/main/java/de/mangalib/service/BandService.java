@@ -255,7 +255,6 @@ public class BandService {
         var prices = newPrices(1, anzahlBaende, preisProBand, scrapedData);
         var adjustments = Money.distribute(gesamtpreisAenderung, anzahlBaende);
         Money.amount(prices.stream().reduce(BigDecimal.ZERO, BigDecimal::add).add(gesamtpreisAenderung));
-        System.out.println("createAndSaveBaende Aenderung Gesamtpreis: " + gesamtpreisAenderung);
         for (int i = 1; i <= anzahlBaende; i++) {
             Band band = new Band();
             band.setMangaReihe(mangaReihe);
@@ -310,20 +309,17 @@ public class BandService {
                 if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
                     BigDecimal aenderungPreis = adjustments.get(i - 1);
                     band.setAenderungPreis(aenderungPreis);
-                    System.out.println("Änderung Preis: " + aenderungPreis + " für Band: " + i);
                 } else {
                     band.setAenderungPreis(new BigDecimal(0));
                 }
 
             } catch (MalformedURLException e) {
-                e.printStackTrace();
+                de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.LEGACY_VALUE, e);
             } catch (URISyntaxException e) {
-                e.printStackTrace();
+                de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.LEGACY_VALUE, e);
             }
 
-            System.out.println("Es wird ein neuer Band für eine neue Reihe erzeugt!");
             bandRepository.save(band);
-            System.out.println("Band gespeichert: " + band.getBandNr() + ", ID: " + band.getId());
         }
     }
 
@@ -413,15 +409,12 @@ public class BandService {
             }
             Money.amount(total);
         }
-        System.out.println("Anzahl existierender Bände: " + existierendeAnzahl);
-        System.out.println("Anzahl Bände: " + anzahlBaende);
 
         for (int i = appendOnly ? existierendeAnzahl + 1 : 1; i <= anzahlBaende; i++) {
             Band band;
             if (i <= existierendeAnzahl) {
                 // Aktualisieren eines existierenden Bandes
                 band = inventory.get(i);
-                System.out.println("Aktualisiere existierenden Band: " + band.getBandNr());
                 // Aktualisieren des Preises, wenn die Anzahl der Bände sich nicht geändert hat
                 if (!anzahlBaendeChanged) {
                     if (changePrice) {
@@ -438,7 +431,6 @@ public class BandService {
                 band.setBandNr(i);
                 if (readingHistory != null) band.setReread(0);
                 band.setIstGelesen(false);
-                System.out.println("Es wurde ein neuer Band erstellt mit der Nr.:" + i);
                 band.setPreis(preisProBand);
             }
 
@@ -447,7 +439,6 @@ public class BandService {
             String preisKey = "Band " + i + " Preis";
 
             try {
-                System.out.println("Hat BildURL Key: " + scrapedData.containsKey(bildUrlKey));
                 // Fuege den Link zum Bild bei den ersten 5 Baenden ein
                 if (scrapedData.containsKey(bildUrlKey)) {
                     if (band.getBildUrl() == null || !scrapedData.get(bildUrlKey)
@@ -466,8 +457,6 @@ public class BandService {
                     if (band.getMpUrl() == null || !scrapedData.get(mpUrlKey)
                             .equals(band.getMpUrl().toString() != null ? band.getMpUrl().toString() : "")) {
                         String mpUrlString = scrapedData.get(mpUrlKey);
-                        System.out
-                                .println("MP Url String existiert: " + (mpUrlString != null && !mpUrlString.isEmpty()));
                         if (mpUrlString != null && !mpUrlString.isEmpty()) {
                             // Extrahiere den Index aus dem Link
                             Pattern pattern = Pattern.compile("volumes/(\\d+)");
@@ -475,7 +464,6 @@ public class BandService {
                             if (matcher.find()) {
                                 int bandIndex = Integer.parseInt(matcher.group(1));
                                 band.setBandIndex(bandIndex);
-                                System.out.println("Band Index gesetzt auf: " + bandIndex);
                             }
 
                             URI mpUri = new URI(mpUrlString);
@@ -492,36 +480,30 @@ public class BandService {
                             band.setPreis(prices.get(i - existierendeAnzahl - 1));
                         } catch (NumberFormatException e) {
                             band.setPreis(preisProBand);
-                            System.out.println("Fehler beim Setzen des Preises für Band " + i);
-                            e.printStackTrace();
+                            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.LEGACY_VALUE, e);
                         }
                     } else {
                         band.setPreis(preisProBand);
-                        System.out.println("Setze Standardpreis: " + preisProBand);
                     }
                 }
 
                 if (i > existierendeAnzahl) {
                     // Setzt AenderungGesamtpreis, wenn vorhanden
-                    System.out.println("GesamtpreisAenderung: " + gesamtpreisAenderung + " größer als 0: "
-                            + (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0));
                     if (gesamtpreisAenderung.compareTo(BigDecimal.ZERO) != 0) {
                         BigDecimal aenderungPreis = adjustments.get(i - existierendeAnzahl - 1);
                         band.setAenderungPreis(aenderungPreis);
-                        System.out.println("Änderung Preis: " + aenderungPreis + " für Band: " + i);
                     } else {
                         band.setAenderungPreis(new BigDecimal(0));
                     }
                 }
 
             } catch (MalformedURLException e) {
-                e.printStackTrace();
+                de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.LEGACY_VALUE, e);
             } catch (URISyntaxException e) {
-                e.printStackTrace();
+                de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.LEGACY_VALUE, e);
             }
 
             bandRepository.save(band);
-            System.out.println("Band gespeichert: " + band.getBandNr() + ", ID: " + band.getId());
         }
     }
 
@@ -601,7 +583,6 @@ public class BandService {
                     && !WriteValidation.sameMoney(bandData.getAenderungPreis(), band.getAenderungPreis())) {
                 preisChanged = true;
                 band.setAenderungPreis(bandData.getAenderungPreis());
-                System.out.println("AenderungPreis: " + bandData.getAenderungPreis());
             }
             if (bandData.getBildUrl() != null && !WriteValidation.sameUrl(bandData.getBildUrl(), band.getBildUrl())) {
                 band.setBildUrl(bandData.getBildUrl());
@@ -626,20 +607,13 @@ public class BandService {
             if (readingHistory != null) readingHistory.recordTransition(band, previouslyRead);
             MangaReihe mangaReihe = band.getMangaReihe();
             if (financialChange) {
-                System.out.println("Alte Aenderung Gesamtpreis: " + mangaReihe.getAenderungGesamtpreis());
                 BigDecimal neueAenderungGesamtpreis = calculateAenderungGesamtpreis(mangaReihe);
-                System.out.println("Neue Aenderung Gesamtpreis: " + neueAenderungGesamtpreis);
                 mangaReihe.setAenderungGesamtpreis(neueAenderungGesamtpreis);
-                System.out.println("Aenderung Gesamtpreis gesetzt auf: " + mangaReihe.getAenderungGesamtpreis());
-                System.out.println("Alter Gesamtpreis: " + mangaReihe.getGesamtpreis());
                 BigDecimal neuerGesamtpreis = calculateGesamtpreis(mangaReihe);
-                System.out.println("Neuer Gesamtpreis: " + neuerGesamtpreis);
                 mangaReihe.setGesamtpreis(neuerGesamtpreis);
-                System.out.println("Gesamtpreis gesetzt auf: " + mangaReihe.getGesamtpreis());
 
                 // Nur aktualisieren, wenn sich der Preis geändert hat
                 if (preisChanged) {
-                    System.out.println("Preis Pro Band wird neu berechnet");
                     mangaReihe.setPreisProBand(
                             Money.mean(neuerGesamtpreis, inventory.size()));
                 }

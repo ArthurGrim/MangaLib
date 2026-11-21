@@ -81,7 +81,6 @@ public class VerlagService {
     }
 
     public Long findVerlagIdByName(String bezeichnung) {
-        System.out.println(bezeichnung);
         return verlagRepository.findByName(bezeichnung)
                 .map(Verlag::getVerlagId)
                 .orElse(null); // oder eine Standard-ID zurückgeben

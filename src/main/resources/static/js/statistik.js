@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOMContentLoaded event fired");
+
   
     // Erstes Diagramm: Bar Chart für Bandkategorien
     fetch("/statistik/bandKategorien")
       .then((response) => response.json())
       .then((data) => {
-        console.log("Bandkategorien-Daten erhalten:", data);
+
         
         const reihenKategorien = [
           "1 Band",
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
           xAxis.appendChild(label);
         });
       })
-      .catch((error) => console.error("Fehler beim Laden der Daten:", error));
+      .catch((error) => console.error("MangaLib: Aktion fehlgeschlagen."));
   
     // Zweites Diagramm: Liniendiagramm für Monatsdaten
     const yearSelector = document.getElementById("yearSelector");
@@ -70,26 +70,26 @@ document.addEventListener("DOMContentLoaded", function () {
     let chartRequest = 0;
   
     populateYearSelector();
-    console.log("Loading chart data initially");
+
     loadChartData(currentYear, currentType);
   
     yearSelector.addEventListener("change", function () {
       currentYear = yearSelector.value;
-      console.log("Year changed, loading chart data");
+
       loadChartData(currentYear, currentType);
     });
   
     optionBands.addEventListener("click", function () {
       currentType = "baende";
       setActiveOption(optionBands, optionSpending);
-      console.log("Option switched to bands, loading chart data");
+
       loadChartData(currentYear, currentType);
     });
   
     optionSpending.addEventListener("click", function () {
       currentType = "geld";
       setActiveOption(optionSpending, optionBands);
-      console.log("Option switched to spending, loading chart data");
+
       loadChartData(currentYear, currentType);
     });
   
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
   
     function loadChartData(year, type) {
       const request = ++chartRequest;
-      console.log(`Fetching data for year: ${year}, type: ${type}`);
+
       fetch(`/statistik/monatsdaten?jahr=${year}&typ=${type}`)
         .then((response) => {
           if (!response.ok) throw new Error("Monatsdaten nicht verfügbar");
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then((data) => {
           if (request !== chartRequest) return;
-          console.log("Monatsdaten erhalten:", data);
+
           renderChart(data, type === "geld"); // Übergebe true für Geld ausgegeben
         })
         .catch(() => {

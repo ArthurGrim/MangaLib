@@ -1,0 +1,27 @@
+<configuration>
+    <!-- Keine Payloads/SQL oder fremden Exceptiontexte; Level bleiben extern konfigurierbar. -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="de.mangalib.diagnostics.DiagnosticEncoder"/>
+    </appender>
+    <springProfile name="!test &amp; !manual-test">
+        <springProperty name="LOG_DIRECTORY" source="mangalib.diagnostics.directory" defaultValue="${user.home}/.mangalib/logs"/>
+        <springProperty name="LOG_FILE_SIZE" source="mangalib.diagnostics.file-size" defaultValue="10MB"/>
+        <springProperty name="LOG_ARCHIVE_SIZE" source="mangalib.diagnostics.archive-size" defaultValue="90MB"/>
+        <springProperty name="LOG_HISTORY" source="mangalib.diagnostics.history-days" defaultValue="14"/>
+        <springProperty name="LOG_BUDGET" source="mangalib.diagnostics.total-budget-bytes" defaultValue="104857600"/>
+        <appender name="PRIVATE" class="de.mangalib.diagnostics.PrivateRollingFileAppender">
+            <file>${LOG_DIRECTORY}/mangalib.log</file>
+            <totalBudgetBytes>${LOG_BUDGET}</totalBudgetBytes>
+            <encoder class="de.mangalib.diagnostics.DiagnosticEncoder"/>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_DIRECTORY}/mangalib.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>${LOG_FILE_SIZE}</maxFileSize>
+                <maxHistory>${LOG_HISTORY}</maxHistory>
+                <totalSizeCap>${LOG_ARCHIVE_SIZE}</totalSizeCap>
+                <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            </rollingPolicy>
+        </appender>
+        <root level="INFO"><appender-ref ref="PRIVATE"/></root>
+    </springProfile>
+    <root level="INFO"><appender-ref ref="CONSOLE"/></root>
+</configuration>

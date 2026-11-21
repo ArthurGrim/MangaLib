@@ -25,7 +25,6 @@ public class BandScraper {
         Map<String, String> bandData = new HashMap<>();
         String fullUrl = ScraperDestinationPolicy.volume(bandIndex).toASCIIString();
 
-        System.out.println("Scraping Band-URL: " + fullUrl);
 
         WebDriver driver = setupWebDriver();
         try {
@@ -38,9 +37,7 @@ public class BandScraper {
             try {
                 WebElement denyAllButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("consent-deny-all")));
                 denyAllButton.click();
-                System.out.println("Cookie-Banner geschlossen.");
             } catch (Exception e) {
-                System.out.println("Kein Cookie-Banner gefunden.");
             }
 
             // Warten bis Seite “inhaltlich” geladen ist
@@ -54,7 +51,6 @@ public class BandScraper {
                     bandData.put("Titel", title);
                     var number = java.util.regex.Pattern.compile(",\\s*Band\\s+([1-9][0-9]*)$").matcher(title);
                     if (number.find()) bandData.put("Bandnummer", number.group(1));
-                    System.out.println("Titel: " + title);
                 }
             } catch (Exception ignored) { }
 
@@ -81,10 +77,8 @@ public class BandScraper {
 
                 if (bildUrl != null && !bildUrl.isBlank()) {
                     bandData.put("BildUrl", bildUrl);
-                    System.out.println("BildUrl: " + bildUrl);
                 }
             } catch (Exception e) {
-                System.out.println("Cover/Bild konnte nicht extrahiert werden: " + e.getMessage());
             }
 
             // ✅ Info-Blöcke robust auslesen (wie bei MangaScraper)
@@ -98,7 +92,6 @@ public class BandScraper {
                 String fallbackPreis = tryExtractPriceFallback(driver, wait);
                 if (!isBlank(fallbackPreis)) {
                     bandData.put("Preis", fallbackPreis);
-                    System.out.println("Preis (Fallback): " + fallbackPreis);
                 }
             }
 
@@ -175,7 +168,6 @@ public class BandScraper {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Info-Blöcke konnten nicht extrahiert werden: " + e.getMessage());
         }
     }
 
@@ -248,6 +240,6 @@ public class BandScraper {
     public static void main(String[] args) {
         String bandIndex = "15295"; // Beispiel ID
         Map<String, String> bandData = scrapeBandData(bandIndex);
-        bandData.forEach((key, value) -> System.out.println(key + ": " + value));
+
     }
 }

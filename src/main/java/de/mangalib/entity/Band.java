@@ -76,7 +76,7 @@ public class Band {
             this.bildUrl = new URI("https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png?20200912122019").toURL();
         } catch (MalformedURLException | URISyntaxException e) {
             // Loggen Sie den Fehler oder behandeln Sie ihn entsprechend
-            e.printStackTrace();
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.LEGACY_VALUE, e);
         } 
     }
 }

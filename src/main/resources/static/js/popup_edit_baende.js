@@ -5,7 +5,7 @@ let bandSpecialEdited = false;
 document.getElementById("ist_spezial").addEventListener("change", () => { bandSpecialEdited = true; });
 
 function editBand(bandId) {
-  console.log("Editing band with ID:", bandId);
+
   fetch(`/getBand/${bandId}`) // Korrigieren Sie den Pfad hier
     .then((response) => {
       if (response.ok === false) throw new Error("Bestand nicht verfügbar");
@@ -16,7 +16,7 @@ function editBand(bandId) {
       bandRereadUnknown = data.rereadNull === true;
       bandSpecialUnknown = data.specialNull === true;
       bandSpecialEdited = false;
-      console.log("Fetched data for band:", data);
+
       mangaLibSetCover(document.getElementById("editBandCoverImage"), data.bildUrl);
       document.getElementById("manga_reihe_id").textContent = data.id;
       document.getElementById("band_nr").textContent = data.bandNr;
@@ -129,7 +129,7 @@ function saveBand() {
   }, document.getElementById("editBaendePopupContainer"), { empty: 204 })
     .then((data) => {
       if (data) {
-        console.log("Success:", data);
+
       }
       // Schließen des Popups
       document.querySelector("#editBaendePopupContainer").style.display =
@@ -165,7 +165,7 @@ function autofillBandData() {
     MangaLibFeedback.show(document.getElementById("editBaendePopupContainer"), "Bitte geben Sie einen gültigen Manga-Index ein.");
     return;
   }
-  console.log("Der MangaIndex ist", bandIndex);
+
 
   MangaLibFeedback.clear(document.getElementById("editBaendePopupContainer"));
   // Anzeigen des Lade-Labels
@@ -173,7 +173,7 @@ function autofillBandData() {
 
   MangaLibFeedback.request(`/autofillBandData/${bandIndex}`, { method: "POST" }, document.getElementById("editBaendePopupContainer"), { persist: false })
     .then((data) => {
-      console.log("Autofilled data:", data); // Log hinzugefügt
+
       document.getElementById("bild_url").value = data.BildUrl; // Schlüssel angepasst
       mangaLibSetCover(document.getElementById("editBandCoverImage"), data.BildUrl); // Schlüssel angepasst
       document.getElementById("preis").value = data["Preis"];

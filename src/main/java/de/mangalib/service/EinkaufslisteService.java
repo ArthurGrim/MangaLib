@@ -192,7 +192,6 @@ public class EinkaufslisteService {
         Sort sort = Sort.by("erscheinungsdatum").ascending();
         
         List<EinkaufslisteItem> items = einkaufslisteRepository.findByErscheinungsdatumBetween(start, end, sort);
-        System.out.println("Startdatum: " + start + ", Enddatum: " + end + ", Anzahl der Items: " + items.size());
         return items;
     }
 
@@ -342,7 +341,6 @@ public class EinkaufslisteService {
         einkaufslistenItemDetails.setAnilistUrl(anilistUrl);
         if (sammelbandTypId != null) {
             einkaufslistenItemDetails.setSammelbaendeId(sammelband);
-            System.out.println(einkaufslistenItemDetails.getSammelbaendeId().getId());
         }
 
         einkaufslistenItemDetails.setCoverUrl(WriteValidation.importedCover(scrapedData));

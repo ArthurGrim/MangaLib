@@ -15272,3 +15272,102 @@ Windows-Nativ- oder Live-Scraper-CI-Lauf hinzugefügt.
 Die abschließende GUI-Abnahme ist in MANUAL_TESTING.md beschrieben. Kein Zugang
 zu `mangalib`, keine Migration/Normalisierung, keine echte Scraperausführung.
 T06-Logging und T07-Bereitstellung nicht vorgezogen. Abschlussmatrix: T05_CLOSEOUT.md.
+## T06 – Erster datenbankfreier Implementierungsstand (21.11.2026)
+
+RequestDiagnosticsFilter ergänzt: servergenerierte UUID statt eingehender IDs,
+neutraler Responseheader X-MangaLib-Request-ID, MDC-Kontext während synchroner
+Requests und Wiederherstellung im finally-Block. Neue Requestlogs enthalten keine
+Pfade, Querys, Bodies oder Clientheader. Unbehandelte Exceptions werden mit einer
+meldungs-/ursachenfreien technischen Stackkopie diagnostiziert; die ursprüngliche
+Exception wird unverändert weitergereicht. HTTP-Abschluss ist kein Commitbeweis.
+
+Browser-console.log-Rohdatenausgaben aus sechs Anwendungsskripten entfernt.
+JavaScript-Syntaxprüfungen und 260 DOM-Tests bestanden. Gezielte Requestdiagnose-
+und TestDatabaseGuard-Tests offline nach identischem Dry-Run erfolgreich im ersten
+Lauf; ergänzte MDC-Regression im anschließenden Lauf separat prüfen.
+
+Noch kein T06-Abschluss: Dateirotation/Aufbewahrungsgrenzen zur Eigentümerentscheidung
+gestellt; Backend-/Workerdiagnoseinventar, behandelte Fehler und Windows-Dateirechte
+weiter zu bearbeiten. Keine neue Datei-Logging-Konfiguration aktiviert, kein realer
+Worker-/Scraper-/Browserstart, kein DB-Zugriff oder Schemaeingriff. Keine Commits.
+## T06 – Implementierung und Abschlussgrenze (21.11.2026)
+
+Der vorstehende erste Implementierungsstand ist historisch überholt:
+Dateilogging/Rotation, Privatberechtigungen, feste Ereignisse und Backendfehler-
+Diagnose sind inzwischen umgesetzt. Anleitung/Konfiguration: T06_LOGGING.md.
+Quellcodeänderungen ausschließlich für Diagnoseausgaben; Guards, Transaktionen,
+Preis-/Lesestatusregeln, IPC-/Job-/Quarantäneverträge und DB-Konfiguration erhalten.
+
+Tatsächliche Prüfungen (alle Gradle-Aufrufe offline/ohne Daemon und jeweils nach
+identischem Dry-Run):
+
+- Gezielte Diagnose-/Guardprüfungen zunächst 50 Fälle. Ein Rolloversimulationstest
+  war anfangs falsch aufgebaut und wurde auf den echten Größen-Trigger umgestellt.
+- Erster Gesamtversuch scheiterte vor Tests an einem Variablennamen im neuen
+  Budgettest. Danach 1.473 Fälle mit zwei Fehlern ausschließlich in neuen Testaufbauten
+  (bereits gesetzter Throwable-Proxy und fehlende Rolling-Policy im Probe-Appender).
+  Nach Korrektur bestand `test`: **1.471 bestanden, 0 Fehler, 2 bestehende Opt-in-Skips**.
+  Dieser grüne Gesamtlauf liegt vor den letzten Ergänzungen für sichere Routenmuster,
+  Importstartmeldungen und Unicode-Loggernamen; nicht als finale Gesamtabnahme ausgeben.
+- Lesende s03SchemaTest-Vorprüfung bestanden, unveränderte Referenz
+  `77fce665515396821a2fb21f36f074a3abccdac48de04c09f1f065be1c9e814f`.
+  Noch kein neuer globaler Nachher-Fingerabdruck nach den Gesamtläufen; einzelne
+  bestehende Erhaltungsassertions im grünen Gesamtlauf ersetzen diesen nicht.
+- Endstand mit getrennten Artefaktausgaben paketiert; **94 Manual-Schutztests und
+  20 datenbankfreie produktive Scraper-Paket-/Transportfakes bestanden**, ohne Skips.
+  Keine Worker-/Firefox-/Proxy-/HTTP-Starts. Neue Artefakte nur unter ignoriertem
+  .gradle/t06-validation; alle sechs historischen Manual-JARs hashgleich erhalten.
+- DOM-Suite nach Entfernung auch roher console.error-Argumente: **260 bestanden,
+  0 Fehler/Skips**; JavaScript-Syntaxprüfungen erfolgreich. Keine GUI-Änderung oder
+  Speicherung im Browser, daher keine neue Browserabnahme durchgeführt.
+- Finale isolierte Diagnose-/Guardprüfung schließt Request-ID/MDC, echte Rotation
+  und Eigentümerrechte unter temporärem Pfad, Ausfall/Budgeterschöpfung, begrenzte
+  Encodergröße, Unicode-/CRLF-/Secret-Schutz und beide gemockten Importwege ein.
+  Der direkte Request-zu-Import-Korrelationsnachweis wurde zuletzt zusätzlich ergänzt.
+
+Eine erneute finale Kombination aus `test`, Manual-Schutz und Paketprüfung wurde
+von der automatischen Freigabeprüfung **vor Ausführung** abgelehnt: neue ausdrückliche
+Freigabe für den DB-fähigen Gesamttask erforderlich. Stattdessen ausschließlich
+gefilterte datenbankfreie Tests/Paketfakes durchgeführt. Keine Umgehung, keine
+erneute DB-Verbindung nach dieser Sperre. Für den Abschluss benötigt werden der
+vollständige geschützte Lauf ausschließlich auf mangalib_test und lesender globaler
+Vorher-/Nachher-Fingerabdruck, AUTO_INCREMENT weiterhin ausgenommen.
+
+Keine Produktions-/Manual-DB-Verbindung, Migration, Datenbereinigung, Installation,
+neue Abhängigkeit, produktiver Anwendungsstart oder echter Scraper. Keine Commits
+oder Pushes; historische Evidenzen unverändert. git diff --check erfolgreich.
+## T06 – Finale freigegebene Gesamtregression bestanden (21.11.2026)
+
+**T06_TECHNICALLY_VERIFIED.** Die vorstehenden Hinweise auf die ausstehende
+DB-Freigabe sind historisch: Der Eigentümer hat den finalen vollständigen Lauf
+ausschließlich auf mangalib_test/mangalib_test_user einschließlich globalem
+lesendem Vorher-/Nachher-Vergleich ausdrücklich erneut freigegeben.
+
+- Branch codex/t06-logging; Passwort ausschließlich aus MANGALIB_TEST_DB_PASSWORD
+  vorhanden, keine relevanten Framework-/JVM-Overrides. Guards, Profil test und
+  Schema-/Init-/Migrationsverbote unverändert.
+- Vorprüfung s03SchemaTest nach identischem Offline-Dry-Run: 1/1 bestanden.
+- Vollständiges `test` ohne Filter nach identischem Offline-Dry-Run: **1.476 Fälle,
+  1.474 bestanden, 0 Fehler, 2 bestehende Commit-Opt-in-Skips**. Finale Diagnose-
+  Ergänzungen enthalten; keine Assertions abgeschwächt oder neue Tests deaktiviert.
+- Nachprüfung s03SchemaTest wiederum nach identischem Dry-Run: 1/1 bestanden.
+  Globale Fingerabdrücke vorher/nachher gleich:
+  Vollbestand/Schema `77fce665515396821a2fb21f36f074a3abccdac48de04c09f1f065be1c9e814f`,
+  Altzeilen `3b629c3faeac198c4d83cf8df033257724a289eca71b46d17d344fc5d523d0b9`,
+  Altschema `9ca0a1402263a0830ed9df7ffbd50edbee22f50f02ad357bf91ed468c166a6e0`.
+  Elf InnoDB-Tabellen, 78 Stammdatensätze und bestehende Geschäftszeilen erhalten;
+  AUTO_INCREMENT wie bisher ausgenommen, keine dauerhaft verbliebenen Fixtures.
+- Der vorherige rein datenbankfreie Schlusslauf bestand mit **56 Diagnose-/Guard-
+  Fällen**, **94 Manual-Schutzfällen** und **20 Scraper-Paket-/Transportfakes**,
+  jeweils 0 Fehler/Skips. Darunter 12 neue Diagnosetests; diese sind auch im
+  vollständigen finalen Lauf enthalten, nicht doppelt als neue Fälle zählen.
+- **260 DOM-Tests**, JavaScript-Syntaxchecks und git diff --check erfolgreich.
+  Offline-Paketierung von Anwendung, isoliertem Worker und Manual-Kandidat grün;
+  alle sechs historischen Manual-JARs hashgleich erhalten. Keine neue Abhängigkeit.
+
+Private Nachweise unter .gradle/t06-validation, ursprüngliche historische Evidenzen
+unverändert. Keine Produktiv-/Manual-DB-Verbindung, Migration, Bereinigung,
+produktiver Anwendungsstart, native Job-/Live-Scraperabnahme oder Browserprüfung.
+T07 muss weiterhin Betriebskonto/Logpfad und regulären Start abnehmen; keine echte
+Datenträgerfüllung provoziert. Finale Konfiguration: T06_LOGGING.md. Kein Commit,
+Staging oder Push der T06-Änderungen. Frühere Fehlversuche bleiben dokumentiert.

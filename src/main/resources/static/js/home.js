@@ -126,7 +126,7 @@ function initializeLazyLoading() {
 
 // Global function to toggle the bands
 function toggleBands(mangaReiheId) {
-    console.log(`Toggling bands for ID ${mangaReiheId}`);
+
     const bandsContainer = document.getElementById('bands-' + mangaReiheId);
     if (bandsContainer) {
         // Ein noch nicht initialisierter, leerer Inline-Zustand gilt ebenfalls
@@ -136,7 +136,7 @@ function toggleBands(mangaReiheId) {
             return fetch('/mangaReihe/' + mangaReiheId + '/bands')
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Fetched data:", data);  // Überprüfen Sie die Daten
+
                     bandsContainer.replaceChildren(...data.map(createBandElement));
 
                     // Initialisiere Lazy Loading für die neu geladenen Bilder
@@ -148,7 +148,7 @@ function toggleBands(mangaReiheId) {
             bandsContainer.style.display = "none";
         }
     } else {
-        console.error("Bands container not found for MangaReihe ID:", mangaReiheId);
+        console.error("MangaLib: Aktion fehlgeschlagen.");
     }
 }
 

@@ -99,6 +99,7 @@ public class EinkaufslisteController {
         } catch (IllegalArgumentException | java.time.DateTimeException e) {
             return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
         } catch (Exception e) {
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.STORAGE, e);
             return ResponseEntity.internalServerError().body("Anfrage konnte nicht verarbeitet werden.");
         }
     }
@@ -109,6 +110,7 @@ public class EinkaufslisteController {
             einkaufslisteService.deleteItemById(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.STORAGE, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -134,6 +136,7 @@ public class EinkaufslisteController {
         } catch (IllegalArgumentException | java.time.DateTimeException invalid) {
             return ResponseEntity.badRequest().build();
         } catch (Exception failure) {
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.STORAGE, failure);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -163,6 +166,7 @@ public class EinkaufslisteController {
         } catch (IllegalArgumentException invalid) {
             return ResponseEntity.badRequest().body("Fehler bei der Verarbeitung der Anfrage: Ungültige Eingabe.");
         } catch (Exception failure) {
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.STORAGE, failure);
             return ResponseEntity.internalServerError().body("Anfrage konnte nicht verarbeitet werden.");
         }
     }

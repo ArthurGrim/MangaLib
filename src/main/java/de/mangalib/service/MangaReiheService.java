@@ -177,7 +177,6 @@ public class MangaReiheService {
             if (reread == null) reread = 0;
         }
         scrapedData = WriteValidation.scrapedData(scrapedData);
-        System.out.println("SaveMangaReihe gestartet");
         Money.amount(preisProBand);
         BandService.validateMoneyPlan(List.of(), anzahlBaende, preisProBand, gesamtpreisAenderung, false, false, scrapedData);
         Money.distribute(gesamtpreisAenderung, anzahlBaende);
@@ -220,9 +219,7 @@ public class MangaReiheService {
 
         MangaReihe savedMangaReihe = mangaReiheRepository.save(mangaReihe);
 
-        System.out.println("MangaReihe Objekt erstellt");
 
-        System.out.println("Setze Details");
         MangaDetails details = mangaDetailsService.createMangaDetails(
                 savedMangaReihe,
                 anilistUrl,
@@ -233,9 +230,7 @@ public class MangaReiheService {
             details.setReread(reread);
         }
         mangaDetailsRepository.save(details);
-        System.out.println("Details gesetzt");
 
-        System.out.println("Bände werden erzeugt");
         if (volume == null) {
             bandService.createAndSaveBaende(savedMangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData);
         } else {
@@ -246,7 +241,6 @@ public class MangaReiheService {
                 readingHistory.recordTransition(volume, false);
             }
         }
-        System.out.println("Bände erzeugt");
 
         BigDecimal aenderungGesamtPreis = bandService.calculateAenderungGesamtpreis(savedMangaReihe);
         savedMangaReihe.setAenderungGesamtpreis(aenderungGesamtPreis);
@@ -403,11 +397,9 @@ public class MangaReiheService {
         WriteValidation.volumes(anzahlBaende);
         WriteValidation.reread(reread);
         scrapedData = WriteValidation.scrapedData(scrapedData);
-        System.out.println("----------------------updateMangaReihe gestartet----------------------");
 
         Optional<MangaReihe> mangaReiheOptional = findById(mangaReiheId);
         if (!mangaReiheOptional.isPresent()) {
-            System.out.println("Keine Reihe mit der ID gefunden");
             return Optional.empty();
         }
         MangaReihe mangaReihe = mangaReiheOptional.get();
@@ -497,7 +489,6 @@ public class MangaReiheService {
             WriteValidation.require(typService.getTypById(typId).isPresent());
         if (!Objects.equals(mangaReihe.getFormat().getFormatId(), formatId))
             WriteValidation.require(formatService.getFormatById(formatId).isPresent());
-        System.out.println("Update die Stammdaten");
 
         updateMangaReiheAttributes(mangaReihe, mangaIndex, statusId, verlagId, typId, formatId, titel, anzahlBaende,
                 preisProBand, istVergriffen, istEbayPreis,
@@ -505,9 +496,7 @@ public class MangaReiheService {
         if (priceEdited) mangaReihe.setPreisProBand(preisProBand);
         if (adjustmentEdited) mangaReihe.setAenderungGesamtpreis(gesamtpreisAenderung);
 
-        System.out.println("MangaReihe Objekt geupdated");
 
-        System.out.println("Setze Details");
 
         // Vorgefüllte Formularwerte sind kein Massenänderungsauftrag. Auch ein
         // abweichend mitgesendeter Wert wird bei Erweiterung nicht auf Altbände verteilt.
@@ -518,15 +507,12 @@ public class MangaReiheService {
                 sammelbandTypId,
                 scrapedData);
         mangaDetailsRepository.save(details);
-        System.out.println("Details gesetzt");
 
-        System.out.println("Update den Gelesenstatus");
         // Überprüfen und aktualisieren des istGelesen-Status der Bände
         if (!extension && applyRead) {
             updateBaendeIstGelesenStatus(details);
         }
 
-        System.out.println("Update die Bände");
 
         if (extension) {
             bandService.appendBaende(mangaReihe, anzahlBaende, preisProBand, gesamtpreisAenderung, scrapedData, existing);
@@ -536,7 +522,6 @@ public class MangaReiheService {
                     anzahlBaendeChanged);
         }
 
-        System.out.println("Bände geupdatet");
 
         if (extension) {
             bandService.updateMangaDetailsIstGelesenStatus(details);

@@ -404,7 +404,18 @@ T06 und T07 bleiben eigenständige Folgearbeiten; weitere Wartung ist fortlaufen
 
 ### T06 – Logging, Fehlerdiagnose und Nachvollziehbarkeit
 
-**Nur geplant, noch nicht implementiert.** Querschnittsaufgabe für T02/T04 und den späteren Hintergrundbetrieb T07; keine Änderung der fachlichen Prioritäten.
+**Technisch abgeschlossen und regressionsgeprüft (21.11.2026).**
+Request-Korrelation/MDC, bereinigte technische Fehlerdiagnose, Import-/Betriebsereignisse,
+Entfernung von Backend-/Browser-Rohdatenlogs und private rotierende Dateilogs sind
+umgesetzt. Standards: 14 Tage, 10-MiB-Rotationsschwelle, 90 MiB Archive plus aktives
+Log und zusätzliche 100-MiB-Schreibbudgetprüfung; bei Ausfall bleibt die Konsole
+verfügbar. Keine Fach-/DB-/Importprotokolländerung. Details: `T06_LOGGING.md`.
+Nach erneuter ausdrücklicher Freigabe bestand der finale Gesamtlauf mit **1.474
+Erfolgen, 0 Fehlern und 2 bisherigen Opt-in-Skips**. Globaler Daten-/Schemafingerabdruck
+vorher/nachher identisch; zusätzlich 260 DOM-, 94 Manual-Schutz- und 20 Scraper-
+Pakettests grün. Abschluss und Nachweisgrenzen: `T06_CLOSEOUT.md`.
+Noch kein Git-Abschluss. Reguläre Windows-Betriebsabnahme bleibt T07;
+keine Änderung der fachlichen Prioritäten.
 
 - Bestehende `System.out.println`-/`printStackTrace`- und Browser-Rohdatenausgaben gezielt inventarisieren (beispielsweise `MainController.java:233,300,326`, `EinkaufslisteController.java:95`, beide Scraper). Vorhandene Logging-Fassade verwenden; keine zweite Logging-Plattform ohne Bedarf einführen.
 - Log-Level konsistent definieren: TRACE für eng begrenzte Ablaufdetails, DEBUG für gezielte Diagnose, INFO für wichtige Start-/Abschlussereignisse, WARN für erwartete problematische Situationen, ERROR für unerwartete Fehler/fehlgeschlagene Aktionen. Keine vollständigen Request-/Response-Maps auch auf niedrigeren Leveln. Level extern konfigurierbar; Dauerbetrieb standardmäßig INFO.

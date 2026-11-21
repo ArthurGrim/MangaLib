@@ -73,6 +73,7 @@ public class ReadingHistoryController {
             return ResponseEntity.status(409).body(Map.of("message", "Leseaktion widerspricht dem aktuellen Stand. Bitte neu laden."));
         }
         catch (IllegalArgumentException invalid) { return ResponseEntity.badRequest().build(); }
-        catch (Exception failure) { return ResponseEntity.internalServerError().build(); }
+        catch (Exception failure) {
+            de.mangalib.diagnostics.DiagnosticEvents.failure(de.mangalib.diagnostics.DiagnosticEvents.Action.STORAGE, failure); return ResponseEntity.internalServerError().build(); }
     }
 }

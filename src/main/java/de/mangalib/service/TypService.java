@@ -81,7 +81,6 @@ public class TypService {
     }
 
     public Long findTypIdByBezeichnung(String bezeichnung) {
-        System.out.println(bezeichnung);
         return typRepository.findByBezeichnung(bezeichnung)
                 .map(Typ::getTypId)
                 .orElse(null); // oder eine Standard-ID zurückgeben
